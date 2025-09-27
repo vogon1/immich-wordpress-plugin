@@ -21,7 +21,7 @@ A simple way to display galleries without uploading images manually.
 
 ## 🖼️ Usage
 
-Use shortcode \[immich-gallery\] with optional parameters.
+Use shortcode \[immich_gallery\] with optional parameters.
 Possible parameters (use none or only one):
 
 - (none): - Show a list of all albums with thumbnails
@@ -43,29 +43,29 @@ The parameter 'show' defaults to 'name'.
 Use the shortcode below to display a list of all albums with thumbnails:
 
 ```text
-[immich-gallery]
+[immich_gallery]
 ```
 
 Use the shortcode below to display a specific list of albums (no spaces around comma), of course with your album id's:
 
 ```text
-[immich-gallery albums=3c874076-ba9e-410a-8501-ef3cca897bcb,3c874076-ba9e-410a-8501-ef3cca897bcc]
+[immich_gallery albums=3c874076-ba9e-410a-8501-ef3cca897bcb,3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
 Use the shortcode below to display an album:
 
 ```text
-[immich-gallery album=3c874076-ba9e-410a-8501-ef3cca897bcc]
+[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
 If you want to show descriptions and dates of the photos:
 
 ```text
-[immich-gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd show=asset_description,asset_date]
+[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd show=asset_description,asset_date]
 ```
 
 Use the shortcode below to display just one photo:
 
 ```text
-[immich-gallery asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
+[immich_gallery asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
 ```

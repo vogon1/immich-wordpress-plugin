@@ -122,6 +122,69 @@ class Immich_Gallery {
                 display: block !important;
                 margin 0 auto !important;
             }
+            
+            /* Remove blue focus outline */
+            .immich-lightbox {
+                outline: none !important;
+                text-decoration: none !important;
+            }
+            
+            .immich-lightbox:focus {
+                outline: none !important;
+                box-shadow: none !important;
+            }
+            
+            /* Album grid hover effects and shadows */
+            .immich-grid > div {
+                transition: all 0.3s ease;
+                box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+                border-radius: 8px;
+                overflow: hidden;
+                background: white;
+            }
+            
+            .immich-grid > div:hover {
+                transform: translateY(-8px);
+                box-shadow: 0 8px 25px rgba(0,0,0,0.2);
+            }
+            
+            .immich-grid > div img {
+                transition: transform 0.3s ease;
+            }
+            
+            .immich-grid > div:hover img {
+                transform: scale(1.05);
+            }
+            
+            .immich-grid > div a {
+                display: block;
+                text-decoration: none;
+                color: inherit;
+            }
+            
+            .immich-grid > div > div {
+                padding: 10px;
+            }
+            
+            /* Album photo grid specific styles */
+            .immich-album-grid > div {
+                transition: all 0.3s ease;
+                border-radius: 6px;
+                overflow: hidden;
+            }
+            
+            .immich-album-grid > div:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 4px 15px rgba(0,0,0,0.15);
+            }
+            
+            .immich-album-grid > div img {
+                transition: transform 0.3s ease;
+            }
+            
+            .immich-album-grid > div:hover img {
+                transform: scale(1.03);
+            }
         ');
     }
 
@@ -166,7 +229,23 @@ class Immich_Gallery {
             $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
 
             $html = '<div>';
-            $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" data-gallery="asset-' . esc_attr($asset['id']) . '">
+            
+            // Prepare description for lightbox
+            $description = '';
+            if (!empty($asset['exifInfo']['description'])) {
+                $description = esc_attr($asset['exifInfo']['description']);
+            }
+            if (!empty($asset['exifInfo']['dateTimeOriginal'])) {
+                $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                if ($description) {
+                    $description .= ' • ' . $date;
+                } else {
+                    $description = $date;
+                }
+            }
+            
+            $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
+                        data-gallery="asset-' . esc_attr($asset['id']) . '">
                         <img src="' . esc_url($thumb_url) . '" style="max-width:100%;border-radius:6px;margin-bottom:15px;">
                         </a>';
             if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
@@ -194,22 +273,38 @@ class Immich_Gallery {
             if (in_array('gallery_description', $show) && !empty($album['description'])) {
                 $html .= '<p>' . esc_html($album['description']) . '</p>';
             }
-            $html .= '<div class="immich-grid" style="display:flex;flex-wrap:wrap;gap:10px;">';
+            $html .= '<div class="immich-grid immich-album-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;">';
 
             foreach ($album['assets'] as $asset) {
                 if (empty($asset['id'])) continue;
                 $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
                 $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
+                
+                // Prepare description for lightbox
+                $description = '';
+                if (!empty($asset['exifInfo']['description'])) {
+                    $description = esc_attr($asset['exifInfo']['description']);
+                }
+                if (!empty($asset['exifInfo']['dateTimeOriginal'])) {
+                    $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                    if ($description) {
+                        $description .= ' • ' . $date;
+                    } else {
+                        $description = $date;
+                    }
+                }
+                
                 $html .= '<div>';
-                $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" data-gallery="album-' . esc_attr($album['id']) . '">
-                            <img src="' . esc_url($thumb_url) . '" style="width:200px;border-radius:6px;margin-bottom:5px;">
+                $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
+                            data-gallery="album-' . esc_attr($album['id']) . '">
+                            <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;border-radius:6px;display:block;">
                           </a>';
                 if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
                     $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
-                    $html .= '<div style="text-align:center;margin-bottom:5px;">' . esc_html($date) . '</div>';
+                    $html .= '<div style="text-align:center;margin-top:8px;font-size:0.9em;">' . esc_html($date) . '</div>';
                 }
                 if (in_array('asset_description', $show)) {
-                    $html .= '<div style="text-align:center;margin-bottom:5px;">' . esc_html($asset['exifInfo']['description'] ?? '') . '</div>';
+                    $html .= '<div style="text-align:center;margin-top:5px;font-size:0.9em;color:#666;">' . esc_html($asset['exifInfo']['description'] ?? '') . '</div>';
                 }
                 $html .= '</div>';
             }
@@ -233,7 +328,7 @@ class Immich_Gallery {
                 return '<p>' . __('No albums found.', 'immich-gallery') . '</p>';
             }
 
-            $html = '<div class="immich-grid" style="display:flex;flex-wrap:wrap;gap:20px;">';
+            $html = '<div class="immich-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;">';
             
             // Determine which albums to render and in what order
             $albums_to_render = [];
@@ -249,8 +344,26 @@ class Immich_Gallery {
                     }
                 }
             } else {
-                // Show all albums from Immich in their original order
+                // Show all albums from Immich, sorted by endDate (newest first)
                 $albums_to_render = $immich_albums;
+                
+                // Sort albums by endDate in descending order (newest first)
+                usort($albums_to_render, function($a, $b) {
+                    $endDateA = $a['endDate'] ?? '';
+                    $endDateB = $b['endDate'] ?? '';
+                    
+                    // If both have endDate, compare them
+                    if ($endDateA && $endDateB) {
+                        return strcmp($endDateB, $endDateA); // Descending order
+                    }
+                    
+                    // If only one has endDate, prioritize the one with endDate
+                    if ($endDateA && !$endDateB) return -1;
+                    if (!$endDateA && $endDateB) return 1;
+                    
+                    // If neither has endDate, maintain original order
+                    return 0;
+                });
             }
 
             // Render the albums
@@ -258,16 +371,22 @@ class Immich_Gallery {
                 if (empty($album['albumThumbnailAssetId'])) continue;
                 $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
 
-                $html .= '<div style="width:200px;text-align:center;">';
+                $html .= '<div>';
                 $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="width:100%;border-radius:8px;"></a>';
-                if (in_array('gallery_name', $show)) {
-                    $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
-                            <div>' . esc_html($album['albumName']) . '</div></a>';
+                        <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;"></a>';
+                
+                if (in_array('gallery_name', $show) || in_array('gallery_description', $show)) {
+                    $html .= '<div style="text-align:center;">';
+                    if (in_array('gallery_name', $show)) {
+                        $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
+                                <div style="font-weight:bold;margin-bottom:5px;">' . esc_html($album['albumName']) . '</div></a>';
+                    }
+                    if (in_array('gallery_description', $show)) {
+                        $html .= '<div style="font-size:0.9em;color:#666;">' . esc_html($album['description']) . '</div>';
+                    }
+                    $html .= '</div>';
                 }
-                if (in_array('gallery_description', $show)) {
-                    $html .= '<div>' . esc_html($album['description']) . '</div>';
-                }
+                
                 $html .= '</div>';
 
             }
