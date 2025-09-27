@@ -18,6 +18,7 @@ jobs:
 
       # 2. (optioneel) Installeer PHP dependencies
       - name: Install PHP dependencies
+        working-directory: immich-gallery
         run: |
           if [ -f composer.json ]; then
             composer install --no-dev --optimize-autoloader
@@ -25,6 +26,7 @@ jobs:
 
       # 3. (optioneel) Installeer JS dependencies en bouw
       - name: Build JS/CSS
+        working-directory: immich-gallery
         run: |
           if [ -f package.json ]; then
             npm ci
@@ -36,7 +38,7 @@ jobs:
         run: |
           PLUGIN_SLUG="immich-gallery"
           mkdir dist
-          zip -r dist/${PLUGIN_SLUG}.zip {$PLUGIIN_SLUG} \
+          zip -r dist/${PLUGIN_SLUG}.zip {$PLUGIN_SLUG} \
             -x "*.git*" \
             -x "*/node_modules/*" \
             -x "*/src/*" \
