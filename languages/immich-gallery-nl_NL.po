@@ -1,0 +1,39 @@
+# Dutch translation for Immich Gallery
+# Copyright (C) 2025
+# This file is distributed under the same license as the Immich Gallery package.
+# Sietse Visser <email@example.com>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Immich Gallery 0.7\n"
+"Report-Msgid-Bugs-To: \n"
+"POT-Creation-Date: 2025-09-27 12:00+0000\n"
+"PO-Revision-Date: 2025-09-27 12:00+0000\n"
+"Last-Translator: Sietse Visser\n"
+"Language-Team: Dutch\n"
+"Language: nl_NL\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+"Plural-Forms: nplurals=2; plural=(n != 1);\n"
+
+msgid "Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access."
+msgstr "Toon Immich albums en foto's in een WordPress site met behulp van shortcodes. Vereist Immich server met API toegang."
+
+msgid "Settings"
+msgstr "Instellingen"
+
+msgid "Immich server URL"
+msgstr "Immich server URL"
+
+msgid "API Key"
+msgstr "API-sleutel"
+
+msgid "No albums found or Immich not reachable."
+msgstr "Geen albums gevonden of Immich niet bereikbaar."
+
+msgid "No photos found in this album."
+msgstr "Geen foto's gevonden in dit album."
+
+msgid "Back to overview"
+msgstr "Terug naar overzicht"
