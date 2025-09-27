@@ -2,7 +2,7 @@
 /*
 Plugin Name: Immich Gallery
 Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
-Version: 0.7
+Version: 0.1
 Author: Sietse Visser
 Text Domain: immich-gallery
 Domain Path: /languages
@@ -24,7 +24,7 @@ class Immich_Gallery {
         add_action('init', [$this, 'load_textdomain'], 1);
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'settings_init']);
-        add_shortcode('immich_album', [$this, 'render_gallery']);
+        add_shortcode('immich_gallery', [$this, 'render_gallery']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         
         // Plugin description translation for plugin list
@@ -142,47 +142,136 @@ class Immich_Gallery {
 
     /* --- Shortcode: overview + detail --- */
     public function render_gallery($atts) {
-        $options = get_option($this->option_name);
-        $album_id = $_GET['immich_album'] ?? ($atts['id'] ?? '');
+        $albums = $atts['albums'] ?? [];
+        if ($albums) {
+            $albums = explode(',', $albums);
+        }
+        $album = $_GET['immich_gallery'] ?? ($atts['album'] ?? '');
+        $asset = $atts['asset'] ?? '';
+        $show = $atts['show'] ?? [];
+        if ($show) {
+            $show = explode(',', $show);
+        }
 
-        if (!$album_id) {
-            // Overview page
-            $albums = $this->api_request('albums');
-            if (!$albums) return '<p>' . __('No albums found or Immich not reachable.', 'immich-gallery') . '</p>';
+        if ($asset) {
+            // Direct link to single asset
+            if (!$show) $show = ['asset_description'];
 
-            $html = '<div class="immich-grid" style="display:flex;flex-wrap:wrap;gap:20px;">';
-            foreach ($albums as $album) {
-                if (empty($album['albumThumbnailAssetId'])) continue;
-                $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
-                $html .= '<div style="width:200px;text-align:center;">
-                    <a href="' . get_permalink() . '?immich_album=' . esc_attr($album['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="width:100%;border-radius:8px;">
-                        <div>' . esc_html($album['albumName']) . '</div>
-                    </a>
-                </div>';
+            $asset = $this->api_request('assets/' . $asset);
+            // error_log(print_r($asset, true));
+
+            if (!$asset || empty($asset['id'])) return '<p>' . __('Photo not found.', 'immich-gallery') . '</p>';
+
+            $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
+            $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
+
+            $html = '<div>';
+            $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" data-gallery="asset-' . esc_attr($asset['id']) . '">
+                        <img src="' . esc_url($thumb_url) . '" style="max-width:100%;border-radius:6px;margin-bottom:15px;">
+                        </a>';
+            if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
+                $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                $html .= '<div>' . esc_html($date) . '</div>';
+            }
+            if (in_array('asset_description', $show)) {
+                $html .= '<div>' . esc_html($asset['exifInfo']['description'] ?? '') . '</div>';
             }
             $html .= '</div>';
+
             return $html;
-
-        } else {
+        } elseif ($album) {
             // Detail page
-            $album = $this->api_request('albums/' . $album_id);
-            if (!$album || empty($album['assets'])) return '<p>Geen foto’s gevonden in dit album.</p>';
+            if (!$show) $show = ['gallery_name', 'gallery_description', 'asset_description'];
 
-            $html = '<h2>' . esc_html($album['albumName']) . '</h2>';
+            $album = $this->api_request('albums/' . $album);
+            // error_log(print_r($album, true));
+
+            if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'immich-gallery') . '</p>';
+
+            if (in_array('gallery_name', $show)) {
+                $html = '<h2>' . esc_html($album['albumName']) . '</h2>';
+            }
+            if (in_array('gallery_description', $show) && !empty($album['description'])) {
+                $html .= '<p>' . esc_html($album['description']) . '</p>';
+            }
             $html .= '<div class="immich-grid" style="display:flex;flex-wrap:wrap;gap:10px;">';
 
             foreach ($album['assets'] as $asset) {
                 if (empty($asset['id'])) continue;
                 $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
                 $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
+                $html .= '<div>';
                 $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" data-gallery="album-' . esc_attr($album['id']) . '">
                             <img src="' . esc_url($thumb_url) . '" style="width:200px;border-radius:6px;margin-bottom:5px;">
                           </a>';
+                if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
+                    $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                    $html .= '<div style="text-align:center;margin-bottom:5px;">' . esc_html($date) . '</div>';
+                }
+                if (in_array('asset_description', $show)) {
+                    $html .= '<div style="text-align:center;margin-bottom:5px;">' . esc_html($asset['exifInfo']['description'] ?? '') . '</div>';
+                }
+                $html .= '</div>';
             }
             $html .= '</div>';
-            $html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Back to overview', 'immich-gallery') . '</a></p>';
+            //$html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Back to overview', 'immich-gallery') . '</a></p>';
 
+            return $html;
+        } else {
+            // Overview page
+            if (!$show) $show = ['gallery_name', 'gallery_description'];
+
+            $immich_albums = $this->api_request('albums');
+            // error_log(print_r($immich_albums, true));
+
+            // Check for API error
+            if (isset($immich_albums['error']) && $immich_albums['error']) {
+                return '<p>' . __('Error from Immich API: ', 'immich-gallery') . esc_html($immich_albums['error']) . ': ' . esc_html($immich_albums['message']) . '</p>';
+            }
+
+            if (!$immich_albums) {
+                return '<p>' . __('No albums found.', 'immich-gallery') . '</p>';
+            }
+
+            $html = '<div class="immich-grid" style="display:flex;flex-wrap:wrap;gap:20px;">';
+            
+            // Determine which albums to render and in what order
+            $albums_to_render = [];
+            if (is_array($albums) && count($albums) > 0) {
+                // Render albums in the order specified in $albums array
+                foreach ($albums as $album_id) {
+                    // Find the album in $immich_albums by ID
+                    foreach ($immich_albums as $immich_album) {
+                        if ($immich_album['id'] === $album_id) {
+                            $albums_to_render[] = $immich_album;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                // Show all albums from Immich in their original order
+                $albums_to_render = $immich_albums;
+            }
+
+            // Render the albums
+            foreach ($albums_to_render as $album) {
+                if (empty($album['albumThumbnailAssetId'])) continue;
+                $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
+
+                $html .= '<div style="width:200px;text-align:center;">';
+                $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
+                        <img src="' . esc_url($thumb_url) . '" style="width:100%;border-radius:8px;"></a>';
+                if (in_array('gallery_name', $show)) {
+                    $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
+                            <div>' . esc_html($album['albumName']) . '</div></a>';
+                }
+                if (in_array('gallery_description', $show)) {
+                    $html .= '<div>' . esc_html($album['description']) . '</div>';
+                }
+                $html .= '</div>';
+
+            }
+            $html .= '</div>';
             return $html;
         }
     }

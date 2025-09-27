@@ -37,3 +37,9 @@ msgstr "Geen foto's gevonden in dit album."
 
 msgid "Back to overview"
 msgstr "Terug naar overzicht"
+
+msgid "Error from Immich API: "
+msgstr "Fout van Immich API: "
+
+msgid "No albums found."
+msgstr "Geen albums gevonden."

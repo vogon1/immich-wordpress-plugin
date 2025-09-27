@@ -1,7 +1,7 @@
-# SOME DESCRIPTIVE TITLE.
-# Copyright (C) YEAR THE PACKAGE'S COPYRIGHT HOLDER
+# Immich-gallery translations.
+# Copyright (C) 2025 THE PACKAGE'S COPYRIGHT HOLDER
 # This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <EMAIL@ADDRESS>, YEAR.
+# FIRST AUTHOR <sietse@sietse.nl>, 2025.
 #
 msgid ""
 msgstr ""
@@ -35,4 +35,10 @@ msgid "No photos found in this album."
 msgstr ""
 
 msgid "Back to overview"
+msgstr ""
+
+msgid "Error from Immich API: "
+msgstr ""
+
+msgid "No albums found."
 msgstr ""
