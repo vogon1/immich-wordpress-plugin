@@ -2,7 +2,7 @@
 /*
 Plugin Name: Immich Gallery
 Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
-Version: 0.1
+Version: 0.2.1
 Author: Sietse Visser
 Text Domain: immich-gallery
 Domain Path: /languages
