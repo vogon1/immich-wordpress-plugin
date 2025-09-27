@@ -267,6 +267,25 @@ class Immich_Gallery {
 
             if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'immich-gallery') . '</p>';
 
+            // Sort album photos by dateTimeOriginal in ascending order (oldest first)
+            $assets_to_render = $album['assets'];
+            usort($assets_to_render, function($a, $b) {
+                $dateA = $a['exifInfo']['dateTimeOriginal'] ?? '';
+                $dateB = $b['exifInfo']['dateTimeOriginal'] ?? '';
+                
+                // If both have dateTimeOriginal, compare them
+                if ($dateA && $dateB) {
+                    return strcmp($dateA, $dateB); // Ascending order (oldest first)
+                }
+                
+                // If only one has dateTimeOriginal, prioritize the one with date
+                if ($dateA && !$dateB) return -1;
+                if (!$dateA && $dateB) return 1;
+                
+                // If neither has dateTimeOriginal, maintain original order
+                return 0;
+            });
+
             if (in_array('gallery_name', $show)) {
                 $html = '<h2>' . esc_html($album['albumName']) . '</h2>';
             }
@@ -275,7 +294,7 @@ class Immich_Gallery {
             }
             $html .= '<div class="immich-grid immich-album-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;">';
 
-            foreach ($album['assets'] as $asset) {
+            foreach ($assets_to_render as $asset) {
                 if (empty($asset['id'])) continue;
                 $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
                 $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
