@@ -5,6 +5,10 @@ on:
     tags:
       - "v*"   # Draait alleen bij tags zoals v1.0.0
 
+permissions:
+  contents: write
+  packages: write
+
 jobs:
   build:
     runs-on: ubuntu-latest
