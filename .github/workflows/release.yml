@@ -13,6 +13,8 @@ jobs:
       # 1. Haal code binnen
       - name: Checkout code
         uses: actions/checkout@v4
+        with:
+          path: ./immich-gallery
 
       # 2. (optioneel) Installeer PHP dependencies
       - name: Install PHP dependencies
@@ -34,11 +36,12 @@ jobs:
         run: |
           PLUGIN_SLUG="immich-gallery"
           mkdir dist
-          zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} \
+          zip -r dist/${PLUGIN_SLUG}.zip {$PLUGIIN_SLUG} \
             -x "*.git*" \
             -x "*/node_modules/*" \
             -x "*/src/*" \
-            -x "*.DS_Store"
+            -x "*.DS_Store" \
+            -x "dist"
 
       # 5. Upload ZIP naar de GitHub Release
       - name: Upload release asset
