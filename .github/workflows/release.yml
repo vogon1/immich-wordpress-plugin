@@ -32,7 +32,7 @@ jobs:
       # 4. Maak ZIP van de pluginmap
       - name: Build ZIP
         run: |
-          PLUGIN_SLUG="mijnplugin"   # ← verander naar jouw map/slug
+          PLUGIN_SLUG="immich-gallery"
           mkdir dist
           zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} \
             -x "*.git*" \
