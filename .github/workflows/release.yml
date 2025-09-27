@@ -1,0 +1,49 @@
+name: Build & Release WordPress Plugin
+
+on:
+  push:
+    tags:
+      - "v*"   # Draait alleen bij tags zoals v1.0.0
+
+jobs:
+  build:
+    runs-on: ubuntu-latest
+
+    steps:
+      # 1. Haal code binnen
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # 2. (optioneel) Installeer PHP dependencies
+      - name: Install PHP dependencies
+        run: |
+          if [ -f composer.json ]; then
+            composer install --no-dev --optimize-autoloader
+          fi
+
+      # 3. (optioneel) Installeer JS dependencies en bouw
+      - name: Build JS/CSS
+        run: |
+          if [ -f package.json ]; then
+            npm ci
+            npm run build
+          fi
+
+      # 4. Maak ZIP van de pluginmap
+      - name: Build ZIP
+        run: |
+          PLUGIN_SLUG="mijnplugin"   # ← verander naar jouw map/slug
+          mkdir dist
+          zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} \
+            -x "*.git*" \
+            -x "*/node_modules/*" \
+            -x "*/src/*" \
+            -x "*.DS_Store"
+
+      # 5. Upload ZIP naar de GitHub Release
+      - name: Upload release asset
+        uses: softprops/action-gh-release@v2
+        with:
+          files: dist/*.zip
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
