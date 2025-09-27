@@ -15,9 +15,11 @@ A simple way to display galleries without uploading images manually.
 ## 📦 Installation
 
 1. Download the [latest release](https://github.com/vogon1/immich-wordpress-plugin/releases).
-2. In WordPress, go to **Plugins > Add New > Upload Plugin**.
-3. Upload the `.zip` file and activate the plugin.
-4. Go to **Settings > Immich** and enter your Immich API details.
+1. In WordPress, go to **Plugins > Add New > Upload Plugin**.
+1. Upload the `.zip` file and activate the plugin.
+1. Create an API key in Immich: **Account settings > API keys**.  
+The API key must have 3 permissions: asset.read, asset.view and album.read
+1. In wordpress go to **Settings > Immich** and enter your Immich url and API key.
 
 ## 🖼️ Usage
 
