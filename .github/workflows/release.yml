@@ -38,7 +38,7 @@ jobs:
         run: |
           PLUGIN_SLUG="immich-gallery"
           mkdir dist
-          zip -r dist/${PLUGIN_SLUG}.zip {$PLUGIN_SLUG} \
+          zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} \
             -x "*.git*" \
             -x "*/node_modules/*" \
             -x "*/src/*" \
