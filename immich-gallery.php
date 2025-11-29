@@ -3,7 +3,7 @@
  * Plugin Name: Immich Gallery
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
- * Version: 0.3.0
+ * Version: 0.3.1
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -27,7 +27,7 @@ class Immich_Gallery {
     private $option_name = 'immich_gallery_settings';
 
     public function __construct() {
-        add_action('init', [$this, 'load_textdomain'], 1);
+        // Note: load_plugin_textdomain() not needed - WordPress.org automatically loads translations since WP 4.6
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'settings_init']);
         add_shortcode('immich_gallery', [$this, 'render_gallery']);
@@ -46,12 +46,6 @@ class Immich_Gallery {
         }
         
         return $plugins;
-    }
-
-    public function load_textdomain() {
-        $loaded = load_plugin_textdomain('immich-gallery', false, dirname(plugin_basename(__FILE__)) . '/languages');
-        
-        return $loaded;
     }
 
     /* --- Admin settings --- */
@@ -109,21 +103,21 @@ class Immich_Gallery {
     public function field_server_url() {
         $options = get_option($this->option_name);
         ?>
-        <input type="url" name="<?= esc_attr($this->option_name) ?>[server_url]" value="<?= esc_attr($options['server_url'] ?? '') ?>" style="width:400px;" placeholder="https://immich.example.com">
+        <input type="url" name="<?php echo esc_attr($this->option_name); ?>[server_url]" value="<?php echo esc_attr($options['server_url'] ?? ''); ?>" style="width:400px;" placeholder="https://immich.example.com">
         <?php
     }
 
     public function field_api_key() {
         $options = get_option($this->option_name);
         ?>
-        <input type="password" name="<?= esc_attr($this->option_name) ?>[api_key]" value="<?= esc_attr($options['api_key'] ?? '') ?>" style="width:400px;" autocomplete="off">
+        <input type="password" name="<?php echo esc_attr($this->option_name); ?>[api_key]" value="<?php echo esc_attr($options['api_key'] ?? ''); ?>" style="width:400px;" autocomplete="off">
         <?php
     }
 
     public function options_page() {
         // Double-check user capabilities
         if (!current_user_can('manage_options')) {
-            wp_die(__('You do not have sufficient permissions to access this page.', 'immich-gallery'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'immich-gallery'));
         }
         ?>
         <div class="wrap">
@@ -141,8 +135,8 @@ class Immich_Gallery {
 
     /* --- Scripts and CSS for Lightbox --- */
     public function enqueue_scripts() {
-        wp_enqueue_style('glightbox-css', 'https://cdn.jsdelivr.net/npm/glightbox/dist/css/glightbox.min.css', [], '3.2.0');
-        wp_enqueue_script('glightbox-js', 'https://cdn.jsdelivr.net/npm/glightbox/dist/js/glightbox.min.js', ['jquery'], '3.2.0', true);
+        wp_enqueue_style('glightbox-css', plugins_url('assets/glightbox/css/glightbox.min.css', __FILE__), [], '3.2.0');
+        wp_enqueue_script('glightbox-js', plugins_url('assets/glightbox/js/glightbox.min.js', __FILE__), ['jquery'], '3.2.0', true);
 
         // JS config for Lightbox
         wp_add_inline_script('glightbox-js', '
@@ -256,13 +250,11 @@ class Immich_Gallery {
         ]);
 
         if (is_wp_error($response)) {
-            error_log('Immich Gallery API Error: ' . $response->get_error_message());
             return ['error' => true, 'message' => $response->get_error_message()];
         }
         
         $status_code = wp_remote_retrieve_response_code($response);
         if ($status_code !== 200) {
-            error_log('Immich Gallery API returned status: ' . $status_code);
             return ['error' => true, 'message' => 'API returned status code: ' . $status_code];
         }
         
@@ -282,7 +274,7 @@ class Immich_Gallery {
         }
         
         // Validate album parameter from GET or shortcode
-        $album = sanitize_text_field($_GET['immich_gallery'] ?? ($atts['album'] ?? ''));
+        $album = sanitize_text_field(wp_unslash($_GET['immich_gallery'] ?? ($atts['album'] ?? '')));
         if ($album && !preg_match('/^[a-f0-9\-]{36}$/i', $album)) {
             $album = ''; // Invalid format, ignore
         }
@@ -323,7 +315,7 @@ class Immich_Gallery {
                 $description = esc_attr($asset['exifInfo']['description']);
             }
             if (!empty($asset['exifInfo']['dateTimeOriginal'])) {
-                $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
                 if ($description) {
                     $description .= ' • ' . $date;
                 } else {
@@ -336,7 +328,7 @@ class Immich_Gallery {
                         <img src="' . esc_url($thumb_url) . '" style="max-width:100%;border-radius:6px;margin-bottom:15px;">
                         </a>';
             if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
-                $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
                 $html .= '<div>' . esc_html($date) . '</div>';
             }
             if (in_array('asset_description', $show)) {
@@ -393,7 +385,7 @@ class Immich_Gallery {
                     $description = esc_attr($asset['exifInfo']['description']);
                 }
                 if (!empty($asset['exifInfo']['dateTimeOriginal'])) {
-                    $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                    $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
                     if ($description) {
                         $description .= ' • ' . $date;
                     } else {
@@ -407,7 +399,7 @@ class Immich_Gallery {
                             <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;border-radius:6px;display:block;">
                           </a>';
                 if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
-                    $date = date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+                    $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
                     $html .= '<div style="text-align:center;margin-top:8px;font-size:0.9em;">' . esc_html($date) . '</div>';
                 }
                 if (in_array('asset_description', $show)) {

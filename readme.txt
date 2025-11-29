@@ -2,9 +2,9 @@
 Contributors: sietsevisser
 Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
-Tested up to: 6.7
+Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.0
+Stable tag: 0.3.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -113,6 +113,24 @@ Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translatio
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.3.1 =
+*Release Date - 29 November 2025*
+
+* WordPress.org compliance: bundled GLightbox locally (no CDN dependencies)
+* Removed load_plugin_textdomain() - WordPress.org handles translations automatically
+* Removed debug error_log() calls for production
+* Full WordPress Plugin Check compliance with zero errors
+* Ready for WordPress.org plugin directory submission
+
+= 0.3.0 =
+*Release Date - 29 November 2025*
+
+* WordPress.org compliance: bundled GLightbox locally (no CDN dependencies)
+* Removed load_plugin_textdomain() - WordPress.org handles translations automatically
+* Removed debug error_log() calls for production
+* Full WordPress Plugin Check compliance with zero errors
+* Ready for WordPress.org plugin directory submission
 
 = 0.3.0 =
 *Release Date - 29 November 2025*
