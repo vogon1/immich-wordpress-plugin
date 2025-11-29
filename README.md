@@ -3,6 +3,10 @@
 This plugin allows you to easily integrate photos and albums from [Immich](https://immich.app/) into your WordPress site.  
 A simple way to display galleries without uploading images manually.
 
+**Security & Privacy:** The Immich API key is stored securely in your WordPress database and is only used server-side to fetch photos from your Immich server. The API key is never exposed to website visitors or sent to their browsers. All image requests are proxied through WordPress, keeping your Immich server credentials completely private.
+
+**Access Control:** The plugin displays photos and albums based on the permissions of the Immich user account that owns the API key. Only photos and albums that are visible to this specific Immich user will be accessible in WordPress. This means if your Immich server has multiple users, each with their own private collections, only the albums shared with or owned by the API key's user account can be displayed on your WordPress site.
+
 ## ✨ Features
 
 - Display list of albums from Immich.
@@ -17,9 +21,27 @@ A simple way to display galleries without uploading images manually.
 1. Download the [latest release](https://github.com/vogon1/immich-wordpress-plugin/releases).
 1. In WordPress, go to **Plugins > Add New > Upload Plugin**.
 1. Upload the `.zip` file and activate the plugin.
-1. Create an API key in Immich: **Account settings > API keys**.  
-The API key must have 3 permissions: asset.read, asset.view, asset.download and album.read
-1. In wordpress go to **Settings > Immich** and enter your Immich url and API key.
+
+### 🔑 Creating and installing an Immich API Key
+
+1. Log in to your Immich server with the user account whose photos you want to display
+1. Go to **Account Settings** (click your profile picture in the top right)
+1. Navigate to **API Keys** tab
+1. Click **New API Key**
+1. Give it a descriptive name (e.g., "WordPress Plugin")
+1. Set the following **minimum required permissions**:
+   - `album.read` - Required to list and view albums
+   - `asset.read` - Required to access photo metadata (EXIF data, descriptions, dates)
+   - `asset.view` - Required to retrieve photo thumbnails
+   - `asset.download` - Required to retrieve original full-size photos
+
+   **Note:** The plugin only needs read-only access. Never grant write permissions for security reasons.
+
+1. Click **Create** and copy the generated API key
+1. In WordPress, go to **Settings > Immich Gallery** and enter:
+   - Your Immich server URL (e.g., `https://immich.example.com`)
+   - The API key you just created
+1. Save the settings
 
 ## 🖼️ Usage
 

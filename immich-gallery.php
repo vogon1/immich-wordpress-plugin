@@ -1,12 +1,18 @@
 <?php
-/*
-Plugin Name: Immich Gallery
-Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
-Version: 0.2.1
-Author: Sietse Visser
-Text Domain: immich-gallery
-Domain Path: /languages
-*/
+/**
+ * Plugin Name: Immich Gallery
+ * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
+ * Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
+ * Version: 0.3.0
+ * Requires at least: 5.8
+ * Requires PHP: 7.4
+ * Author: Sietse Visser
+ * Author URI: https://github.com/vogon1
+ * License: GPL v2 or later
+ * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * Text Domain: immich-gallery
+ * Domain Path: /languages
+ */
 
 // Plugin description for translations - WordPress will pick this up
 if (!function_exists('immich_gallery_get_plugin_description')) {
@@ -54,7 +60,9 @@ class Immich_Gallery {
     }
 
     public function settings_init() {
-        register_setting('immich_gallery', $this->option_name);
+        register_setting('immich_gallery', $this->option_name, [
+            'sanitize_callback' => [$this, 'sanitize_settings'],
+        ]);
 
         add_settings_section('immich_gallery_section', __('Settings', 'immich-gallery'), null, 'immich_gallery');
 
@@ -62,21 +70,61 @@ class Immich_Gallery {
         add_settings_field('api_key', __('API Key', 'immich-gallery'), [$this, 'field_api_key'], 'immich_gallery', 'immich_gallery_section');
     }
 
+    public function sanitize_settings($input) {
+        $sanitized = [];
+        
+        // Sanitize and validate server URL
+        if (!empty($input['server_url'])) {
+            $url = esc_url_raw($input['server_url']);
+            // Ensure it's HTTPS in production (or localhost for dev)
+            if (strpos($url, 'https://') === 0 || strpos($url, 'http://localhost') === 0 || strpos($url, 'http://127.0.0.1') === 0) {
+                $sanitized['server_url'] = rtrim($url, '/');
+            } else {
+                add_settings_error(
+                    $this->option_name,
+                    'invalid_url',
+                    __('Server URL must use HTTPS (or localhost for development).', 'immich-gallery')
+                );
+            }
+        }
+        
+        // Sanitize API key - only allow alphanumeric and common special chars
+        if (!empty($input['api_key'])) {
+            $api_key = sanitize_text_field($input['api_key']);
+            // Validate format (basic alphanumeric check)
+            if (preg_match('/^[a-zA-Z0-9_\-\.]+$/', $api_key)) {
+                $sanitized['api_key'] = $api_key;
+            } else {
+                add_settings_error(
+                    $this->option_name,
+                    'invalid_api_key',
+                    __('API Key contains invalid characters.', 'immich-gallery')
+                );
+            }
+        }
+        
+        return $sanitized;
+    }
+
     public function field_server_url() {
         $options = get_option($this->option_name);
         ?>
-        <input type="text" name="<?= $this->option_name ?>[server_url]" value="<?= esc_attr($options['server_url'] ?? '') ?>" style="width:400px;">
+        <input type="url" name="<?= esc_attr($this->option_name) ?>[server_url]" value="<?= esc_attr($options['server_url'] ?? '') ?>" style="width:400px;" placeholder="https://immich.example.com">
         <?php
     }
 
     public function field_api_key() {
         $options = get_option($this->option_name);
         ?>
-        <input type="text" name="<?= $this->option_name ?>[api_key]" value="<?= esc_attr($options['api_key'] ?? '') ?>" style="width:400px;">
+        <input type="password" name="<?= esc_attr($this->option_name) ?>[api_key]" value="<?= esc_attr($options['api_key'] ?? '') ?>" style="width:400px;" autocomplete="off">
         <?php
     }
 
     public function options_page() {
+        // Double-check user capabilities
+        if (!current_user_can('manage_options')) {
+            wp_die(__('You do not have sufficient permissions to access this page.', 'immich-gallery'));
+        }
         ?>
         <div class="wrap">
             <h1>Immich Gallery</h1>
@@ -102,11 +150,10 @@ class Immich_Gallery {
                 selector: ".immich-lightbox",
                 touchNavigation: true,
                 loop: false,
-                zoomable: true,
+                zoomable: false,
                 openEffect: "zoom",
                 closeEffect: "fade",
                 slideEffect: "slide",
-		slideZoom: true,
                 type: "image"
             });
         ');
@@ -191,29 +238,69 @@ class Immich_Gallery {
     /* --- API request helper --- */
     private function api_request($endpoint) {
         $options = get_option($this->option_name);
+        
+        // Validate options exist
+        if (empty($options['server_url']) || empty($options['api_key'])) {
+            return ['error' => true, 'message' => __('Plugin not configured. Please set Server URL and API Key in settings.', 'immich-gallery')];
+        }
+        
         $url = rtrim($options['server_url'], '/') . '/api/' . ltrim($endpoint, '/');
 
         $response = wp_remote_get($url, [
             'headers' => [
-                'x-api-key' => $options['api_key']
-            ]
+                'x-api-key' => $options['api_key'],
+                'User-Agent' => 'WordPress-Immich-Gallery/' . get_bloginfo('version')
+            ],
+            'timeout' => 15,
+            'sslverify' => true // Enforce SSL verification
         ]);
 
-        if (is_wp_error($response)) return [];
+        if (is_wp_error($response)) {
+            error_log('Immich Gallery API Error: ' . $response->get_error_message());
+            return ['error' => true, 'message' => $response->get_error_message()];
+        }
+        
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code !== 200) {
+            error_log('Immich Gallery API returned status: ' . $status_code);
+            return ['error' => true, 'message' => 'API returned status code: ' . $status_code];
+        }
+        
         return json_decode(wp_remote_retrieve_body($response), true);
     }
 
     /* --- Shortcode: overview + detail --- */
     public function render_gallery($atts) {
+        // Sanitize and validate all input parameters
         $albums = $atts['albums'] ?? [];
         if ($albums) {
-            $albums = explode(',', $albums);
+            $albums = array_map('sanitize_text_field', explode(',', $albums));
+            // Validate each album ID is UUID format
+            $albums = array_filter($albums, function($id) {
+                return preg_match('/^[a-f0-9\-]{36}$/i', trim($id));
+            });
         }
-        $album = $_GET['immich_gallery'] ?? ($atts['album'] ?? '');
-        $asset = $atts['asset'] ?? '';
+        
+        // Validate album parameter from GET or shortcode
+        $album = sanitize_text_field($_GET['immich_gallery'] ?? ($atts['album'] ?? ''));
+        if ($album && !preg_match('/^[a-f0-9\-]{36}$/i', $album)) {
+            $album = ''; // Invalid format, ignore
+        }
+        
+        // Validate asset parameter
+        $asset = sanitize_text_field($atts['asset'] ?? '');
+        if ($asset && !preg_match('/^[a-f0-9\-]{36}$/i', $asset)) {
+            $asset = ''; // Invalid format, ignore
+        }
+        
+        // Sanitize show parameter - only allow specific values
         $show = $atts['show'] ?? [];
         if ($show) {
-            $show = explode(',', $show);
+            $allowed_show = ['gallery_name', 'gallery_description', 'asset_date', 'asset_description'];
+            $show = array_map('sanitize_text_field', explode(',', $show));
+            $show = array_filter($show, function($item) use ($allowed_show) {
+                return in_array(trim($item), $allowed_show);
+            });
         }
 
         if ($asset) {
@@ -286,8 +373,9 @@ class Immich_Gallery {
                 return 0;
             });
 
+            $html = '';
             if (in_array('gallery_name', $show)) {
-                $html = '<h2>' . esc_html($album['albumName']) . '</h2>';
+                $html .= '<h2>' . esc_html($album['albumName']) . '</h2>';
             }
             if (in_array('gallery_description', $show) && !empty($album['description'])) {
                 $html .= '<p>' . esc_html($album['description']) . '</p>';
