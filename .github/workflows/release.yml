@@ -41,34 +41,21 @@ jobs:
       - name: Build ZIP
         run: |
           PLUGIN_SLUG="immich-gallery"
-          mkdir dist
           
-          # Lees .distignore en bouw exclusie lijst
-          cd ${PLUGIN_SLUG}
-          EXCLUDE_FILE="../exclude_list.txt"
-          if [ -f .distignore ]; then
-            # Converteer .distignore naar zip exclusie formaat
-            while IFS= read -r line || [ -n "$line" ]; do
-              # Skip lege regels en comments
-              [[ -z "$line" || "$line" =~ ^# ]] && continue
-              # Verwijder leading slash
-              pattern="${line#/}"
-              # Voor directories: exclude zowel de dir zelf als alle content
-              if [[ "$pattern" == "node_modules" ]] || [[ "$pattern" == "src" ]] || [[ "$pattern" == ".git" ]] || [[ "$pattern" == ".github" ]]; then
-                echo "${PLUGIN_SLUG}/${pattern}/*" >> "$EXCLUDE_FILE"
-              fi
-              # Exclude ook het path zelf
-              echo "${PLUGIN_SLUG}/${pattern}" >> "$EXCLUDE_FILE"
-            done < .distignore
-          fi
+          # Kopieer alles naar een schone directory
+          mkdir -p clean-build/${PLUGIN_SLUG}
+          
+          # Kopieer plugin files (niet de hele directory, anders krijgen we .git mee)
+          rsync -av --exclude-from=${PLUGIN_SLUG}/.distignore ${PLUGIN_SLUG}/ clean-build/${PLUGIN_SLUG}/
+          
+          # Maak ZIP van de schone build
+          cd clean-build
+          zip -r ../${PLUGIN_SLUG}.zip ${PLUGIN_SLUG}
           cd ..
           
-          # Maak ZIP met exclusies uit bestand
-          if [ -f exclude_list.txt ]; then
-            zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} -x@exclude_list.txt
-          else
-            zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG}
-          fi
+          # Verplaats naar dist folder
+          mkdir dist
+          mv ${PLUGIN_SLUG}.zip dist/
 
       # 5. Upload ZIP naar de GitHub Release
       - name: Upload release asset
