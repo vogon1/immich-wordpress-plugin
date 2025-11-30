@@ -114,12 +114,6 @@ Show photos in chronological order (oldest first):
 [immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd order=date_asc]
 ```
 
-Use Immich's original order without sorting:
-
-```text
-[immich_gallery order=none]
-```
-
 Use the shortcode below to display just one photo:
 
 ```text

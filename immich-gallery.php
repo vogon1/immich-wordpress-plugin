@@ -302,6 +302,9 @@ class Immich_Gallery {
         if (!in_array($order, ['date_asc', 'date_desc', 'name_asc', 'name_desc', 'description_asc', 'description_desc'])) {
             $order = $default_order;
         }
+        
+        // Enable lazy loading for all images
+        $lazy_attr = ' loading="lazy"';
 
         if ($asset) {
             // Direct link to single asset
@@ -333,7 +336,7 @@ class Immich_Gallery {
             
             $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
                         data-gallery="asset-' . esc_attr($asset['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="max-width:100%;border-radius:6px;margin-bottom:15px;">
+                        <img src="' . esc_url($thumb_url) . '" style="max-width:100%;border-radius:6px;margin-bottom:15px;"' . $lazy_attr . '>
                         </a>';
             if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
                 $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
@@ -420,7 +423,7 @@ class Immich_Gallery {
                 $html .= '<div>';
                 $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
                             data-gallery="album-' . esc_attr($album['id']) . '">
-                            <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;border-radius:6px;display:block;">
+                            <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>
                           </a>';
                 if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
                     $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
@@ -510,7 +513,7 @@ class Immich_Gallery {
 
                 $html .= '<div>';
                 $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;"></a>';;
+                        <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;"' . $lazy_attr . '></a>';;
                 
                 if (in_array('gallery_name', $show) || in_array('gallery_description', $show)) {
                     $html .= '<div style="text-align:center;">';
