@@ -45,18 +45,25 @@ jobs:
           
           # Lees .distignore en bouw exclusie lijst
           cd ${PLUGIN_SLUG}
-          EXCLUDE_ARGS=""
+          EXCLUDE_FILE="../exclude_list.txt"
           if [ -f .distignore ]; then
+            # Converteer .distignore naar zip exclusie formaat
             while IFS= read -r line || [ -n "$line" ]; do
               # Skip lege regels en comments
               [[ -z "$line" || "$line" =~ ^# ]] && continue
-              EXCLUDE_ARGS="$EXCLUDE_ARGS -x ${PLUGIN_SLUG}${line#/}*"
+              # Verwijder leading slash en voeg plugin slug toe
+              pattern="${line#/}"
+              echo "${PLUGIN_SLUG}/${pattern}" >> "$EXCLUDE_FILE"
             done < .distignore
           fi
           cd ..
           
-          # Maak ZIP met exclusies
-          zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} $EXCLUDE_ARGS
+          # Maak ZIP met exclusies uit bestand
+          if [ -f exclude_list.txt ]; then
+            zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} -x@exclude_list.txt
+          else
+            zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG}
+          fi
 
       # 5. Upload ZIP naar de GitHub Release
       - name: Upload release asset
