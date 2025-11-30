@@ -106,6 +106,23 @@ const Edit = ({ attributes, setAttributes }) => {
 		setAttributes({ albums: newAlbums });
 	};
 	
+	const handleModeChange = (newMode) => {
+		// Clear mode-specific attributes when switching modes
+		const updates = { mode: newMode };
+		
+		if (newMode !== 'asset') {
+			updates.asset = '';
+		}
+		if (newMode !== 'single') {
+			updates.album = '';
+		}
+		if (newMode !== 'multiple') {
+			updates.albums = [];
+		}
+		
+		setAttributes(updates);
+	};
+	
 	return (
 		<div {...blockProps}>
 			<InspectorControls>
@@ -119,7 +136,7 @@ const Edit = ({ attributes, setAttributes }) => {
 							{ label: __('Multiple albums', 'immich-gallery'), value: 'multiple' },
 							{ label: __('Single photo', 'immich-gallery'), value: 'asset' }
 						]}
-						onChange={(value) => setAttributes({ mode: value })}
+						onChange={handleModeChange}
 					/>
 					
 				{mode === 'asset' && (

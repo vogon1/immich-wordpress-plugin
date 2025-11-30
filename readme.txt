@@ -131,8 +131,10 @@ Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translatio
 = 0.4.0 =
 *Release Date - 30 November 2025*
 
-* Gutenber editor added
-* Options added for thumb size and text sizes
+* Added Gutenberg block editor
+* Visual block interface for easy gallery configuration
+* Added album and thumb nail ordering options
+* Options added for thumbnail size and text sizes
 * Added German (de_DE) translation - complete internationalization
 * Added French (fr_FR) translation - complete internationalization
 
