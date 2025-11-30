@@ -1,0 +1,22 @@
+# Development files
+/.git
+/.github
+/.gitignore
+/node_modules
+/src
+
+# Build tools
+/package.json
+/package-lock.json
+
+# Documentation (README.md is for GitHub, readme.txt for WordPress)
+/README.md
+/TRANSLATION.md
+
+# Old/test files
+/block.js
+/immich-gallery-original.php
+/immich-gallery-thumbnail.php
+
+# System files
+.DS_Store

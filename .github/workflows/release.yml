@@ -37,16 +37,26 @@ jobs:
             npm run build
           fi
 
-      # 4. Maak ZIP van de pluginmap
+      # 4. Maak ZIP van de pluginmap (volgens .distignore)
       - name: Build ZIP
         run: |
           PLUGIN_SLUG="immich-gallery"
           mkdir dist
-          zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} \
-            -x "*.git*" \
-            -x "*/node_modules/*" \
-            -x "*/src/*" \
-            -x "*.DS_Store"
+          
+          # Lees .distignore en bouw exclusie lijst
+          cd ${PLUGIN_SLUG}
+          EXCLUDE_ARGS=""
+          if [ -f .distignore ]; then
+            while IFS= read -r line || [ -n "$line" ]; do
+              # Skip lege regels en comments
+              [[ -z "$line" || "$line" =~ ^# ]] && continue
+              EXCLUDE_ARGS="$EXCLUDE_ARGS -x ${PLUGIN_SLUG}${line#/}*"
+            done < .distignore
+          fi
+          cd ..
+          
+          # Maak ZIP met exclusies
+          zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} $EXCLUDE_ARGS
 
       # 5. Upload ZIP naar de GitHub Release
       - name: Upload release asset

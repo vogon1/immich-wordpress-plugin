@@ -14,14 +14,23 @@ A simple way to display galleries without uploading images manually.
 - Display individual photos.
 - Flexible sorting options (date/name, ascending/descending).
 - Shortcode support for posts and pages.
+- Visual Gutenberg block editor.
 - Configure Immich server URL and API key in the WordPress admin panel.
-- Easy installation and updates via GitHub.
+- Multi-language support (Dutch, German, French).
 
 ## 📦 Installation
 
+### From WordPress.org (Recommended)
+
+1. In WordPress, go to **Plugins > Add New**
+2. Search for "Immich Gallery"
+3. Click **Install Now** and then **Activate**
+
+### Manual Installation
+
 1. Download the [latest release](https://github.com/vogon1/immich-wordpress-plugin/releases).
-1. In WordPress, go to **Plugins > Add New > Upload Plugin**.
-1. Upload the `.zip` file and activate the plugin.
+2. In WordPress, go to **Plugins > Add New > Upload Plugin**.
+3. Upload the `.zip` file and activate the plugin.
 
 ### 🔑 Creating and installing an Immich API Key
 

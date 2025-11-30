@@ -1,44 +1,323 @@
-# Immich-gallery translations.
-# Copyright (C) 2025 THE PACKAGE'S COPYRIGHT HOLDER
-# This file is distributed under the same license as the PACKAGE package.
-# FIRST AUTHOR <sietse@sietse.nl>, 2025.
-#
+# Copyright (C) 2025 Sietse Visser
+# This file is distributed under the GPL v2 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Immich Gallery 0.7\n"
-"Report-Msgid-Bugs-To: \n"
-"POT-Creation-Date: 2025-09-27 12:00+0000\n"
-"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Project-Id-Version: Immich Gallery 0.3.2\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/immich-gallery\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
-"Language: \n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
+"POT-Creation-Date: 2025-11-30T11:28:49+00:00\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"X-Generator: WP-CLI 2.12.0\n"
+"X-Domain: immich-gallery\n"
 
+#. Plugin Name of the plugin
+#: immich-gallery.php
+#: block.js:165
+#: build/index.js:1
+#: src/index.js:227
+msgid "Immich Gallery"
+msgstr ""
+
+#. Plugin URI of the plugin
+#: immich-gallery.php
+msgid "https://github.com/vogon1/immich-wordpress-plugin"
+msgstr ""
+
+#. Description of the plugin
+#: immich-gallery.php
+#: immich-gallery.php:20
+#: immich-gallery.php:58
 msgid "Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access."
 msgstr ""
 
+#. Author of the plugin
+#: immich-gallery.php
+msgid "Sietse Visser"
+msgstr ""
+
+#. Author URI of the plugin
+#: immich-gallery.php
+msgid "https://github.com/vogon1"
+msgstr ""
+
+#: immich-gallery.php:74
 msgid "Settings"
 msgstr ""
 
+#: immich-gallery.php:76
 msgid "Immich server URL"
 msgstr ""
 
+#: immich-gallery.php:77
 msgid "API Key"
 msgstr ""
 
-msgid "No albums found or Immich not reachable."
+#: immich-gallery.php:93
+msgid "Server URL must use HTTPS (or localhost for development)."
 msgstr ""
 
+#: immich-gallery.php:108
+msgid "API Key contains invalid characters."
+msgstr ""
+
+#: immich-gallery.php:133
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""
+
+#: immich-gallery.php:338
+msgid "Untitled Album"
+msgstr ""
+
+#: immich-gallery.php:351
+msgid "Plugin not configured. Please set Server URL and API Key in settings."
+msgstr ""
+
+#: immich-gallery.php:371
+#, php-format
+msgid "API returned status code: %d"
+msgstr ""
+
+#: immich-gallery.php:454
+msgid "Photo not found."
+msgstr ""
+
+#: immich-gallery.php:496
 msgid "No photos found in this album."
 msgstr ""
 
-msgid "Back to overview"
-msgstr ""
-
+#: immich-gallery.php:588
 msgid "Error from Immich API: "
 msgstr ""
 
+#: immich-gallery.php:592
 msgid "No albums found."
+msgstr ""
+
+#: block.js:55
+#: build/index.js:1
+#: src/index.js:71
+msgid "Select an album..."
+msgstr ""
+
+#: block.js:66
+#: build/index.js:1
+#: src/index.js:79
+msgid "Gallery name"
+msgstr ""
+
+#: block.js:67
+#: build/index.js:1
+#: src/index.js:80
+msgid "Gallery description"
+msgstr ""
+
+#: block.js:68
+#: build/index.js:1
+#: src/index.js:81
+msgid "Asset date"
+msgstr ""
+
+#: block.js:69
+#: build/index.js:1
+#: src/index.js:82
+msgid "Asset description"
+msgstr ""
+
+#: block.js:73
+#: build/index.js:1
+#: src/index.js:86
+msgid "Default"
+msgstr ""
+
+#: block.js:74
+#: build/index.js:1
+#: src/index.js:87
+msgid "Newest first"
+msgstr ""
+
+#: block.js:75
+#: build/index.js:1
+#: src/index.js:88
+msgid "Oldest first"
+msgstr ""
+
+#: block.js:76
+#: build/index.js:1
+#: src/index.js:89
+msgid "A-Z (albums only)"
+msgstr ""
+
+#: block.js:77
+#: build/index.js:1
+#: src/index.js:90
+msgid "Z-A (albums only)"
+msgstr ""
+
+#: block.js:78
+#: build/index.js:1
+#: src/index.js:91
+msgid "A-Z by description (photos only)"
+msgstr ""
+
+#: block.js:79
+#: build/index.js:1
+#: src/index.js:92
+msgid "Z-A by description (photos only)"
+msgstr ""
+
+#: block.js:98
+#: build/index.js:1
+#: src/index.js:112
+msgid "Gallery Settings"
+msgstr ""
+
+#: block.js:100
+#: build/index.js:1
+#: src/index.js:114
+msgid "Display Mode"
+msgstr ""
+
+#: block.js:103
+#: build/index.js:1
+#: src/index.js:117
+msgid "All albums overview"
+msgstr ""
+
+#: block.js:104
+#: build/index.js:1
+#: src/index.js:118
+msgid "Single album"
+msgstr ""
+
+#: block.js:105
+#: build/index.js:1
+#: src/index.js:119
+msgid "Multiple albums"
+msgstr ""
+
+#: block.js:111
+#: build/index.js:1
+#: src/index.js:135
+msgid "Select Album"
+msgstr ""
+
+#: block.js:121
+#: build/index.js:1
+#: src/index.js:146
+msgid "Select Albums"
+msgstr ""
+
+#: block.js:134
+#: build/index.js:1
+#: src/index.js:160
+msgid "Sort Order"
+msgstr ""
+
+#: block.js:141
+#: build/index.js:1
+#: src/index.js:203
+msgid "Display Options"
+msgstr ""
+
+#: block.js:162
+#: build/index.js:1
+#: src/index.js:223
+msgid "Loading albums..."
+msgstr ""
+
+#: block.js:171
+#: build/index.js:1
+#: src/index.js:234
+msgid "Will display all albums from Immich"
+msgstr ""
+
+#: block.js:174
+#: build/index.js:1
+#: src/index.js:244
+msgid "Selected: "
+msgstr ""
+
+#: block.js:177
+#: build/index.js:1
+#: src/index.js:250
+msgid "Selected albums: "
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:120
+msgid "Single photo"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:127
+msgid "Photo ID"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:131
+msgid "Enter the photo ID from your Immich URL"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:167
+msgid "Thumbnail Size"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:176
+msgid "Text Sizes"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:178
+msgid "Title Size"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:187
+msgid "Description Size"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:196
+msgid "Date Size"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:239
+msgid "Single photo: "
+msgstr ""
+
+#: block.json
+msgctxt "block title"
+msgid "Immich Gallery"
+msgstr ""
+
+#: block.json
+msgctxt "block description"
+msgid "Display photos and albums from your Immich server"
+msgstr ""
+
+#: block.json
+msgctxt "block keyword"
+msgid "gallery"
+msgstr ""
+
+#: block.json
+msgctxt "block keyword"
+msgid "photos"
+msgstr ""
+
+#: block.json
+msgctxt "block keyword"
+msgid "immich"
+msgstr ""
+
+#: block.json
+msgctxt "block keyword"
+msgid "images"
 msgstr ""

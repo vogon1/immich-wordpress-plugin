@@ -1,17 +1,17 @@
-# Dutch translation for Immich Gallery
+# German translation for Immich Gallery
 # Copyright (C) 2025 Sietse Visser
 # This file is distributed under the same license as the Immich Gallery package.
-# Sietse Visser <sietse@sietse.nl>, 2025.
+# GitHub Copilot, 2025.
 #
 msgid ""
 msgstr ""
 "Project-Id-Version: Immich Gallery 0.4.0\n"
 "Report-Msgid-Bugs-To: https://github.com/vogon1/immich-wordpress-plugin\n"
 "POT-Creation-Date: 2025-11-30 12:00+0000\n"
-"PO-Revision-Date: 2025-11-30 12:00+0000\n"
-"Last-Translator: Sietse Visser\n"
-"Language-Team: Dutch\n"
-"Language: nl_NL\n"
+"PO-Revision-Date: 2025-11-30 13:00+0000\n"
+"Last-Translator: GitHub Copilot\n"
+"Language-Team: German\n"
+"Language: de_DE\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
@@ -19,200 +19,200 @@ msgstr ""
 
 #: immich-gallery.php:20 immich-gallery.php:49
 msgid "Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access."
-msgstr "Toon Immich albums en foto's in een WordPress site met behulp van shortcodes. Vereist Immich server met API toegang."
+msgstr "Zeigen Sie Immich-Alben und Fotos auf einer WordPress-Website mit Shortcodes an. Erfordert Immich-Server mit API-Zugriff."
 
 #: immich-gallery.php:65
 msgid "Settings"
-msgstr "Instellingen"
+msgstr "Einstellungen"
 
 #: immich-gallery.php:67
 msgid "Immich server URL"
-msgstr "Immich server URL"
+msgstr "Immich-Server-URL"
 
 #: immich-gallery.php:68
 msgid "API Key"
-msgstr "API-sleutel"
+msgstr "API-Schlüssel"
 
 #: immich-gallery.php:84
 msgid "Server URL must use HTTPS (or localhost for development)."
-msgstr "Server URL moet HTTPS gebruiken (of localhost voor ontwikkeling)."
+msgstr "Server-URL muss HTTPS verwenden (oder localhost für Entwicklung)."
 
 #: immich-gallery.php:99
 msgid "API Key contains invalid characters."
-msgstr "API-sleutel bevat ongeldige tekens."
+msgstr "API-Schlüssel enthält ungültige Zeichen."
 
 #: immich-gallery.php:124
 msgid "You do not have sufficient permissions to access this page."
-msgstr "Je hebt onvoldoende rechten om deze pagina te bekijken."
+msgstr "Sie haben nicht die erforderlichen Berechtigungen, um auf diese Seite zuzugreifen."
 
 #: immich-gallery.php:322
 msgid "Untitled Album"
-msgstr "Naamloos album"
+msgstr "Unbenanntes Album"
 
 #: immich-gallery.php:335
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
-msgstr "Plugin niet geconfigureerd. Stel Server URL en API-sleutel in bij instellingen."
+msgstr "Plugin nicht konfiguriert. Bitte legen Sie Server-URL und API-Schlüssel in den Einstellungen fest."
 
 #: immich-gallery.php:355
 msgid "API returned status code: %d"
-msgstr "API gaf statuscode: %d"
+msgstr "API hat Statuscode zurückgegeben: %d"
 
 #: immich-gallery.php:438
 msgid "Photo not found."
-msgstr "Foto niet gevonden."
+msgstr "Foto nicht gefunden."
 
 #: immich-gallery.php:480
 msgid "No photos found in this album."
-msgstr "Geen foto's gevonden in dit album."
+msgstr "Keine Fotos in diesem Album gefunden."
 
 #: immich-gallery.php:560
 msgid "Back to overview"
-msgstr "Terug naar overzicht"
+msgstr "Zurück zur Übersicht"
 
 #: immich-gallery.php:572
 msgid "Error from Immich API: "
-msgstr "Fout van Immich API: "
+msgstr "Fehler von Immich API: "
 
 #: immich-gallery.php:576
 msgid "No albums found."
-msgstr "Geen albums gevonden."
+msgstr "Keine Alben gefunden."
 
 #: src/index.js:71
 msgid "Select an album..."
-msgstr "Selecteer een album..."
+msgstr "Wählen Sie ein Album aus..."
 
 #: src/index.js:79
 msgid "Gallery name"
-msgstr "Galerijnaam"
+msgstr "Galeriename"
 
 #: src/index.js:80
 msgid "Gallery description"
-msgstr "Galerij omschrijving"
+msgstr "Galeriebeschreibung"
 
 #: src/index.js:81
 msgid "Asset date"
-msgstr "Foto datum"
+msgstr "Fotodatum"
 
 #: src/index.js:82
 msgid "Asset description"
-msgstr "Foto omschrijving"
+msgstr "Fotobeschreibung"
 
 #: src/index.js:86
 msgid "Default"
-msgstr "Standaard"
+msgstr "Standard"
 
 #: src/index.js:87
 msgid "Newest first"
-msgstr "Nieuwste eerst"
+msgstr "Neueste zuerst"
 
 #: src/index.js:88
 msgid "Oldest first"
-msgstr "Oudste eerst"
+msgstr "Älteste zuerst"
 
 #: src/index.js:89
 msgid "A-Z (albums only)"
-msgstr "A-Z (alleen albums)"
+msgstr "A-Z (nur Alben)"
 
 #: src/index.js:90
 msgid "Z-A (albums only)"
-msgstr "Z-A (alleen albums)"
+msgstr "Z-A (nur Alben)"
 
 #: src/index.js:91
 msgid "A-Z by description (photos only)"
-msgstr "A-Z op omschrijving (alleen foto's)"
+msgstr "A-Z nach Beschreibung (nur Fotos)"
 
 #: src/index.js:92
 msgid "Z-A by description (photos only)"
-msgstr "Z-A op omschrijving (alleen foto's)"
+msgstr "Z-A nach Beschreibung (nur Fotos)"
 
 #: src/index.js:112
 msgid "Gallery Settings"
-msgstr "Galerij instellingen"
+msgstr "Galerieeinstellungen"
 
 #: src/index.js:114
 msgid "Display Mode"
-msgstr "Weergavemodus"
+msgstr "Anzeigemodus"
 
 #: src/index.js:117
 msgid "All albums overview"
-msgstr "Alle albums overzicht"
+msgstr "Alle Alben Übersicht"
 
 #: src/index.js:118
 msgid "Single album"
-msgstr "Enkel album"
+msgstr "Einzelnes Album"
 
 #: src/index.js:119
 msgid "Multiple albums"
-msgstr "Meerdere albums"
+msgstr "Mehrere Alben"
 
 #: src/index.js:120
 msgid "Single photo"
-msgstr "Enkele foto"
+msgstr "Einzelnes Foto"
 
 #: src/index.js:127
 msgid "Photo ID"
-msgstr "Foto ID"
+msgstr "Foto-ID"
 
 #: src/index.js:131
 msgid "Enter the photo ID from your Immich URL"
-msgstr "Voer het foto ID in van je Immich URL"
+msgstr "Geben Sie die Foto-ID aus Ihrer Immich-URL ein"
 
 #: src/index.js:135
 msgid "Select Album"
-msgstr "Selecteer album"
+msgstr "Album auswählen"
 
 #: src/index.js:145
 msgid "Select Albums"
-msgstr "Selecteer albums"
+msgstr "Alben auswählen"
 
 #: src/index.js:158
 msgid "Sort Order"
-msgstr "Sorteervolgorde"
+msgstr "Sortierreihenfolge"
 
 #: src/index.js:167
 msgid "Thumbnail Size"
-msgstr "Miniatuurgrootte"
+msgstr "Vorschaubildgröße"
 
 #: src/index.js:175
 msgid "Text Sizes"
-msgstr "Tekstgroottes"
+msgstr "Textgrößen"
 
 #: src/index.js:177
 msgid "Title Size"
-msgstr "Titelgrootte"
+msgstr "Titelgröße"
 
 #: src/index.js:186
 msgid "Description Size"
-msgstr "Omschrijvingsgrootte"
+msgstr "Beschreibungsgröße"
 
 #: src/index.js:195
 msgid "Date Size"
-msgstr "Datumgrootte"
+msgstr "Datumgröße"
 
 #: src/index.js:204
 msgid "Display Options"
-msgstr "Weergaveopties"
+msgstr "Anzeigeoptionen"
 
 #: src/index.js:222
 msgid "Loading albums..."
-msgstr "Albums laden..."
+msgstr "Alben werden geladen..."
 
 #: src/index.js:226
 msgid "Immich Gallery"
-msgstr "Immich Galerij"
+msgstr "Immich-Galerie"
 
 #: src/index.js:233
 msgid "Will display all albums from Immich"
-msgstr "Toont alle albums van Immich"
+msgstr "Zeigt alle Alben von Immich an"
 
 #: src/index.js:237
 msgid "Single photo: "
-msgstr "Enkele foto: "
+msgstr "Einzelnes Foto: "
 
 #: src/index.js:242
 msgid "Selected: "
-msgstr "Geselecteerd: "
+msgstr "Ausgewählt: "
 
 #: src/index.js:248
 msgid "Selected albums: "
-msgstr "Geselecteerde albums: "
+msgstr "Ausgewählte Alben: "

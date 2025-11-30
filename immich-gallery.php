@@ -3,7 +3,7 @@
  * Plugin Name: Immich Gallery
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
- * Version: 0.3.1
+ * Version: 0.4.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -27,14 +27,30 @@ class Immich_Gallery {
     private $option_name = 'immich_gallery_settings';
 
     public function __construct() {
-        // Note: load_plugin_textdomain() not needed - WordPress.org automatically loads translations since WP 4.6
+        // Load text domain for translations (required for JavaScript translations)
+        add_action('init', [$this, 'load_textdomain']);
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'settings_init']);
         add_shortcode('immich_gallery', [$this, 'render_gallery']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         
+        // Gutenberg block support
+        add_action('init', [$this, 'register_block']);
+        add_action('rest_api_init', [$this, 'register_rest_routes']);
+        
         // Plugin description translation for plugin list
         add_filter('all_plugins', [$this, 'translate_plugin_description']);
+    }
+
+    public function load_textdomain() {
+        // Load plugin translations manually for standalone installations
+        // WordPress.org automatically loads translations, but this ensures
+        // compatibility when installed via GitHub or direct download
+        load_plugin_textdomain(
+            'immich-gallery',
+            false,
+            dirname(plugin_basename(__FILE__)) . '/languages'
+        );
     }
 
     public function translate_plugin_description($plugins) {
@@ -229,6 +245,106 @@ class Immich_Gallery {
         ');
     }
 
+    /* --- Gutenberg block registration --- */
+    public function register_block() {
+        // Register the block with compiled script
+        wp_register_script(
+            'immich-gallery-block',
+            plugins_url('build/index.js', __FILE__),
+            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-api-fetch'],
+            filemtime(plugin_dir_path(__FILE__) . 'build/index.js'),
+            true // Load in footer
+        );
+        
+        // Set translations for the block editor script
+        wp_set_script_translations(
+            'immich-gallery-block',
+            'immich-gallery',
+            plugin_dir_path(__FILE__) . 'languages'
+        );
+        
+        register_block_type(__DIR__ . '/block.json', [
+            'editor_script' => 'immich-gallery-block',
+            'render_callback' => [$this, 'render_block']
+        ]);
+    }
+    
+    public function render_block($attributes) {
+        // Convert block attributes to shortcode attributes
+        $shortcode_atts = [];
+        
+        if (!empty($attributes['asset'])) {
+            $shortcode_atts['asset'] = $attributes['asset'];
+        }
+        
+        if (!empty($attributes['album'])) {
+            $shortcode_atts['album'] = $attributes['album'];
+        }
+        
+        if (!empty($attributes['albums']) && is_array($attributes['albums'])) {
+            $shortcode_atts['albums'] = implode(',', $attributes['albums']);
+        }
+        
+        if (!empty($attributes['show']) && is_array($attributes['show'])) {
+            $shortcode_atts['show'] = implode(',', $attributes['show']);
+        }
+        
+        if (!empty($attributes['order'])) {
+            $shortcode_atts['order'] = $attributes['order'];
+        }
+        
+        if (!empty($attributes['size'])) {
+            $shortcode_atts['size'] = $attributes['size'];
+        }
+        
+        if (!empty($attributes['title_size'])) {
+            $shortcode_atts['title_size'] = $attributes['title_size'];
+        }
+        
+        if (!empty($attributes['description_size'])) {
+            $shortcode_atts['description_size'] = $attributes['description_size'];
+        }
+        
+        if (!empty($attributes['date_size'])) {
+            $shortcode_atts['date_size'] = $attributes['date_size'];
+        }
+        
+        return $this->render_gallery($shortcode_atts);
+    }
+    
+    /* --- REST API endpoint for block editor --- */
+    public function register_rest_routes() {
+        register_rest_route('immich-gallery/v1', '/albums', [
+            'methods' => 'GET',
+            'callback' => [$this, 'rest_get_albums'],
+            'permission_callback' => function() {
+                return current_user_can('edit_posts');
+            }
+        ]);
+    }
+    
+    public function rest_get_albums() {
+        $immich_albums = $this->api_request('albums');
+        
+        if (isset($immich_albums['error']) && $immich_albums['error']) {
+            return new WP_Error('api_error', $immich_albums['message'], ['status' => 500]);
+        }
+        
+        if (!$immich_albums) {
+            return ['albums' => []];
+        }
+        
+        // Format albums for the block editor
+        $formatted_albums = array_map(function($album) {
+            return [
+                'id' => $album['id'],
+                'name' => $album['albumName'] ?? __('Untitled Album', 'immich-gallery')
+            ];
+        }, $immich_albums);
+        
+        return ['albums' => $formatted_albums];
+    }
+
     /* --- API request helper --- */
     private function api_request($endpoint) {
         $options = get_option($this->option_name);
@@ -255,7 +371,8 @@ class Immich_Gallery {
         
         $status_code = wp_remote_retrieve_response_code($response);
         if ($status_code !== 200) {
-            return ['error' => true, 'message' => 'API returned status code: ' . $status_code];
+            /* translators: %d: HTTP status code number */
+            return ['error' => true, 'message' => sprintf(__('API returned status code: %d', 'immich-gallery'), $status_code)];
         }
         
         return json_decode(wp_remote_retrieve_body($response), true);
@@ -274,6 +391,7 @@ class Immich_Gallery {
         }
         
         // Validate album parameter from GET or shortcode
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public gallery view, no privileged action
         $album = sanitize_text_field(wp_unslash($_GET['immich_gallery'] ?? ($atts['album'] ?? '')));
         if ($album && !preg_match('/^[a-f0-9\-]{36}$/i', $album)) {
             $album = ''; // Invalid format, ignore
@@ -301,6 +419,30 @@ class Immich_Gallery {
         $order = sanitize_text_field($atts['order'] ?? $default_order);
         if (!in_array($order, ['date_asc', 'date_desc', 'name_asc', 'name_desc', 'description_asc', 'description_desc'])) {
             $order = $default_order;
+        }
+        
+        // Sanitize size parameter - thumbnail size in pixels
+        // Default: 200px, allowed range: 100-500
+        $size = intval($atts['size'] ?? 200);
+        if ($size < 100 || $size > 500) {
+            $size = 200;
+        }
+        
+        // Sanitize text size parameters - font sizes in pixels
+        // Defaults: title=16, description=14, date=13
+        $title_size = intval($atts['title_size'] ?? 16);
+        if ($title_size < 10 || $title_size > 30) {
+            $title_size = 16;
+        }
+        
+        $description_size = intval($atts['description_size'] ?? 14);
+        if ($description_size < 10 || $description_size > 30) {
+            $description_size = 14;
+        }
+        
+        $date_size = intval($atts['date_size'] ?? 13);
+        if ($date_size < 10 || $date_size > 30) {
+            $date_size = 13;
         }
         
         // Enable lazy loading for all images
@@ -394,12 +536,12 @@ class Immich_Gallery {
 
             $html = '';
             if (in_array('gallery_name', $show)) {
-                $html .= '<h2>' . esc_html($album['albumName']) . '</h2>';
+                $html .= '<h2 style="font-size:' . $title_size . 'px;">' . esc_html($album['albumName']) . '</h2>';
             }
             if (in_array('gallery_description', $show) && !empty($album['description'])) {
-                $html .= '<p>' . esc_html($album['description']) . '</p>';
+                $html .= '<p style="font-size:' . $description_size . 'px;">' . esc_html($album['description']) . '</p>';
             }
-            $html .= '<div class="immich-grid immich-album-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:15px;">';
+            $html .= '<div class="immich-grid immich-album-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' . $size . 'px,1fr));gap:15px;">';
 
             foreach ($assets_to_render as $asset) {
                 if (empty($asset['id'])) continue;
@@ -423,14 +565,14 @@ class Immich_Gallery {
                 $html .= '<div>';
                 $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
                             data-gallery="album-' . esc_attr($album['id']) . '">
-                            <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>
+                            <img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>
                           </a>';
                 if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
                     $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
-                    $html .= '<div style="text-align:center;margin-top:8px;font-size:0.9em;">' . esc_html($date) . '</div>';
+                    $html .= '<div style="text-align:center;margin-top:4px;margin-bottom:-2px;line-height:1;font-size:' . $date_size . 'px;">' . esc_html($date) . '</div>';
                 }
                 if (in_array('asset_description', $show)) {
-                    $html .= '<div style="text-align:center;margin-top:5px;font-size:0.9em;color:#666;">' . esc_html($asset['exifInfo']['description'] ?? '') . '</div>';
+                    $html .= '<div style="text-align:center;margin-top:0;margin-bottom:0;line-height:1;font-size:' . $description_size . 'px;color:#666;">' . esc_html($asset['exifInfo']['description'] ?? '') . '</div>';
                 }
                 $html .= '</div>';
             }
@@ -454,7 +596,7 @@ class Immich_Gallery {
                 return '<p>' . __('No albums found.', 'immich-gallery') . '</p>';
             }
 
-            $html = '<div class="immich-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;">';
+            $html = '<div class="immich-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' . $size . 'px,1fr));gap:20px;">';
             
             // Determine which albums to render and in what order
             $albums_to_render = [];
@@ -513,16 +655,16 @@ class Immich_Gallery {
 
                 $html .= '<div>';
                 $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;"' . $lazy_attr . '></a>';;
+                        <img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;display:block;"' . $lazy_attr . '></a>';;
                 
                 if (in_array('gallery_name', $show) || in_array('gallery_description', $show)) {
                     $html .= '<div style="text-align:center;">';
                     if (in_array('gallery_name', $show)) {
                         $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
-                                <div style="font-weight:bold;margin-bottom:5px;">' . esc_html($album['albumName']) . '</div></a>';
+                                <div style="font-weight:bold;margin-bottom:5px;font-size:' . $title_size . 'px;">' . esc_html($album['albumName']) . '</div></a>';
                     }
                     if (in_array('gallery_description', $show)) {
-                        $html .= '<div style="font-size:0.9em;color:#666;">' . esc_html($album['description']) . '</div>';
+                        $html .= '<div style="font-size:' . $description_size . 'px;color:#666;">' . esc_html($album['description']) . '</div>';
                     }
                     $html .= '</div>';
                 }

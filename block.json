@@ -1,0 +1,57 @@
+{
+	"$schema": "https://schemas.wp.org/trunk/block.json",
+	"apiVersion": 3,
+	"name": "immich-gallery/gallery",
+	"version": "0.3.2",
+	"title": "Immich Gallery",
+	"category": "media",
+	"icon": "format-gallery",
+	"description": "Display photos and albums from your Immich server",
+	"keywords": ["gallery", "photos", "immich", "images"],
+	"textdomain": "immich-gallery",
+	"attributes": {
+		"mode": {
+			"type": "string",
+			"default": "overview"
+		},
+		"album": {
+			"type": "string",
+			"default": ""
+		},
+		"albums": {
+			"type": "array",
+			"default": []
+		},
+		"asset": {
+			"type": "string",
+			"default": ""
+		},
+		"show": {
+			"type": "array",
+			"default": []
+		},
+		"order": {
+			"type": "string",
+			"default": ""
+		},
+		"size": {
+			"type": "number",
+			"default": 200
+		},
+		"title_size": {
+			"type": "number",
+			"default": 16
+		},
+		"description_size": {
+			"type": "number",
+			"default": 14
+		},
+		"date_size": {
+			"type": "number",
+			"default": 13
+		}
+	},
+	"supports": {
+		"html": false
+	}
+}

@@ -1,0 +1,18 @@
+{
+	"name": "immich-gallery",
+	"version": "0.4.0",
+	"description": "WordPress plugin to display Immich galleries",
+	"scripts": {
+		"build": "wp-scripts build src/index.js --output-path=build",
+		"start": "wp-scripts start src/index.js --output-path=build",
+		"i18n:pot": "wp i18n make-pot . languages/immich-gallery.pot --domain=immich-gallery",
+		"i18n:update": "msgmerge --update --backup=none languages/immich-gallery-nl_NL.po languages/immich-gallery.pot",
+		"i18n:mo": "msgfmt -o languages/immich-gallery-nl_NL.mo languages/immich-gallery-nl_NL.po",
+		"i18n:json": "wp i18n make-json languages/ --no-purge",
+		"i18n:build": "npm run i18n:mo && npm run i18n:json",
+		"translate": "npm run i18n:pot && npm run i18n:update && npm run i18n:build"
+	},
+	"devDependencies": {
+		"@wordpress/scripts": "^27.0.0"
+	}
+}

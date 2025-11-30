@@ -4,7 +4,7 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.1
+Stable tag: 0.4.0
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -127,6 +127,14 @@ Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translatio
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.4.0 =
+*Release Date - 30 November 2025*
+
+* Gutenber editor added
+* Options added for thumb size and text sizes
+* Added German (de_DE) translation - complete internationalization
+* Added French (fr_FR) translation - complete internationalization
 
 = 0.3.1 =
 *Release Date - 29 November 2025*
