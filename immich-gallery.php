@@ -294,6 +294,14 @@ class Immich_Gallery {
                 return in_array(trim($item), $allowed_show);
             });
         }
+        
+        // Sanitize order parameter - only allow specific sort options
+        // Default: date_desc for albums (newest first), date_asc for photos (oldest first/chronological)
+        $default_order = $album ? 'date_asc' : 'date_desc';
+        $order = sanitize_text_field($atts['order'] ?? $default_order);
+        if (!in_array($order, ['date_asc', 'date_desc', 'name_asc', 'name_desc', 'description_asc', 'description_desc'])) {
+            $order = $default_order;
+        }
 
         if ($asset) {
             // Direct link to single asset
@@ -346,23 +354,39 @@ class Immich_Gallery {
 
             if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'immich-gallery') . '</p>';
 
-            // Sort album photos by dateTimeOriginal in ascending order (oldest first)
+            // Sort album photos based on order parameter
+            // date_asc: oldest first (chronological), date_desc: newest first
+            // description_asc: A-Z by description, description_desc: Z-A by description
             $assets_to_render = $album['assets'];
-            usort($assets_to_render, function($a, $b) {
-                $dateA = $a['exifInfo']['dateTimeOriginal'] ?? '';
-                $dateB = $b['exifInfo']['dateTimeOriginal'] ?? '';
-                
-                // If both have dateTimeOriginal, compare them
-                if ($dateA && $dateB) {
-                    return strcmp($dateA, $dateB); // Ascending order (oldest first)
+            
+            usort($assets_to_render, function($a, $b) use ($order) {
+                if ($order === 'description_asc' || $order === 'description_desc') {
+                    // Sort by description
+                    $descA = $a['exifInfo']['description'] ?? '';
+                    $descB = $b['exifInfo']['description'] ?? '';
+                    
+                    if ($descA && $descB) {
+                        $comparison = strcasecmp($descA, $descB);
+                        return ($order === 'description_asc') ? $comparison : -$comparison;
+                    }
+                    
+                    if ($descA && !$descB) return -1;
+                    if (!$descA && $descB) return 1;
+                    return 0;
+                } else {
+                    // Sort by date (date_asc or date_desc)
+                    $dateA = $a['exifInfo']['dateTimeOriginal'] ?? '';
+                    $dateB = $b['exifInfo']['dateTimeOriginal'] ?? '';
+                    
+                    if ($dateA && $dateB) {
+                        $comparison = strcmp($dateA, $dateB);
+                        return ($order === 'date_asc') ? $comparison : -$comparison;
+                    }
+                    
+                    if ($dateA && !$dateB) return -1;
+                    if (!$dateA && $dateB) return 1;
+                    return 0;
                 }
-                
-                // If only one has dateTimeOriginal, prioritize the one with date
-                if ($dateA && !$dateB) return -1;
-                if (!$dateA && $dateB) return 1;
-                
-                // If neither has dateTimeOriginal, maintain original order
-                return 0;
             });
 
             $html = '';
@@ -443,25 +467,39 @@ class Immich_Gallery {
                     }
                 }
             } else {
-                // Show all albums from Immich, sorted by endDate (newest first)
+                // Show all albums from Immich, sorted based on order parameter
+                // date_asc: oldest first, date_desc: newest first
+                // name_asc: A-Z, name_desc: Z-A
                 $albums_to_render = $immich_albums;
                 
-                // Sort albums by endDate in descending order (newest first)
-                usort($albums_to_render, function($a, $b) {
-                    $endDateA = $a['endDate'] ?? '';
-                    $endDateB = $b['endDate'] ?? '';
-                    
-                    // If both have endDate, compare them
-                    if ($endDateA && $endDateB) {
-                        return strcmp($endDateB, $endDateA); // Descending order
+                usort($albums_to_render, function($a, $b) use ($order) {
+                    if ($order === 'name_asc' || $order === 'name_desc') {
+                        // Sort by album name
+                        $nameA = $a['albumName'] ?? '';
+                        $nameB = $b['albumName'] ?? '';
+                        
+                        if ($nameA && $nameB) {
+                            $comparison = strcasecmp($nameA, $nameB);
+                            return ($order === 'name_asc') ? $comparison : -$comparison;
+                        }
+                        
+                        if ($nameA && !$nameB) return -1;
+                        if (!$nameA && $nameB) return 1;
+                        return 0;
+                    } else {
+                        // Sort by date (date_asc or date_desc)
+                        $endDateA = $a['endDate'] ?? '';
+                        $endDateB = $b['endDate'] ?? '';
+                        
+                        if ($endDateA && $endDateB) {
+                            $comparison = strcmp($endDateA, $endDateB);
+                            return ($order === 'date_asc') ? $comparison : -$comparison;
+                        }
+                        
+                        if ($endDateA && !$endDateB) return -1;
+                        if (!$endDateA && $endDateB) return 1;
+                        return 0;
                     }
-                    
-                    // If only one has endDate, prioritize the one with endDate
-                    if ($endDateA && !$endDateB) return -1;
-                    if (!$endDateA && $endDateB) return 1;
-                    
-                    // If neither has endDate, maintain original order
-                    return 0;
                 });
             }
 
@@ -472,7 +510,7 @@ class Immich_Gallery {
 
                 $html .= '<div>';
                 $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;"></a>';
+                        <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;"></a>';;
                 
                 if (in_array('gallery_name', $show) || in_array('gallery_description', $show)) {
                     $html .= '<div style="text-align:center;">';

@@ -21,8 +21,8 @@ Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted
 * Display individual photos with EXIF data
 * Beautiful responsive grid layouts
 * Integrated lightbox with GLightbox
-* Photo descriptions and dates in lightbox
 * Automatic sorting (albums by date, photos chronologically)
+* Flexible sorting options (date/name, ascending/descending)
 * Full internationalization support (includes Dutch translation)
 * Secure API integration with validation
 * HTTPS enforcement for production use
@@ -79,6 +79,20 @@ Available show options:
 * `asset_date` - Show photo date
 * `asset_description` - Show photo description
 
+**Sort order:**
+`[immich_gallery order="date_desc"]`
+`[immich_gallery album="album-id" order="description_asc"]`
+
+Available order options:
+* `date_desc` - Newest first (default for albums)
+* `date_asc` - Oldest first (default for photos - chronological order)
+* `name_asc` - Alphabetically A-Z (albums only)
+* `name_desc` - Alphabetically Z-A (albums only)
+* `description_asc` - Alphabetically A-Z by description (photos only)
+* `description_desc` - Alphabetically Z-A by description (photos only)
+
+Note: Name sorting is only available for albums. Photos can be sorted by date or description.
+
 == Frequently Asked Questions ==
 
 = What is Immich? =
@@ -117,6 +131,11 @@ Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translatio
 = 0.3.1 =
 *Release Date - 29 November 2025*
 
+* Added flexible sorting with order parameter (none, date_asc, date_desc, name_asc, name_desc)
+* Albums can be sorted by date or name, ascending or descending
+* Photos can be sorted by date (ascending/descending) or use Immich's original order
+* Default sorting: albums newest first (date_desc), photos oldest first (date_asc/chronological)
+* Uses standard database terminology (asc/desc)
 * WordPress.org compliance: bundled GLightbox locally (no CDN dependencies)
 * Removed load_plugin_textdomain() - WordPress.org handles translations automatically
 * Removed debug error_log() calls for production

@@ -12,6 +12,7 @@ A simple way to display galleries without uploading images manually.
 - Display list of albums from Immich.
 - Display entire albums from Immich.
 - Display individual photos.
+- Flexible sorting options (date/name, ascending/descending).
 - Shortcode support for posts and pages.
 - Configure Immich server URL and API key in the WordPress admin panel.
 - Easy installation and updates via GitHub.
@@ -62,6 +63,19 @@ You can add a parameter called 'show', it tells what to show on the page:
 
 The parameter 'show' defaults to 'name'.
 
+You can add a parameter called 'order' to control sorting:
+
+- date_desc - Newest first (default for albums by endDate)
+- date_asc - Oldest first (default for photos - chronological order)
+- name_asc - Alphabetically A-Z (albums only)
+- name_desc - Alphabetically Z-A (albums only)
+- description_asc - Alphabetically A-Z by description (photos only)
+- description_desc - Alphabetically Z-A by description (photos only)
+
+The parameter 'order' defaults to 'date_desc' for albums and 'date_asc' for photos.
+
+**Note:** Name sorting is only available for album lists. Photos can be sorted by date or description.
+
 ## Examples
 
 Use the shortcode below to display a list of all albums with thumbnails:
@@ -86,6 +100,24 @@ If you want to show descriptions and dates of the photos:
 
 ```text
 [immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd show=asset_description,asset_date]
+```
+
+Sort albums alphabetically:
+
+```text
+[immich_gallery order=name_asc]
+```
+
+Show photos in chronological order (oldest first):
+
+```text
+[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd order=date_asc]
+```
+
+Use Immich's original order without sorting:
+
+```text
+[immich_gallery order=none]
 ```
 
 Use the shortcode below to display just one photo:
