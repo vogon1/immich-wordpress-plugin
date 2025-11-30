@@ -15,8 +15,6 @@
 
 # Old/test files
 /block.js
-/immich-gallery-original.php
-/immich-gallery-thumbnail.php
 
 # System files
 .DS_Store
