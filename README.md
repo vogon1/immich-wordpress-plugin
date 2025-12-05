@@ -55,66 +55,101 @@ A simple way to display galleries without uploading images manually.
 
 ## 🖼️ Usage
 
-Use shortcode \[immich_gallery\] with optional parameters.
-Possible parameters (use none or only one):
+### Using the Gutenberg Block Editor (Recommended)
 
-- (none): - Show a list of all albums with thumbnails
-- albums=id1,id2,... - Show a list of given albums. The id's are the id's of the albums as found in Immich url of your album.
-- album=id - Show thumbnails of all photos/videos in the album
-- asset=id - Show only one photo. The id is shown in the url when visiting the photo or video on Immich
+The easiest way to add an Immich gallery is through the Gutenberg block editor:
 
-You can add a parameter called 'show', it tells what to show on the page:
+1. Add a new block and search for **"Immich Gallery"**
+2. Select your display mode:
+   - **All albums overview** - Show all albums from your Immich server
+   - **Single album** - Display photos from one specific album
+   - **Multiple albums** - Show a curated selection of albums
+   - **Single photo** - Display a single image
+3. Configure display options in the sidebar:
+   - **Show options**: Choose what to display (defaults: gallery name, asset description)
+   - **Sort order**: Control the sorting of albums/photos
+   - **Thumbnail size**: Adjust thumbnail size (100-500px, default: 200px)
+   - **Text sizes**: Customize title, description, and date font sizes
+4. The preview shows the shortcode that will be used
 
-- gallery_name - Show the name of the album (when albums are listed)
-- gallery_description - Show description of the album(s)
-- asset_description - Show description of photo/video (in album view)
-- asset_date - Show date the photo/video was taken (on photo list of an album)
+### Using Shortcodes
 
-The parameter 'show' defaults to 'name'.
+You can also use shortcodes directly in your content:
 
-You can add a parameter called 'order' to control sorting:
-
-- date_desc - Newest first (default for albums by endDate)
-- date_asc - Oldest first (default for photos - chronological order)
-- name_asc - Alphabetically A-Z (albums only)
-- name_desc - Alphabetically Z-A (albums only)
-- description_asc - Alphabetically A-Z by description (photos only)
-- description_desc - Alphabetically Z-A by description (photos only)
-
-The parameter 'order' defaults to 'date_desc' for albums and 'date_asc' for photos.
-
-**Note:** Name sorting is only available for album lists. Photos can be sorted by date or description.
-
-## Examples
-
-Use the shortcode below to display a list of all albums with thumbnails:
+**Basic Usage:**
 
 ```text
 [immich_gallery]
 ```
 
-Use the shortcode below to display a specific list of albums (no spaces around comma), of course with your album id's:
+Shows a list of all albums with thumbnails.
+
+**Display specific albums:**
 
 ```text
 [immich_gallery albums=3c874076-ba9e-410a-8501-ef3cca897bcb,3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
-Use the shortcode below to display an album:
+**Display single album:**
 
 ```text
 [immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
-If you want to show descriptions and dates of the photos:
+**Display single photo:**
 
 ```text
-[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd show=asset_description,asset_date]
+[immich_gallery asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
 ```
+
+**Customize display options:**
+
+```text
+[immich_gallery show="gallery_name,asset_description"]
+```
+
+Available show options (defaults: `gallery_name`, `asset_description`):
+
+- `gallery_name` - Show the name of the album
+- `gallery_description` - Show description of the album
+- `asset_description` - Show description of photo/video
+- `asset_date` - Show date the photo/video was taken
+
+**Customize sizes:**
+
+```text
+[immich_gallery size="300" title_size="18" description_size="15" date_size="12"]
+```
+
+Size options:
+- `size` - Thumbnail size in pixels (100-500, default: 200)
+- `title_size` - Title font size (10-30, default: 16)
+- `description_size` - Description font size (10-30, default: 14)
+- `date_size` - Date font size (10-30, default: 13)
+
+**Sorting options:**
+
+```text
+[immich_gallery order="date_desc"]
+```
+
+Available order options:
+
+- `date_desc` - Newest first (default for albums)
+- `date_asc` - Oldest first (default for photos - chronological order)
+- `name_asc` - Alphabetically A-Z (albums only)
+- `name_desc` - Alphabetically Z-A (albums only)
+- `description_asc` - Alphabetically A-Z by description (photos only)
+- `description_desc` - Alphabetically Z-A by description (photos only)
+
+**Note:** Name sorting is only available for album lists. Photos can be sorted by date or description.
+
+## Examples
 
 Sort albums alphabetically:
 
 ```text
-[immich_gallery order=name_asc]
+[immich_gallery order="name_asc"]
 ```
 
 Show photos in chronological order (oldest first):

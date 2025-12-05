@@ -182,7 +182,7 @@ const Edit = ({ attributes, setAttributes }) => {
 				
 				<RangeControl
 					label={__('Thumbnail Size', 'immich-gallery')}
-					value={size}
+					value={size || 200}
 					onChange={(value) => setAttributes({ size: value })}
 					min={100}
 					max={500}
@@ -193,7 +193,7 @@ const Edit = ({ attributes, setAttributes }) => {
 			<PanelBody title={__('Text Sizes', 'immich-gallery')} initialOpen={false}>
 				<RangeControl
 					label={__('Title Size', 'immich-gallery')}
-					value={title_size}
+					value={title_size || 16}
 					onChange={(value) => setAttributes({ title_size: value })}
 					min={10}
 					max={30}
@@ -202,7 +202,7 @@ const Edit = ({ attributes, setAttributes }) => {
 				
 				<RangeControl
 					label={__('Description Size', 'immich-gallery')}
-					value={description_size}
+					value={description_size || 14}
 					onChange={(value) => setAttributes({ description_size: value })}
 					min={10}
 					max={30}
@@ -211,7 +211,7 @@ const Edit = ({ attributes, setAttributes }) => {
 				
 				<RangeControl
 					label={__('Date Size', 'immich-gallery')}
-					value={date_size}
+					value={date_size || 13}
 					onChange={(value) => setAttributes({ date_size: value })}
 					min={10}
 					max={30}
@@ -231,10 +231,11 @@ const Edit = ({ attributes, setAttributes }) => {
 			
 			<div style={{ 
 				padding: '20px', 
-				backgroundColor: '#f0f0f0', 
+				backgroundColor: (mode === 'single' && !album) || (mode === 'multiple' && albums.length === 0) || (mode === 'asset' && !asset) ? '#fef2f2' : '#f0f0f0', 
 				borderRadius: '4px',
 				fontFamily: 'monospace',
-				fontSize: '13px'
+				fontSize: '13px',
+				border: (mode === 'single' && !album) || (mode === 'multiple' && albums.length === 0) || (mode === 'asset' && !asset) ? '2px solid #ef4444' : 'none'
 			}}>
 				{loading ? (
 					<p>{__('Loading albums...', 'immich-gallery')}</p>
@@ -243,6 +244,55 @@ const Edit = ({ attributes, setAttributes }) => {
 						<p style={{ marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
 							{__('Immich Gallery', 'immich-gallery')}
 						</p>
+						
+						{mode === 'single' && !album && (
+							<div style={{ 
+								padding: '12px', 
+								backgroundColor: '#fee2e2', 
+								border: '1px solid #ef4444',
+								borderRadius: '4px',
+								marginBottom: '12px',
+								color: '#991b1b'
+							}}>
+								<strong>{__('⚠️ No album selected', 'immich-gallery')}</strong>
+								<p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+									{__('Please select an album from the sidebar to display.', 'immich-gallery')}
+								</p>
+							</div>
+						)}
+						
+						{mode === 'multiple' && albums.length === 0 && (
+							<div style={{ 
+								padding: '12px', 
+								backgroundColor: '#fee2e2', 
+								border: '1px solid #ef4444',
+								borderRadius: '4px',
+								marginBottom: '12px',
+								color: '#991b1b'
+							}}>
+								<strong>{__('⚠️ No albums selected', 'immich-gallery')}</strong>
+								<p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+									{__('Please select at least one album from the sidebar to display.', 'immich-gallery')}
+								</p>
+							</div>
+						)}
+						
+						{mode === 'asset' && !asset && (
+							<div style={{ 
+								padding: '12px', 
+								backgroundColor: '#fee2e2', 
+								border: '1px solid #ef4444',
+								borderRadius: '4px',
+								marginBottom: '12px',
+								color: '#991b1b'
+							}}>
+								<strong>{__('⚠️ No photo ID entered', 'immich-gallery')}</strong>
+								<p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
+									{__('Please enter a photo ID from your Immich server.', 'immich-gallery')}
+								</p>
+							</div>
+						)}
+						
 						<code style={{ display: 'block', padding: '8px', backgroundColor: 'white', borderRadius: '3px', fontSize: '12px' }}>
 							{generateShortcode()}
 						</code>

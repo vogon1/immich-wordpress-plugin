@@ -2,9 +2,9 @@
 Contributors: sietsevisser
 Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
-Tested up to: 6.8
+Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.4.1
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -58,6 +58,20 @@ Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted
 
 == Usage ==
 
+**Using the Gutenberg Block Editor:**
+
+The easiest way to add an Immich gallery is through the Gutenberg block editor:
+
+1. Add a new block and search for "Immich Gallery"
+2. Select your display mode (all albums, single album, multiple albums, or single photo)
+3. Configure display options using the sidebar controls
+4. Customize thumbnail size and text sizes as needed
+5. The preview shows the shortcode that will be used
+
+**Using Shortcodes:**
+
+You can also use shortcodes directly in your content:
+
 **Display all albums:**
 `[immich_gallery]`
 
@@ -71,13 +85,22 @@ Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted
 `[immich_gallery asset="photo-id"]`
 
 **Customize display options:**
-`[immich_gallery show="gallery_name,gallery_description,asset_date,asset_description"]`
+`[immich_gallery show="gallery_name,asset_description"]`
 
-Available show options:
+Available show options (defaults: gallery_name, asset_description):
 * `gallery_name` - Show album/gallery name
 * `gallery_description` - Show album description
 * `asset_date` - Show photo date
 * `asset_description` - Show photo description
+
+**Customize sizes:**
+`[immich_gallery size="300" title_size="18" description_size="15" date_size="12"]`
+
+Size options:
+* `size` - Thumbnail size in pixels (100-500, default: 200)
+* `title_size` - Title font size (10-30, default: 16)
+* `description_size` - Description font size (10-30, default: 14)
+* `date_size` - Date font size (10-30, default: 13)
 
 **Sort order:**
 `[immich_gallery order="date_desc"]`
@@ -128,12 +151,22 @@ Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translatio
 
 == Changelog ==
 
+= 0.4.1 =
+*Release Date - 5 December 2025*
+
+* Fixed: Default values now properly displayed in Gutenberg block controls (RangeControls show defaults)
+* Fixed: PHP no longer overrides display options set in Gutenberg block
+* Display options with sensible defaults (gallery name, asset description)
+* Improved: Display option defaults now consistent between block and shortcode
+* Updated: Documentation with Gutenberg block usage examples and default values
+* Tested with WordPress 6.9
+
 = 0.4.0 =
 *Release Date - 30 November 2025*
 
 * Added Gutenberg block editor
 * Visual block interface for easy gallery configuration
-* Added album and thumb nail ordering options
+* Display mode selection (all albums, single album, multiple albums, single photo)
 * Options added for thumbnail size and text sizes
 * Added German (de_DE) translation - complete internationalization
 * Added French (fr_FR) translation - complete internationalization

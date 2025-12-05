@@ -1,6 +1,6 @@
 {
 	"name": "immich-gallery",
-	"version": "0.4.0",
+	"version": "0.4.1",
 	"description": "WordPress plugin to display Immich galleries",
 	"scripts": {
 		"build": "wp-scripts build src/index.js --output-path=build",

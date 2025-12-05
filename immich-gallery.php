@@ -3,7 +3,7 @@
  * Plugin Name: Immich Gallery
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
- * Version: 0.4.0
+ * Version: 0.4.1
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -450,8 +450,6 @@ class Immich_Gallery {
 
         if ($asset) {
             // Direct link to single asset
-            if (!$show) $show = ['asset_description'];
-
             $asset = $this->api_request('assets/' . $asset);
             // error_log(print_r($asset, true));
 
@@ -492,8 +490,6 @@ class Immich_Gallery {
             return $html;
         } elseif ($album) {
             // Detail page
-            if (!$show) $show = ['gallery_name', 'gallery_description', 'asset_description'];
-
             $album = $this->api_request('albums/' . $album);
             // error_log(print_r($album, true));
 
@@ -582,8 +578,6 @@ class Immich_Gallery {
             return $html;
         } else {
             // Overview page
-            if (!$show) $show = ['gallery_name', 'gallery_description'];
-
             $immich_albums = $this->api_request('albums');
             // error_log(print_r($immich_albums, true));
 
