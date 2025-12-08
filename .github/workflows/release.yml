@@ -18,11 +18,11 @@ jobs:
       - name: Checkout code
         uses: actions/checkout@v4
         with:
-          path: 'immich-gallery'
+          path: 'gallery-for-immich'
 
       # 2. (optioneel) Installeer PHP dependencies
       - name: Install PHP dependencies
-        working-directory: immich-gallery
+        working-directory: gallery-for-immich
         run: |
           if [ -f composer.json ]; then
             composer install --no-dev --optimize-autoloader
@@ -30,7 +30,7 @@ jobs:
 
       # 3. (optioneel) Installeer JS dependencies en bouw
       - name: Build JS/CSS
-        working-directory: immich-gallery
+        working-directory: gallery-for-immich
         run: |
           if [ -f package.json ]; then
             npm ci
@@ -40,7 +40,7 @@ jobs:
       # 4. Maak ZIP van de pluginmap
       - name: Build ZIP
         run: |
-          PLUGIN_SLUG="immich-gallery"
+          PLUGIN_SLUG="gallery-for-immich"
           mkdir dist
           zip -r dist/${PLUGIN_SLUG}.zip ${PLUGIN_SLUG} \
             -x "*.git*" \

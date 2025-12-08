@@ -1,10 +1,10 @@
-=== Immich Gallery ===
+=== Gallery for Immich ===
 Contributors: sietsevisser
 Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 6.8
 Requires PHP: 7.4
-Stable tag: 0.3.1
+Stable tag: 0.3.2
 License: GPLv2 or later
 License URI: https://www.gnu.org/licenses/gpl-2.0.html
 
@@ -12,7 +12,9 @@ Display your Immich photo albums and galleries in WordPress using simple shortco
 
 == Description ==
 
-Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted Immich photo server with your WordPress site. Display beautiful photo galleries and albums using simple shortcodes.
+Gallery for Immich is a WordPress plugin that seamlessly integrates your self-hosted Immich photo server with your WordPress site. Display beautiful photo galleries and albums using simple shortcodes.
+
+**Note:** This plugin is not affiliated with or endorsed by Immich. It is an independent integration tool for WordPress users.
 
 **Key Features:**
 
@@ -37,41 +39,52 @@ Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted
 
 == Installation ==
 
-1. Upload the `immich-gallery` folder to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Settings > Immich Gallery
-4. Enter your Immich server URL (must be HTTPS)
-5. Enter your Immich API key
-6. Use shortcodes in your posts and pages
+1. Install via WordPress admin: Plugins > Add New > Search for "Gallery for Immich"
+2. Click "Install Now" and then "Activate"
+3. Or upload the plugin files to `/wp-content/plugins/gallery-for-immich/` directory and activate through the 'Plugins' menu
 
 == Configuration ==
 
-**Settings:**
+**Step 1: Create an Immich API Key**
 
-1. Navigate to Settings > Immich Gallery in your WordPress admin
+1. Log in to your Immich server with the user account whose photos you want to display
+2. Go to **Account Settings** (click your profile picture in the top right)
+3. Navigate to **API Keys** tab
+4. Click **New API Key**
+5. Give it a descriptive name (e.g., "WordPress Plugin")
+6. Set the following **minimum required permissions**:
+   * `album.read` - Required to list and view albums
+   * `asset.read` - Required to access photo metadata (EXIF data, descriptions, dates)
+   * `asset.view` - Required to retrieve photo thumbnails
+   * `asset.download` - Required to retrieve original full-size photos
+7. **Important:** Only grant read-only access. Never grant write permissions for security reasons.
+8. Click **Create** and copy the generated API key
+
+**Step 2: Configure the Plugin in WordPress**
+
+1. Navigate to Settings > Gallery for Immich in your WordPress admin
 2. Enter your Immich server URL (e.g., https://immich.example.com)
-3. Generate an API key in your Immich server settings
-4. Paste the API key in the plugin settings
-5. Save changes
+3. Paste the API key you created in Step 1
+4. Save changes
 
-**Security Note:** The plugin requires HTTPS for production servers. Localhost URLs are allowed for development.
+**Security Note:** The plugin requires HTTPS for production servers. Localhost URLs (http://localhost or http://127.0.0.1) are allowed for development only.
 
 == Usage ==
 
 **Display all albums:**
-`[immich_gallery]`
+`[gallery_for_immich]`
 
 **Display specific albums (comma-separated IDs):**
-`[immich_gallery albums="album-id-1,album-id-2"]`
+`[gallery_for_immich albums="album-id-1,album-id-2"]`
 
 **Display single album:**
-`[immich_gallery album="album-id"]`
+`[gallery_for_immich album="album-id"]`
 
 **Display single photo:**
-`[immich_gallery asset="photo-id"]`
+`[gallery_for_immich asset="photo-id"]`
 
 **Customize display options:**
-`[immich_gallery show="gallery_name,gallery_description,asset_date,asset_description"]`
+`[gallery_for_immich show="gallery_name,gallery_description,asset_date,asset_description"]`
 
 Available show options:
 * `gallery_name` - Show album/gallery name
@@ -105,6 +118,13 @@ Yes, the plugin generates standard HTML with CSS classes. You can override style
 
 Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translations. Additional translations can be added via .po files.
 
+== Third Party Libraries ==
+
+This plugin includes GLightbox v3.2.0 for the lightbox functionality.
+Copyright (c) 2018 Biati Digital
+Licensed under MIT License
+https://github.com/biati-digital/glightbox
+
 == Screenshots ==
 
 1. Album grid overview with thumbnails
@@ -113,6 +133,13 @@ Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translatio
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.3.2 =
+* Release Date - 8 December 2025*
+* Changed plugin slug from 'immich-gallery' to 'gallery-for-immich' (WordPress naming policy compliance)
+* Changed shortcode from [immich_gallery] to [gallery_for_immich]
+* Updated all internal naming conventions
+* Added disclaimer about non-affiliation with Immich
 
 = 0.3.1 =
 *Release Date - 29 November 2025*

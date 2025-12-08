@@ -1,7 +1,9 @@
-# Immich WordPress Plugin
+# Gallery for Immich
 
 This plugin allows you to easily integrate photos and albums from [Immich](https://immich.app/) into your WordPress site.  
 A simple way to display galleries without uploading images manually.
+
+**Note:** This plugin is not affiliated with or endorsed by Immich. It is an independent integration tool for WordPress users.
 
 **Security & Privacy:** The Immich API key is stored securely in your WordPress database and is only used server-side to fetch photos from your Immich server. The API key is never exposed to website visitors or sent to their browsers. All image requests are proxied through WordPress, keeping your Immich server credentials completely private.
 
@@ -18,9 +20,17 @@ A simple way to display galleries without uploading images manually.
 
 ## 📦 Installation
 
+### From WordPress Plugin Directory (Recommended)
+
+1. In WordPress, go to **Plugins > Add New**
+2. Search for "Gallery for Immich"
+3. Click **Install Now**, then **Activate**
+
+### From GitHub Release
+
 1. Download the [latest release](https://github.com/vogon1/immich-wordpress-plugin/releases).
-1. In WordPress, go to **Plugins > Add New > Upload Plugin**.
-1. Upload the `.zip` file and activate the plugin.
+2. In WordPress, go to **Plugins > Add New > Upload Plugin**.
+3. Upload the `.zip` file and activate the plugin.
 
 ### 🔑 Creating and installing an Immich API Key
 
@@ -45,7 +55,7 @@ A simple way to display galleries without uploading images manually.
 
 ## 🖼️ Usage
 
-Use shortcode \[immich_gallery\] with optional parameters.
+Use shortcode \[gallery_for_immich\] with optional parameters.
 Possible parameters (use none or only one):
 
 - (none): - Show a list of all albums with thumbnails
@@ -67,29 +77,29 @@ The parameter 'show' defaults to 'name'.
 Use the shortcode below to display a list of all albums with thumbnails:
 
 ```text
-[immich_gallery]
+[gallery_for_immich]
 ```
 
 Use the shortcode below to display a specific list of albums (no spaces around comma), of course with your album id's:
 
 ```text
-[immich_gallery albums=3c874076-ba9e-410a-8501-ef3cca897bcb,3c874076-ba9e-410a-8501-ef3cca897bcc]
+[gallery_for_immich albums=3c874076-ba9e-410a-8501-ef3cca897bcb,3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
 Use the shortcode below to display an album:
 
 ```text
-[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcc]
+[gallery_for_immich album=3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
 If you want to show descriptions and dates of the photos:
 
 ```text
-[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd show=asset_description,asset_date]
+[gallery_for_immich album=3c874076-ba9e-410a-8501-ef3cca897bcd show=asset_description,asset_date]
 ```
 
 Use the shortcode below to display just one photo:
 
 ```text
-[immich_gallery asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
 ```

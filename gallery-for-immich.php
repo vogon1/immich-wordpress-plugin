@@ -1,36 +1,36 @@
 <?php
 /**
- * Plugin Name: Immich Gallery
+ * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
- * Version: 0.3.1
+ * Version: 0.3.2
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
  * Author URI: https://github.com/vogon1
  * License: GPL v2 or later
  * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: immich-gallery
+ * Text Domain: gallery-for-immich
  * Domain Path: /languages
  */
 
 // Plugin description for translations - WordPress will pick this up
-if (!function_exists('immich_gallery_get_plugin_description')) {
-    function immich_gallery_get_plugin_description() {
-        return __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'immich-gallery');
+if (!function_exists('gallery_for_immich_get_plugin_description')) {
+    function gallery_for_immich_get_plugin_description() {
+        return __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'gallery-for-immich');
     }
 }
 
 if (!defined('ABSPATH')) exit;
 
-class Immich_Gallery {
-    private $option_name = 'immich_gallery_settings';
+class Gallery_For_Immich {
+    private $option_name = 'gallery_for_immich_settings';
 
     public function __construct() {
         // Note: load_plugin_textdomain() not needed - WordPress.org automatically loads translations since WP 4.6
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'settings_init']);
-        add_shortcode('immich_gallery', [$this, 'render_gallery']);
+        add_shortcode('gallery_for_immich', [$this, 'render_gallery']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
         
         // Plugin description translation for plugin list
@@ -42,7 +42,7 @@ class Immich_Gallery {
         
         if (isset($plugins[$plugin_file])) {
             // Translate the description
-            $plugins[$plugin_file]['Description'] = __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'immich-gallery');
+            $plugins[$plugin_file]['Description'] = __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'gallery-for-immich');
         }
         
         return $plugins;
@@ -50,18 +50,18 @@ class Immich_Gallery {
 
     /* --- Admin settings --- */
     public function add_admin_menu() {
-        add_options_page('Immich Gallery', 'Immich Gallery', 'manage_options', 'immich_gallery', [$this, 'options_page']);
+        add_options_page('Gallery for Immich', 'Gallery for Immich', 'manage_options', 'gallery_for_immich', [$this, 'options_page']);
     }
 
     public function settings_init() {
-        register_setting('immich_gallery', $this->option_name, [
+        register_setting('gallery_for_immich', $this->option_name, [
             'sanitize_callback' => [$this, 'sanitize_settings'],
         ]);
 
-        add_settings_section('immich_gallery_section', __('Settings', 'immich-gallery'), null, 'immich_gallery');
+        add_settings_section('gallery_for_immich_section', __('Settings', 'gallery-for-immich'), null, 'gallery_for_immich');
 
-        add_settings_field('server_url', __('Immich server URL', 'immich-gallery'), [$this, 'field_server_url'], 'immich_gallery', 'immich_gallery_section');
-        add_settings_field('api_key', __('API Key', 'immich-gallery'), [$this, 'field_api_key'], 'immich_gallery', 'immich_gallery_section');
+        add_settings_field('server_url', __('Immich server URL', 'gallery-for-immich'), [$this, 'field_server_url'], 'gallery_for_immich', 'gallery_for_immich_section');
+        add_settings_field('api_key', __('API Key', 'gallery-for-immich'), [$this, 'field_api_key'], 'gallery_for_immich', 'gallery_for_immich_section');
     }
 
     public function sanitize_settings($input) {
@@ -77,7 +77,7 @@ class Immich_Gallery {
                 add_settings_error(
                     $this->option_name,
                     'invalid_url',
-                    __('Server URL must use HTTPS (or localhost for development).', 'immich-gallery')
+                    __('Server URL must use HTTPS (or localhost for development).', 'gallery-for-immich')
                 );
             }
         }
@@ -92,7 +92,7 @@ class Immich_Gallery {
                 add_settings_error(
                     $this->option_name,
                     'invalid_api_key',
-                    __('API Key contains invalid characters.', 'immich-gallery')
+                    __('API Key contains invalid characters.', 'gallery-for-immich')
                 );
             }
         }
@@ -117,15 +117,15 @@ class Immich_Gallery {
     public function options_page() {
         // Double-check user capabilities
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'immich-gallery'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'gallery-for-immich'));
         }
         ?>
         <div class="wrap">
-            <h1>Immich Gallery</h1>
+            <h1>Gallery for Immich</h1>
             <form method="post" action="options.php">
                 <?php
-                settings_fields('immich_gallery');
-                do_settings_sections('immich_gallery');
+                settings_fields('gallery_for_immich');
+                do_settings_sections('gallery_for_immich');
                 submit_button();
                 ?>
             </form>
@@ -235,7 +235,7 @@ class Immich_Gallery {
         
         // Validate options exist
         if (empty($options['server_url']) || empty($options['api_key'])) {
-            return ['error' => true, 'message' => __('Plugin not configured. Please set Server URL and API Key in settings.', 'immich-gallery')];
+            return ['error' => true, 'message' => __('Plugin not configured. Please set Server URL and API Key in settings.', 'gallery-for-immich')];
         }
         
         $url = rtrim($options['server_url'], '/') . '/api/' . ltrim($endpoint, '/');
@@ -243,7 +243,7 @@ class Immich_Gallery {
         $response = wp_remote_get($url, [
             'headers' => [
                 'x-api-key' => $options['api_key'],
-                'User-Agent' => 'WordPress-Immich-Gallery/' . get_bloginfo('version')
+                'User-Agent' => 'WordPress-Gallery-For-Immich/' . get_bloginfo('version')
             ],
             'timeout' => 15,
             'sslverify' => true // Enforce SSL verification
@@ -302,10 +302,10 @@ class Immich_Gallery {
             $asset = $this->api_request('assets/' . $asset);
             // error_log(print_r($asset, true));
 
-            if (!$asset || empty($asset['id'])) return '<p>' . __('Photo not found.', 'immich-gallery') . '</p>';
+            if (!$asset || empty($asset['id'])) return '<p>' . __('Photo not found.', 'gallery-for-immich') . '</p>';
 
-            $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
-            $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
+            $thumb_url = plugins_url('gallery-for-immich-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
+            $full_url  = plugins_url('gallery-for-immich-original.php', __FILE__) . '?id=' . $asset['id'];
 
             $html = '<div>';
             
@@ -344,7 +344,7 @@ class Immich_Gallery {
             $album = $this->api_request('albums/' . $album);
             // error_log(print_r($album, true));
 
-            if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'immich-gallery') . '</p>';
+            if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'gallery-for-immich') . '</p>';
 
             // Sort album photos by dateTimeOriginal in ascending order (oldest first)
             $assets_to_render = $album['assets'];
@@ -376,8 +376,8 @@ class Immich_Gallery {
 
             foreach ($assets_to_render as $asset) {
                 if (empty($asset['id'])) continue;
-                $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
-                $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
+                $thumb_url = plugins_url('gallery-for-immich-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
+                $full_url  = plugins_url('gallery-for-immich-original.php', __FILE__) . '?id=' . $asset['id'];
                 
                 // Prepare description for lightbox
                 $description = '';
@@ -408,7 +408,7 @@ class Immich_Gallery {
                 $html .= '</div>';
             }
             $html .= '</div>';
-            //$html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Back to overview', 'immich-gallery') . '</a></p>';
+            //$html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Back to overview', 'gallery-for-immich') . '</a></p>';
 
             return $html;
         } else {
@@ -420,11 +420,11 @@ class Immich_Gallery {
 
             // Check for API error
             if (isset($immich_albums['error']) && $immich_albums['error']) {
-                return '<p>' . __('Error from Immich API: ', 'immich-gallery') . esc_html($immich_albums['error']) . ': ' . esc_html($immich_albums['message']) . '</p>';
+                return '<p>' . __('Error from Immich API: ', 'gallery-for-immich') . esc_html($immich_albums['error']) . ': ' . esc_html($immich_albums['message']) . '</p>';
             }
 
             if (!$immich_albums) {
-                return '<p>' . __('No albums found.', 'immich-gallery') . '</p>';
+                return '<p>' . __('No albums found.', 'gallery-for-immich') . '</p>';
             }
 
             $html = '<div class="immich-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:20px;">';
@@ -468,7 +468,7 @@ class Immich_Gallery {
             // Render the albums
             foreach ($albums_to_render as $album) {
                 if (empty($album['albumThumbnailAssetId'])) continue;
-                $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
+                $thumb_url = plugins_url('gallery-for-immich-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
 
                 $html .= '<div>';
                 $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
@@ -495,4 +495,4 @@ class Immich_Gallery {
     }
 }
 
-new Immich_Gallery();
+new Gallery_For_Immich();
