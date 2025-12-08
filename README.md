@@ -122,6 +122,7 @@ Available show options (defaults: `gallery_name`, `asset_description`):
 ```
 
 Size options:
+
 - `size` - Thumbnail size in pixels (100-500, default: 200)
 - `title_size` - Title font size (10-30, default: 16)
 - `description_size` - Description font size (10-30, default: 14)

@@ -69,10 +69,12 @@ const Edit = ({ attributes, setAttributes }) => {
 	
 	const albumOptions = [
 		{ label: __('Select an album...', 'immich-gallery'), value: '' },
-		...availableAlbums.map(albumItem => ({
-			label: albumItem.name,
-			value: albumItem.id
-		}))
+		...availableAlbums
+			.sort((a, b) => a.name.localeCompare(b.name))
+			.map(albumItem => ({
+				label: albumItem.name,
+				value: albumItem.id
+			}))
 	];
 	
 	const showOptions = [
