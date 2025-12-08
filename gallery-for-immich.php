@@ -274,7 +274,8 @@ class Gallery_For_Immich {
         }
         
         // Validate album parameter from GET or shortcode
-        $album = sanitize_text_field(wp_unslash($_GET['immich_gallery'] ?? ($atts['album'] ?? '')));
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public gallery navigation doesn't require nonce
+        $album = sanitize_text_field(wp_unslash($_GET['gallery_for_immich'] ?? ($atts['album'] ?? '')));
         if ($album && !preg_match('/^[a-f0-9\-]{36}$/i', $album)) {
             $album = ''; // Invalid format, ignore
         }
@@ -471,13 +472,13 @@ class Gallery_For_Immich {
                 $thumb_url = plugins_url('gallery-for-immich-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
 
                 $html .= '<div>';
-                $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
+                $html .= '<a href="' . get_permalink() . '?gallery_for_immich=' . esc_attr($album['id']) . '">
                         <img src="' . esc_url($thumb_url) . '" style="width:100%;height:200px;object-fit:cover;display:block;"></a>';
                 
                 if (in_array('gallery_name', $show) || in_array('gallery_description', $show)) {
                     $html .= '<div style="text-align:center;">';
                     if (in_array('gallery_name', $show)) {
-                        $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
+                        $html .= '<a href="' . get_permalink() . '?gallery_for_immich=' . esc_attr($album['id']) . '">
                                 <div style="font-weight:bold;margin-bottom:5px;">' . esc_html($album['albumName']) . '</div></a>';
                     }
                     if (in_array('gallery_description', $show)) {
