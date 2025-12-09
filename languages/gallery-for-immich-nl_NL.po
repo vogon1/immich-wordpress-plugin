@@ -43,3 +43,15 @@ msgstr "Fout van Immich API: "
 
 msgid "No albums found."
 msgstr "Geen albums gevonden."
+
+msgid "Gallery for Immich"
+msgstr "Galerij voor Immich"
+
+msgid "Server URL must use HTTPS (or localhost for development)."
+msgstr "Server URL moet HTTPS gebruiken (of localhost voor ontwikkeling)."
+
+msgid "API Key contains invalid characters."
+msgstr "API-sleutel bevat ongeldige tekens."
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr "U heeft niet voldoende rechten om deze pagina te bekijken."

@@ -3,13 +3,13 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
- * Version: 0.3.2
+ * Version: 0.3.3
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
  * Author URI: https://github.com/vogon1
- * License: GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
+ * License: GPL v3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
  * Text Domain: gallery-for-immich
  * Domain Path: /languages
  */
@@ -32,6 +32,7 @@ class Gallery_For_Immich {
         add_action('admin_init', [$this, 'settings_init']);
         add_shortcode('gallery_for_immich', [$this, 'render_gallery']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_action('init', [$this, 'handle_image_proxy']);
         
         // Plugin description translation for plugin list
         add_filter('all_plugins', [$this, 'translate_plugin_description']);
@@ -41,16 +42,80 @@ class Gallery_For_Immich {
         $plugin_file = plugin_basename(__FILE__);
         
         if (isset($plugins[$plugin_file])) {
-            // Translate the description
+            // Translate the name and description
+            $plugins[$plugin_file]['Name'] = __('Gallery for Immich', 'gallery-for-immich');
             $plugins[$plugin_file]['Description'] = __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'gallery-for-immich');
         }
         
         return $plugins;
     }
 
+    /* --- Image proxy handler --- */
+    public function handle_image_proxy() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public image proxy endpoint
+        if (!isset($_GET['gallery_for_immich_proxy'])) {
+            return;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Validated below with strict whitelist
+        $type = isset($_GET['gallery_for_immich_proxy']) ? sanitize_text_field(wp_unslash($_GET['gallery_for_immich_proxy'])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Validated with UUID regex below
+        $id = isset($_GET['id']) ? sanitize_text_field(wp_unslash($_GET['id'])) : '';
+
+        // Validate type with strict whitelist
+        if (!in_array($type, ['thumbnail', 'original'], true)) {
+            status_header(400);
+            exit('Invalid type');
+        }
+
+        // Validate ID: must be UUID format
+        if (!$id || !preg_match('/^[a-f0-9\-]{36}$/i', $id)) {
+            status_header(400);
+            exit('Invalid ID format');
+        }
+
+        $options = get_option($this->option_name);
+        
+        // Validate plugin is configured
+        if (empty($options['server_url']) || empty($options['api_key'])) {
+            status_header(503);
+            exit('Plugin not configured');
+        }
+
+        // Build URL based on type
+        if ($type === 'thumbnail') {
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?w=300&h=300';
+            $timeout = 10;
+        } else {
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/original';
+            $timeout = 30;
+        }
+
+        // Fetch image from Immich
+        $resp = wp_remote_get($url, [
+            'headers' => ['x-api-key' => $options['api_key']],
+            'timeout' => $timeout,
+            'sslverify' => true
+        ]);
+
+        if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) != 200) {
+            status_header(404);
+            exit('Image not found');
+        }
+
+        // Security headers
+        header('Content-Type: image/jpeg');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: public, max-age=31536000');
+        
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Binary image data
+        echo wp_remote_retrieve_body($resp);
+        exit;
+    }
+
     /* --- Admin settings --- */
     public function add_admin_menu() {
-        add_options_page('Gallery for Immich', 'Gallery for Immich', 'manage_options', 'gallery_for_immich', [$this, 'options_page']);
+        add_options_page(__('Gallery for Immich', 'gallery-for-immich'), __('Gallery for Immich', 'gallery-for-immich'), 'manage_options', 'gallery_for_immich', [$this, 'options_page']);
     }
 
     public function settings_init() {
@@ -121,7 +186,7 @@ class Gallery_For_Immich {
         }
         ?>
         <div class="wrap">
-            <h1>Gallery for Immich</h1>
+            <h1><?php echo esc_html__('Gallery for Immich', 'gallery-for-immich'); ?></h1>
             <form method="post" action="options.php">
                 <?php
                 settings_fields('gallery_for_immich');
@@ -305,8 +370,8 @@ class Gallery_For_Immich {
 
             if (!$asset || empty($asset['id'])) return '<p>' . __('Photo not found.', 'gallery-for-immich') . '</p>';
 
-            $thumb_url = plugins_url('gallery-for-immich-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
-            $full_url  = plugins_url('gallery-for-immich-original.php', __FILE__) . '?id=' . $asset['id'];
+            $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=' . $asset['id']);
+            $full_url  = home_url('/?gallery_for_immich_proxy=original&id=' . $asset['id']);
 
             $html = '<div>';
             
@@ -377,8 +442,8 @@ class Gallery_For_Immich {
 
             foreach ($assets_to_render as $asset) {
                 if (empty($asset['id'])) continue;
-                $thumb_url = plugins_url('gallery-for-immich-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
-                $full_url  = plugins_url('gallery-for-immich-original.php', __FILE__) . '?id=' . $asset['id'];
+                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=' . $asset['id']);
+                $full_url  = home_url('/?gallery_for_immich_proxy=original&id=' . $asset['id']);
                 
                 // Prepare description for lightbox
                 $description = '';
@@ -469,7 +534,7 @@ class Gallery_For_Immich {
             // Render the albums
             foreach ($albums_to_render as $album) {
                 if (empty($album['albumThumbnailAssetId'])) continue;
-                $thumb_url = plugins_url('gallery-for-immich-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
+                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=' . $album['albumThumbnailAssetId']);
 
                 $html .= '<div>';
                 $html .= '<a href="' . get_permalink() . '?gallery_for_immich=' . esc_attr($album['id']) . '">

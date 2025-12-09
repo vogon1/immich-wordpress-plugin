@@ -1,0 +1,56 @@
+# Gallery for Immich translations.
+# Copyright (C) 2025 Sietse Visser
+# This file is distributed under the same license as the Gallery for Immich package.
+# Sietse Visser <sietse@sietse.nl>, 2025.
+#
+msgid ""
+msgstr ""
+"Project-Id-Version: Gallery for Immich 0.3.3\n"
+"Report-Msgid-Bugs-To: https://github.com/vogon1/immich-wordpress-plugin/issues\n"
+"POT-Creation-Date: 2025-12-09 12:00+0000\n"
+"PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
+"Last-Translator: Sietse Visser <sietse@sietse.nl>\n"
+"Language-Team: EN\n"
+"Language: en_EN\n"
+"MIME-Version: 1.0\n"
+"Content-Type: text/plain; charset=UTF-8\n"
+"Content-Transfer-Encoding: 8bit\n"
+
+msgid "Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access."
+msgstr ""
+
+msgid "Settings"
+msgstr ""
+
+msgid "Immich server URL"
+msgstr ""
+
+msgid "API Key"
+msgstr ""
+
+msgid "No albums found or Immich not reachable."
+msgstr ""
+
+msgid "No photos found in this album."
+msgstr ""
+
+msgid "Back to overview"
+msgstr ""
+
+msgid "Error from Immich API: "
+msgstr ""
+
+msgid "No albums found."
+msgstr ""
+
+msgid "Gallery for Immich"
+msgstr ""
+
+msgid "Server URL must use HTTPS (or localhost for development)."
+msgstr ""
+
+msgid "API Key contains invalid characters."
+msgstr ""
+
+msgid "You do not have sufficient permissions to access this page."
+msgstr ""

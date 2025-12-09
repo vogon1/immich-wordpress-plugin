@@ -4,9 +4,9 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.3.2
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Stable tag: 0.3.3
+License: GPLv3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 Display your Immich photo albums and galleries in WordPress using simple shortcodes.
 
@@ -134,8 +134,18 @@ https://github.com/biati-digital/glightbox
 
 == Changelog ==
 
+= 0.3.3 =
+*Release Date - 9 December 2025*
+
+* WordPress.org compliance improvements
+* Fixed: Removed direct file access
+* Fixed: Added translation support for plugin name and description
+* Updated: License changed to GPLv3 for consistency
+* Improved: Image proxy now uses query parameters instead of direct PHP files
+
 = 0.3.2 =
 * Release Date - 8 December 2025*
+
 * Changed plugin slug from 'immich-gallery' to 'gallery-for-immich' (WordPress naming policy compliance)
 * Changed shortcode from [immich_gallery] to [gallery_for_immich]
 * Updated all internal naming conventions
