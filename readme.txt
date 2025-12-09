@@ -142,6 +142,7 @@ https://github.com/biati-digital/glightbox
 * Fixed: Added translation support for plugin name and description
 * Updated: License changed to GPLv3 for consistency
 * Improved: Image proxy now uses query parameters instead of direct PHP files
+* Improved: glightbox in its own namespace
 
 = 0.3.2 =
 * Release Date - 8 December 2025*

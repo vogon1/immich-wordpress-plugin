@@ -200,25 +200,27 @@ class Gallery_For_Immich {
 
     /* --- Scripts and CSS for Lightbox --- */
     public function enqueue_scripts() {
-        wp_enqueue_style('glightbox-css', plugins_url('assets/glightbox/css/glightbox.min.css', __FILE__), [], '3.2.0');
-        wp_enqueue_script('glightbox-js', plugins_url('assets/glightbox/js/glightbox.min.js', __FILE__), ['jquery'], '3.2.0', true);
+        wp_enqueue_style('gallery-for-immich-glightbox-css', plugins_url('assets/glightbox/css/glightbox.min.css', __FILE__), [], '3.2.0');
+        wp_enqueue_script('gallery-for-immich-glightbox-js', plugins_url('assets/glightbox/js/glightbox.min.js', __FILE__), ['jquery'], '3.2.0', true);
 
-        // JS config for Lightbox
-        wp_add_inline_script('glightbox-js', '
-            const lightbox = GLightbox({
-                selector: ".immich-lightbox",
-                touchNavigation: true,
-                loop: false,
-                zoomable: false,
-                openEffect: "zoom",
-                closeEffect: "fade",
-                slideEffect: "slide",
-                type: "image"
-            });
+        // JS config for Lightbox with namespaced instance
+        wp_add_inline_script('gallery-for-immich-glightbox-js', '
+            if (typeof window.galleryForImmichLightbox === "undefined") {
+                window.galleryForImmichLightbox = GLightbox({
+                    selector: ".immich-lightbox",
+                    touchNavigation: true,
+                    loop: false,
+                    zoomable: false,
+                    openEffect: "zoom",
+                    closeEffect: "fade",
+                    slideEffect: "slide",
+                    type: "image"
+                });
+            }
         ');
 
         // CSS fix for full scale, centered, maintaining aspect ratio
-        wp_add_inline_style('glightbox-css', '
+        wp_add_inline_style('gallery-for-immich-glightbox-css', '
             .glightbox-container .gslide img {
                 max-width: 95vw !important;
                 max-height: 95vh !important;
