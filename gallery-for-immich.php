@@ -203,9 +203,14 @@ class Gallery_For_Immich {
         wp_enqueue_style('gallery-for-immich-glightbox-css', plugins_url('assets/glightbox/css/glightbox.min.css', __FILE__), [], '3.2.0');
         wp_enqueue_script('gallery-for-immich-glightbox-js', plugins_url('assets/glightbox/js/glightbox.min.js', __FILE__), ['jquery'], '3.2.0', true);
 
-        // JS config for Lightbox with namespaced instance
+        // JS config for Lightbox - always create new instance with unique selector
         wp_add_inline_script('gallery-for-immich-glightbox-js', '
-            if (typeof window.galleryForImmichLightbox === "undefined") {
+            (function() {
+                if (typeof GLightbox === "undefined") {
+                    console.warn("Gallery for Immich: GLightbox library not loaded");
+                    return;
+                }
+                
                 window.galleryForImmichLightbox = GLightbox({
                     selector: ".immich-lightbox",
                     touchNavigation: true,
@@ -216,7 +221,7 @@ class Gallery_For_Immich {
                     slideEffect: "slide",
                     type: "image"
                 });
-            }
+            })();
         ');
 
         // CSS fix for full scale, centered, maintaining aspect ratio
