@@ -1,331 +1,315 @@
 # Copyright (C) 2025 Sietse Visser
-# This file is distributed under the GPL v2 or later.
+# This file is distributed under the GPLv3 or later.
 msgid ""
 msgstr ""
-"Project-Id-Version: Immich Gallery 0.4.1\n"
-"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/immich-gallery\n"
+"Project-Id-Version: Gallery for Immich 0.4.0\n"
+"Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gallery-for-immich\n"
 "Last-Translator: FULL NAME <EMAIL@ADDRESS>\n"
 "Language-Team: LANGUAGE <LL@li.org>\n"
 "MIME-Version: 1.0\n"
 "Content-Type: text/plain; charset=UTF-8\n"
 "Content-Transfer-Encoding: 8bit\n"
-"POT-Creation-Date: 2025-12-05T10:23:47+00:00\n"
+"POT-Creation-Date: 2025-12-10T17:58:17+00:00\n"
 "PO-Revision-Date: YEAR-MO-DA HO:MI+ZONE\n"
 "X-Generator: WP-CLI 2.12.0\n"
-"X-Domain: immich-gallery\n"
+"X-Domain: gallery-for-immich\n"
 
 #. Plugin Name of the plugin
-#: immich-gallery.php
-#: block.js:165
+#: gallery-for-immich.php
+#: gallery-for-immich.php:131
+#: gallery-for-immich.php:132
+#: gallery-for-immich.php:207
 #: build/index.js:1
-#: src/index.js:245
-msgid "Immich Gallery"
+#: src/index.js:247
+msgid "Gallery for Immich"
 msgstr ""
 
 #. Plugin URI of the plugin
-#: immich-gallery.php
+#: gallery-for-immich.php
 msgid "https://github.com/vogon1/immich-wordpress-plugin"
 msgstr ""
 
 #. Description of the plugin
-#: immich-gallery.php
-#: immich-gallery.php:20
-#: immich-gallery.php:61
-msgid "Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access."
+#: gallery-for-immich.php
+msgid "Show Immich albums and photos in a WordPress site. Requires Immich server with API access."
 msgstr ""
 
 #. Author of the plugin
-#: immich-gallery.php
+#: gallery-for-immich.php
 msgid "Sietse Visser"
 msgstr ""
 
 #. Author URI of the plugin
-#: immich-gallery.php
+#: gallery-for-immich.php
 msgid "https://github.com/vogon1"
 msgstr ""
 
-#: immich-gallery.php:77
+#: gallery-for-immich.php:20
+#: gallery-for-immich.php:59
+msgid "Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access."
+msgstr ""
+
+#: gallery-for-immich.php:144
 msgid "Settings"
 msgstr ""
 
-#: immich-gallery.php:79
+#: gallery-for-immich.php:146
 msgid "Immich server URL"
 msgstr ""
 
-#: immich-gallery.php:80
+#: gallery-for-immich.php:147
 msgid "API Key"
 msgstr ""
 
-#: immich-gallery.php:96
+#: gallery-for-immich.php:163
 msgid "Server URL must use HTTPS (or localhost for development)."
 msgstr ""
 
-#: immich-gallery.php:111
+#: gallery-for-immich.php:178
 msgid "API Key contains invalid characters."
 msgstr ""
 
-#: immich-gallery.php:136
+#: gallery-for-immich.php:203
 msgid "You do not have sufficient permissions to access this page."
 msgstr ""
 
-#: immich-gallery.php:341
+#: gallery-for-immich.php:432
 msgid "Untitled Album"
 msgstr ""
 
-#: immich-gallery.php:354
+#: gallery-for-immich.php:445
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
 msgstr ""
 
 #. translators: %d: HTTP status code number
-#: immich-gallery.php:375
+#: gallery-for-immich.php:466
 #, php-format
 msgid "API returned status code: %d"
 msgstr ""
 
-#: immich-gallery.php:456
+#: gallery-for-immich.php:549
 msgid "Photo not found."
 msgstr ""
 
-#: immich-gallery.php:496
+#: gallery-for-immich.php:590
 msgid "No photos found in this album."
 msgstr ""
 
-#: immich-gallery.php:586
+#: gallery-for-immich.php:670
+msgid "Return to gallery"
+msgstr ""
+
+#: gallery-for-immich.php:680
 msgid "Error from Immich API: "
 msgstr ""
 
-#: immich-gallery.php:590
+#: gallery-for-immich.php:684
 msgid "No albums found."
 msgstr ""
 
-#: block.js:55
 #: build/index.js:1
 #: src/index.js:71
 msgid "Select an album..."
 msgstr ""
 
-#: block.js:66
 #: build/index.js:1
-#: src/index.js:79
+#: src/index.js:81
 msgid "Gallery name"
 msgstr ""
 
-#: block.js:67
 #: build/index.js:1
-#: src/index.js:80
+#: src/index.js:82
 msgid "Gallery description"
 msgstr ""
 
-#: block.js:68
 #: build/index.js:1
-#: src/index.js:81
+#: src/index.js:83
 msgid "Asset date"
 msgstr ""
 
-#: block.js:69
 #: build/index.js:1
-#: src/index.js:82
+#: src/index.js:84
 msgid "Asset description"
 msgstr ""
 
-#: block.js:73
 #: build/index.js:1
-#: src/index.js:86
+#: src/index.js:88
 msgid "Default"
 msgstr ""
 
-#: block.js:74
 #: build/index.js:1
-#: src/index.js:87
+#: src/index.js:89
 msgid "Newest first"
 msgstr ""
 
-#: block.js:75
 #: build/index.js:1
-#: src/index.js:88
+#: src/index.js:90
 msgid "Oldest first"
 msgstr ""
 
-#: block.js:76
 #: build/index.js:1
-#: src/index.js:89
+#: src/index.js:91
 msgid "A-Z (albums only)"
 msgstr ""
 
-#: block.js:77
 #: build/index.js:1
-#: src/index.js:90
+#: src/index.js:92
 msgid "Z-A (albums only)"
 msgstr ""
 
-#: block.js:78
 #: build/index.js:1
-#: src/index.js:91
+#: src/index.js:93
 msgid "A-Z by description (photos only)"
 msgstr ""
 
-#: block.js:79
 #: build/index.js:1
-#: src/index.js:92
+#: src/index.js:94
 msgid "Z-A by description (photos only)"
 msgstr ""
 
-#: block.js:98
 #: build/index.js:1
-#: src/index.js:129
+#: src/index.js:131
 msgid "Gallery Settings"
 msgstr ""
 
-#: block.js:100
 #: build/index.js:1
-#: src/index.js:131
+#: src/index.js:133
 msgid "Display Mode"
 msgstr ""
 
-#: block.js:103
-#: build/index.js:1
-#: src/index.js:134
-msgid "All albums overview"
-msgstr ""
-
-#: block.js:104
-#: build/index.js:1
-#: src/index.js:135
-msgid "Single album"
-msgstr ""
-
-#: block.js:105
 #: build/index.js:1
 #: src/index.js:136
-msgid "Multiple albums"
-msgstr ""
-
-#: block.js:111
-#: build/index.js:1
-#: src/index.js:152
-msgid "Select Album"
-msgstr ""
-
-#: block.js:121
-#: build/index.js:1
-#: src/index.js:163
-msgid "Select Albums"
-msgstr ""
-
-#: block.js:134
-#: build/index.js:1
-#: src/index.js:177
-msgid "Sort Order"
-msgstr ""
-
-#: block.js:141
-#: build/index.js:1
-#: src/index.js:220
-msgid "Display Options"
-msgstr ""
-
-#: block.js:162
-#: build/index.js:1
-#: src/index.js:241
-msgid "Loading albums..."
-msgstr ""
-
-#: block.js:171
-#: build/index.js:1
-#: src/index.js:301
-msgid "Will display all albums from Immich"
-msgstr ""
-
-#: block.js:174
-#: build/index.js:1
-#: src/index.js:311
-msgid "Selected: "
-msgstr ""
-
-#: block.js:177
-#: build/index.js:1
-#: src/index.js:317
-msgid "Selected albums: "
+msgid "All albums overview"
 msgstr ""
 
 #: build/index.js:1
 #: src/index.js:137
+msgid "Single album"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:138
+msgid "Multiple albums"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:139
 msgid "Single photo"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:144
+#: src/index.js:146
 msgid "Photo ID"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:148
+#: src/index.js:150
 msgid "Enter the photo ID from your Immich URL"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:184
+#: src/index.js:154
+msgid "Select Album"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:165
+msgid "Select Albums"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:179
+msgid "Sort Order"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:186
 msgid "Thumbnail Size"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:193
+#: src/index.js:195
 msgid "Text Sizes"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:195
+#: src/index.js:197
 msgid "Title Size"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:204
+#: src/index.js:206
 msgid "Description Size"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:213
+#: src/index.js:215
 msgid "Date Size"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:257
-msgid "⚠️ No album selected"
+#: src/index.js:222
+msgid "Display Options"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:243
+msgid "Loading albums..."
 msgstr ""
 
 #: build/index.js:1
 #: src/index.js:259
+msgid "⚠️ No album selected"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:261
 msgid "Please select an album from the sidebar to display."
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:273
+#: src/index.js:275
 msgid "⚠️ No albums selected"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:275
+#: src/index.js:277
 msgid "Please select at least one album from the sidebar to display."
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:289
+#: src/index.js:291
 msgid "⚠️ No photo ID entered"
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:291
+#: src/index.js:293
 msgid "Please enter a photo ID from your Immich server."
 msgstr ""
 
 #: build/index.js:1
-#: src/index.js:306
+#: src/index.js:303
+msgid "Will display all albums from Immich"
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:308
 msgid "Single photo: "
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:313
+msgid "Selected: "
+msgstr ""
+
+#: build/index.js:1
+#: src/index.js:319
+msgid "Selected albums: "
 msgstr ""
 
 #: block.json
 msgctxt "block title"
-msgid "Immich Gallery"
+msgid "Gallery for Immich"
 msgstr ""
 
 #: block.json

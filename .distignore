@@ -5,6 +5,7 @@
 /.distignore
 /node_modules
 /src
+/scripts
 
 # Build tools
 /package.json

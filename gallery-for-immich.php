@@ -1,41 +1,43 @@
 <?php
 /**
- * Plugin Name: Immich Gallery
+ * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
- * Description: Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.
- * Version: 0.4.1
+ * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
+ * Version: 0.4.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
  * Author URI: https://github.com/vogon1
- * License: GPL v2 or later
- * License URI: https://www.gnu.org/licenses/gpl-2.0.html
- * Text Domain: immich-gallery
+ * License: GPLv3 or later
+ * License URI: https://www.gnu.org/licenses/gpl-3.0.html
+ * Text Domain: gallery-for-immich
  * Domain Path: /languages
  */
 
 // Plugin description for translations - WordPress will pick this up
-if (!function_exists('immich_gallery_get_plugin_description')) {
-    function immich_gallery_get_plugin_description() {
-        return __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'immich-gallery');
+if (!function_exists('gallery_for_immich_get_plugin_description')) {
+    function gallery_for_immich_get_plugin_description() {
+        return __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'gallery-for-immich');
     }
 }
 
 if (!defined('ABSPATH')) exit;
 
-class Immich_Gallery {
-    private $option_name = 'immich_gallery_settings';
+class Gallery_For_Immich {
+    private $option_name = 'gallery_for_immich_settings';
 
     public function __construct() {
         // Load text domain for translations (required for JavaScript translations)
         add_action('init', [$this, 'load_textdomain']);
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'settings_init']);
-        add_shortcode('immich_gallery', [$this, 'render_gallery']);
+        add_shortcode('gallery_for_immich', [$this, 'render_gallery']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_action('init', [$this, 'handle_image_proxy']);
         
         // Gutenberg block support
         add_action('init', [$this, 'register_block']);
+        add_action('enqueue_block_editor_assets', [$this, 'enqueue_block_editor_assets']);
         add_action('rest_api_init', [$this, 'register_rest_routes']);
         
         // Plugin description translation for plugin list
@@ -43,14 +45,10 @@ class Immich_Gallery {
     }
 
     public function load_textdomain() {
-        // Load plugin translations manually for standalone installations
-        // WordPress.org automatically loads translations, but this ensures
-        // compatibility when installed via GitHub or direct download
-        load_plugin_textdomain(
-            'immich-gallery',
-            false,
-            dirname(plugin_basename(__FILE__)) . '/languages'
-        );
+        // Load plugin translations with explicit path
+        // This ensures translations work correctly for standalone installations
+        $mofile = plugin_dir_path(__FILE__) . 'languages/gallery-for-immich-' . determine_locale() . '.mo';
+        load_textdomain('gallery-for-immich', $mofile);
     }
 
     public function translate_plugin_description($plugins) {
@@ -58,26 +56,95 @@ class Immich_Gallery {
         
         if (isset($plugins[$plugin_file])) {
             // Translate the description
-            $plugins[$plugin_file]['Description'] = __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'immich-gallery');
+            $plugins[$plugin_file]['Description'] = __('Show Immich albums and photos in a WordPress site using shortcodes. Requires Immich server with API access.', 'gallery-for-immich');
         }
         
         return $plugins;
     }
 
+    /* --- Image proxy handler --- */
+    public function handle_image_proxy() {
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public image proxy endpoint
+        if (!isset($_GET['gallery_for_immich_proxy'])) {
+            return;
+        }
+
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Validated below with strict whitelist
+        $type = isset($_GET['gallery_for_immich_proxy']) ? sanitize_text_field(wp_unslash($_GET['gallery_for_immich_proxy'])) : '';
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Validated with UUID regex below
+        $id = isset($_GET['id']) ? sanitize_text_field(wp_unslash($_GET['id'])) : '';
+
+        // Validate type with strict whitelist
+        if (!in_array($type, ['thumbnail', 'original'], true)) {
+            status_header(400);
+            exit('Invalid type');
+        }
+
+        // Validate ID: must be UUID format
+        if (!$id || !preg_match('/^[a-f0-9\-]{36}$/i', $id)) {
+            status_header(400);
+            exit('Invalid ID format');
+        }
+
+        $options = get_option($this->option_name);
+        
+        // Validate plugin is configured
+        if (empty($options['server_url']) || empty($options['api_key'])) {
+            status_header(503);
+            exit('Plugin not configured');
+        }
+
+        // Build URL based on type
+        if ($type === 'thumbnail') {
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?w=300&h=300';
+            $timeout = 10;
+        } else {
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/original';
+            $timeout = 30;
+        }
+
+        // Fetch image from Immich
+        $resp = wp_remote_get($url, [
+            'headers' => ['x-api-key' => $options['api_key']],
+            'timeout' => $timeout,
+            'sslverify' => true
+        ]);
+
+        if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) != 200) {
+            status_header(404);
+            exit('Image not found');
+        }
+
+        // Security headers
+        header('Content-Type: image/jpeg');
+        header('X-Content-Type-Options: nosniff');
+        header('Cache-Control: public, max-age=31536000');
+        
+        // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Binary image data
+        echo wp_remote_retrieve_body($resp);
+        exit;
+    }
+
     /* --- Admin settings --- */
     public function add_admin_menu() {
-        add_options_page('Immich Gallery', 'Immich Gallery', 'manage_options', 'immich_gallery', [$this, 'options_page']);
+        add_options_page(
+            __('Gallery for Immich', 'gallery-for-immich'),
+            __('Gallery for Immich', 'gallery-for-immich'),
+            'manage_options',
+            'gallery_for_immich',
+            [$this, 'options_page']
+        );
     }
 
     public function settings_init() {
-        register_setting('immich_gallery', $this->option_name, [
+        register_setting('gallery_for_immich', $this->option_name, [
             'sanitize_callback' => [$this, 'sanitize_settings'],
         ]);
 
-        add_settings_section('immich_gallery_section', __('Settings', 'immich-gallery'), null, 'immich_gallery');
+        add_settings_section('gallery_for_immich_section', __('Settings', 'gallery-for-immich'), null, 'gallery_for_immich');
 
-        add_settings_field('server_url', __('Immich server URL', 'immich-gallery'), [$this, 'field_server_url'], 'immich_gallery', 'immich_gallery_section');
-        add_settings_field('api_key', __('API Key', 'immich-gallery'), [$this, 'field_api_key'], 'immich_gallery', 'immich_gallery_section');
+        add_settings_field('server_url', __('Immich server URL', 'gallery-for-immich'), [$this, 'field_server_url'], 'gallery_for_immich', 'gallery_for_immich_section');
+        add_settings_field('api_key', __('API Key', 'gallery-for-immich'), [$this, 'field_api_key'], 'gallery_for_immich', 'gallery_for_immich_section');
     }
 
     public function sanitize_settings($input) {
@@ -93,7 +160,7 @@ class Immich_Gallery {
                 add_settings_error(
                     $this->option_name,
                     'invalid_url',
-                    __('Server URL must use HTTPS (or localhost for development).', 'immich-gallery')
+                    __('Server URL must use HTTPS (or localhost for development).', 'gallery-for-immich')
                 );
             }
         }
@@ -108,7 +175,7 @@ class Immich_Gallery {
                 add_settings_error(
                     $this->option_name,
                     'invalid_api_key',
-                    __('API Key contains invalid characters.', 'immich-gallery')
+                    __('API Key contains invalid characters.', 'gallery-for-immich')
                 );
             }
         }
@@ -133,15 +200,15 @@ class Immich_Gallery {
     public function options_page() {
         // Double-check user capabilities
         if (!current_user_can('manage_options')) {
-            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'immich-gallery'));
+            wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'gallery-for-immich'));
         }
         ?>
         <div class="wrap">
-            <h1>Immich Gallery</h1>
+            <h1><?php echo esc_html__('Gallery for Immich', 'gallery-for-immich'); ?></h1>
             <form method="post" action="options.php">
                 <?php
-                settings_fields('immich_gallery');
-                do_settings_sections('immich_gallery');
+                settings_fields('gallery_for_immich');
+                do_settings_sections('gallery_for_immich');
                 submit_button();
                 ?>
             </form>
@@ -247,26 +314,50 @@ class Immich_Gallery {
 
     /* --- Gutenberg block registration --- */
     public function register_block() {
-        // Register the block with compiled script
-        wp_register_script(
-            'immich-gallery-block',
-            plugins_url('build/index.js', __FILE__),
-            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-api-fetch'],
-            filemtime(plugin_dir_path(__FILE__) . 'build/index.js'),
-            true // Load in footer
-        );
-        
-        // Set translations for the block editor script
-        wp_set_script_translations(
-            'immich-gallery-block',
-            'immich-gallery',
-            plugin_dir_path(__FILE__) . 'languages'
-        );
-        
+        // Register the block - translation loading happens in enqueue_block_editor_assets
         register_block_type(__DIR__ . '/block.json', [
-            'editor_script' => 'immich-gallery-block',
             'render_callback' => [$this, 'render_block']
         ]);
+    }
+    
+    /**
+     * Enqueue block editor assets and set up translations
+     * This runs when the block editor is loaded, ensuring proper timing for translation setup
+     */
+    public function enqueue_block_editor_assets() {
+        // Get the webpack build hash from the asset file
+        $asset_file = plugin_dir_path(__FILE__) . 'build/index.asset.php';
+        $asset = file_exists($asset_file) ? require $asset_file : ['version' => filemtime(plugin_dir_path(__FILE__) . 'build/index.js')];
+        
+        // Register and enqueue the block script
+        wp_enqueue_script(
+            'gallery-for-immich-block',
+            plugins_url('build/index.js', __FILE__),
+            ['wp-blocks', 'wp-element', 'wp-block-editor', 'wp-components', 'wp-i18n', 'wp-api-fetch'],
+            $asset['version'],
+            true
+        );
+        
+        // Load translations inline - must use wp.i18n API correctly
+        $locale = determine_locale();
+        $json_file = plugin_dir_path(__FILE__) . 'languages/gallery-for-immich-' . $locale . '-' . $asset['version'] . '.json';
+        
+        if (file_exists($json_file)) {
+            $translations = file_get_contents($json_file);
+            $json_data = json_decode($translations, true);
+            
+            // Use the correct wp.i18n API
+            if (isset($json_data['locale_data']['messages'])) {
+                wp_add_inline_script(
+                    'gallery-for-immich-block',
+                    sprintf(
+                        'wp.domReady(function() { wp.i18n.setLocaleData(%s, "gallery-for-immich"); });',
+                        wp_json_encode($json_data['locale_data']['messages'])
+                    ),
+                    'before'
+                );
+            }
+        }
     }
     
     public function render_block($attributes) {
@@ -314,7 +405,7 @@ class Immich_Gallery {
     
     /* --- REST API endpoint for block editor --- */
     public function register_rest_routes() {
-        register_rest_route('immich-gallery/v1', '/albums', [
+        register_rest_route('gallery-for-immich/v1', '/albums', [
             'methods' => 'GET',
             'callback' => [$this, 'rest_get_albums'],
             'permission_callback' => function() {
@@ -338,7 +429,7 @@ class Immich_Gallery {
         $formatted_albums = array_map(function($album) {
             return [
                 'id' => $album['id'],
-                'name' => $album['albumName'] ?? __('Untitled Album', 'immich-gallery')
+                'name' => $album['albumName'] ?? __('Untitled Album', 'gallery-for-immich')
             ];
         }, $immich_albums);
         
@@ -351,7 +442,7 @@ class Immich_Gallery {
         
         // Validate options exist
         if (empty($options['server_url']) || empty($options['api_key'])) {
-            return ['error' => true, 'message' => __('Plugin not configured. Please set Server URL and API Key in settings.', 'immich-gallery')];
+            return ['error' => true, 'message' => __('Plugin not configured. Please set Server URL and API Key in settings.', 'gallery-for-immich')];
         }
         
         $url = rtrim($options['server_url'], '/') . '/api/' . ltrim($endpoint, '/');
@@ -359,7 +450,7 @@ class Immich_Gallery {
         $response = wp_remote_get($url, [
             'headers' => [
                 'x-api-key' => $options['api_key'],
-                'User-Agent' => 'WordPress-Immich-Gallery/' . get_bloginfo('version')
+                'User-Agent' => 'WordPress-Gallery-for-Immich/' . get_bloginfo('version')
             ],
             'timeout' => 15,
             'sslverify' => true // Enforce SSL verification
@@ -372,7 +463,7 @@ class Immich_Gallery {
         $status_code = wp_remote_retrieve_response_code($response);
         if ($status_code !== 200) {
             /* translators: %d: HTTP status code number */
-            return ['error' => true, 'message' => sprintf(__('API returned status code: %d', 'immich-gallery'), $status_code)];
+            return ['error' => true, 'message' => sprintf(__('API returned status code: %d', 'gallery-for-immich'), $status_code)];
         }
         
         return json_decode(wp_remote_retrieve_body($response), true);
@@ -392,13 +483,14 @@ class Immich_Gallery {
         
         // Validate album parameter from GET or shortcode
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public gallery view, no privileged action
-        $album = sanitize_text_field(wp_unslash($_GET['immich_gallery'] ?? ($atts['album'] ?? '')));
+        $album = sanitize_text_field(wp_unslash($_GET['gallery_for_immich'] ?? ($atts['album'] ?? '')));
         if ($album && !preg_match('/^[a-f0-9\-]{36}$/i', $album)) {
             $album = ''; // Invalid format, ignore
         }
         
         // Validate asset parameter
         $asset = sanitize_text_field($atts['asset'] ?? '');
+        $asset_requested = !empty($asset); // Remember if asset was explicitly requested
         if ($asset && !preg_match('/^[a-f0-9\-]{36}$/i', $asset)) {
             $asset = ''; // Invalid format, ignore
         }
@@ -448,25 +540,27 @@ class Immich_Gallery {
         // Enable lazy loading for all images
         $lazy_attr = ' loading="lazy"';
 
-        if ($asset) {
+        if ($asset_requested) {
             // Direct link to single asset
-            $asset = $this->api_request('assets/' . $asset);
-            // error_log(print_r($asset, true));
+            $asset_data = $this->api_request('assets/' . $asset);
+            // error_log(print_r($asset_data, true));
 
-            if (!$asset || empty($asset['id'])) return '<p>' . __('Photo not found.', 'immich-gallery') . '</p>';
+            if (!$asset_data || empty($asset_data['id']) || $asset_data['type'] !== 'IMAGE') {
+                return '<p>' . __('Photo not found.', 'gallery-for-immich') . '</p>';
+            }
 
-            $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
-            $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
+            $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset_data['id'];
+            $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset_data['id'];
 
             $html = '<div>';
             
             // Prepare description for lightbox
             $description = '';
-            if (!empty($asset['exifInfo']['description'])) {
-                $description = esc_attr($asset['exifInfo']['description']);
+            if (!empty($asset_data['exifInfo']['description'])) {
+                $description = esc_attr($asset_data['exifInfo']['description']);
             }
-            if (!empty($asset['exifInfo']['dateTimeOriginal'])) {
-                $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+            if (!empty($asset_data['exifInfo']['dateTimeOriginal'])) {
+                $date = wp_date('Y-m-d', strtotime($asset_data['exifInfo']['dateTimeOriginal']));
                 if ($description) {
                     $description .= ' • ' . $date;
                 } else {
@@ -475,15 +569,15 @@ class Immich_Gallery {
             }
             
             $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
-                        data-gallery="asset-' . esc_attr($asset['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="max-width:100%;border-radius:6px;margin-bottom:15px;"' . $lazy_attr . '>
+                        data-gallery="asset-' . esc_attr($asset_data['id']) . '">
+                        <img src="' . esc_url($thumb_url) . '" style="width:' . $size . 'px;max-width:100%;height:auto;border-radius:6px;margin-bottom:15px;"' . $lazy_attr . '>
                         </a>';
-            if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
-                $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
+            if (in_array('asset_date', $show) && !empty($asset_data['exifInfo']['dateTimeOriginal'])) {
+                $date = wp_date('Y-m-d', strtotime($asset_data['exifInfo']['dateTimeOriginal']));
                 $html .= '<div>' . esc_html($date) . '</div>';
             }
             if (in_array('asset_description', $show)) {
-                $html .= '<div>' . esc_html($asset['exifInfo']['description'] ?? '') . '</div>';
+                $html .= '<div>' . esc_html($asset_data['exifInfo']['description'] ?? '') . '</div>';
             }
             $html .= '</div>';
 
@@ -493,7 +587,7 @@ class Immich_Gallery {
             $album = $this->api_request('albums/' . $album);
             // error_log(print_r($album, true));
 
-            if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'immich-gallery') . '</p>';
+            if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'gallery-for-immich') . '</p>';
 
             // Sort album photos based on order parameter
             // date_asc: oldest first (chronological), date_desc: newest first
@@ -537,12 +631,12 @@ class Immich_Gallery {
             if (in_array('gallery_description', $show) && !empty($album['description'])) {
                 $html .= '<p style="font-size:' . $description_size . 'px;">' . esc_html($album['description']) . '</p>';
             }
-            $html .= '<div class="immich-grid immich-album-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' . $size . 'px,1fr));gap:15px;">';
+            $html .= '<div class="immich-grid immich-album-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' . $size . 'px,' . $size . 'px));gap:15px;">';
 
             foreach ($assets_to_render as $asset) {
                 if (empty($asset['id'])) continue;
-                $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $asset['id'];
-                $full_url  = plugins_url('immich-gallery-original.php', __FILE__) . '?id=' . $asset['id'];
+                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset['id'];
+                $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset['id'];
                 
                 // Prepare description for lightbox
                 $description = '';
@@ -573,7 +667,7 @@ class Immich_Gallery {
                 $html .= '</div>';
             }
             $html .= '</div>';
-            //$html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Back to overview', 'immich-gallery') . '</a></p>';
+            $html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Return to gallery', 'gallery-for-immich') . '</a></p>';
 
             return $html;
         } else {
@@ -583,14 +677,14 @@ class Immich_Gallery {
 
             // Check for API error
             if (isset($immich_albums['error']) && $immich_albums['error']) {
-                return '<p>' . __('Error from Immich API: ', 'immich-gallery') . esc_html($immich_albums['error']) . ': ' . esc_html($immich_albums['message']) . '</p>';
+                return '<p>' . __('Error from Immich API: ', 'gallery-for-immich') . esc_html($immich_albums['error']) . ': ' . esc_html($immich_albums['message']) . '</p>';
             }
 
             if (!$immich_albums) {
-                return '<p>' . __('No albums found.', 'immich-gallery') . '</p>';
+                return '<p>' . __('No albums found.', 'gallery-for-immich') . '</p>';
             }
 
-            $html = '<div class="immich-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' . $size . 'px,1fr));gap:20px;">';
+            $html = '<div class="immich-grid" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(' . $size . 'px,' . $size . 'px));gap:20px;">';
             
             // Determine which albums to render and in what order
             $albums_to_render = [];
@@ -645,16 +739,16 @@ class Immich_Gallery {
             // Render the albums
             foreach ($albums_to_render as $album) {
                 if (empty($album['albumThumbnailAssetId'])) continue;
-                $thumb_url = plugins_url('immich-gallery-thumbnail.php', __FILE__) . '?id=' . $album['albumThumbnailAssetId'];
+                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $album['albumThumbnailAssetId'];
 
                 $html .= '<div>';
-                $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
+                $html .= '<a href="' . get_permalink() . '?gallery_for_immich=' . esc_attr($album['id']) . '">
                         <img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;display:block;"' . $lazy_attr . '></a>';;
                 
                 if (in_array('gallery_name', $show) || in_array('gallery_description', $show)) {
                     $html .= '<div style="text-align:center;">';
                     if (in_array('gallery_name', $show)) {
-                        $html .= '<a href="' . get_permalink() . '?immich_gallery=' . esc_attr($album['id']) . '">
+                        $html .= '<a href="' . get_permalink() . '?gallery_for_immich=' . esc_attr($album['id']) . '">
                                 <div style="font-weight:bold;margin-bottom:5px;font-size:' . $title_size . 'px;">' . esc_html($album['albumName']) . '</div></a>';
                     }
                     if (in_array('gallery_description', $show)) {
@@ -672,4 +766,4 @@ class Immich_Gallery {
     }
 }
 
-new Immich_Gallery();
+new Gallery_For_Immich();

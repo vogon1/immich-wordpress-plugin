@@ -14,7 +14,7 @@ const Edit = ({ attributes, setAttributes }) => {
 	
 	// Fetch albums from REST API
 	useEffect(() => {
-		apiFetch({ path: '/immich-gallery/v1/albums' })
+		apiFetch({ path: '/gallery-for-immich/v1/albums' })
 			.then(data => {
 				if (data && data.albums) {
 					setAvailableAlbums(data.albums);
@@ -29,7 +29,7 @@ const Edit = ({ attributes, setAttributes }) => {
 	
 	// Generate shortcode preview
 	const generateShortcode = () => {
-		let shortcode = '[immich_gallery';
+		let shortcode = '[gallery_for_immich';
 		
 		if (mode === 'asset' && asset) {
 			shortcode += ` asset="${asset}"`;
@@ -68,7 +68,7 @@ const Edit = ({ attributes, setAttributes }) => {
 	};
 	
 	const albumOptions = [
-		{ label: __('Select an album...', 'immich-gallery'), value: '' },
+		{ label: __('Select an album...', 'gallery-for-immich'), value: '' },
 		...availableAlbums
 			.sort((a, b) => a.name.localeCompare(b.name))
 			.map(albumItem => ({
@@ -78,20 +78,20 @@ const Edit = ({ attributes, setAttributes }) => {
 	];
 	
 	const showOptions = [
-		{ label: __('Gallery name', 'immich-gallery'), value: 'gallery_name' },
-		{ label: __('Gallery description', 'immich-gallery'), value: 'gallery_description' },
-		{ label: __('Asset date', 'immich-gallery'), value: 'asset_date' },
-		{ label: __('Asset description', 'immich-gallery'), value: 'asset_description' }
+		{ label: __('Gallery name', 'gallery-for-immich'), value: 'gallery_name' },
+		{ label: __('Gallery description', 'gallery-for-immich'), value: 'gallery_description' },
+		{ label: __('Asset date', 'gallery-for-immich'), value: 'asset_date' },
+		{ label: __('Asset description', 'gallery-for-immich'), value: 'asset_description' }
 	];
 	
 	const orderOptions = [
-		{ label: __('Default', 'immich-gallery'), value: '' },
-		{ label: __('Newest first', 'immich-gallery'), value: 'date_desc' },
-		{ label: __('Oldest first', 'immich-gallery'), value: 'date_asc' },
-		{ label: __('A-Z (albums only)', 'immich-gallery'), value: 'name_asc' },
-		{ label: __('Z-A (albums only)', 'immich-gallery'), value: 'name_desc' },
-		{ label: __('A-Z by description (photos only)', 'immich-gallery'), value: 'description_asc' },
-		{ label: __('Z-A by description (photos only)', 'immich-gallery'), value: 'description_desc' }
+		{ label: __('Default', 'gallery-for-immich'), value: '' },
+		{ label: __('Newest first', 'gallery-for-immich'), value: 'date_desc' },
+		{ label: __('Oldest first', 'gallery-for-immich'), value: 'date_asc' },
+		{ label: __('A-Z (albums only)', 'gallery-for-immich'), value: 'name_asc' },
+		{ label: __('Z-A (albums only)', 'gallery-for-immich'), value: 'name_desc' },
+		{ label: __('A-Z by description (photos only)', 'gallery-for-immich'), value: 'description_asc' },
+		{ label: __('Z-A by description (photos only)', 'gallery-for-immich'), value: 'description_desc' }
 	];
 	
 	const handleShowToggle = (value, checked) => {
@@ -128,30 +128,30 @@ const Edit = ({ attributes, setAttributes }) => {
 	return (
 		<div {...blockProps}>
 			<InspectorControls>
-				<PanelBody title={__('Gallery Settings', 'immich-gallery')} initialOpen={true}>
+				<PanelBody title={__('Gallery Settings', 'gallery-for-immich')} initialOpen={true}>
 					<RadioControl
-						label={__('Display Mode', 'immich-gallery')}
+						label={__('Display Mode', 'gallery-for-immich')}
 						selected={mode}
 						options={[
-							{ label: __('All albums overview', 'immich-gallery'), value: 'overview' },
-							{ label: __('Single album', 'immich-gallery'), value: 'single' },
-							{ label: __('Multiple albums', 'immich-gallery'), value: 'multiple' },
-							{ label: __('Single photo', 'immich-gallery'), value: 'asset' }
+							{ label: __('All albums overview', 'gallery-for-immich'), value: 'overview' },
+							{ label: __('Single album', 'gallery-for-immich'), value: 'single' },
+							{ label: __('Multiple albums', 'gallery-for-immich'), value: 'multiple' },
+							{ label: __('Single photo', 'gallery-for-immich'), value: 'asset' }
 						]}
 						onChange={handleModeChange}
 					/>
 					
 				{mode === 'asset' && (
 					<TextControl
-						label={__('Photo ID', 'immich-gallery')}
+						label={__('Photo ID', 'gallery-for-immich')}
 						value={asset}
 						onChange={(value) => setAttributes({ asset: value })}
 						placeholder="e.g., 3c874076-ba9e-410a-8501-ef3cca897bcd"
-						help={__('Enter the photo ID from your Immich URL', 'immich-gallery')}
+						help={__('Enter the photo ID from your Immich URL', 'gallery-for-immich')}
 					/>
 				)}					{mode === 'single' && (
 						<SelectControl
-							label={__('Select Album', 'immich-gallery')}
+							label={__('Select Album', 'gallery-for-immich')}
 							value={album}
 							options={albumOptions}
 							onChange={(value) => setAttributes({ album: value })}
@@ -162,7 +162,7 @@ const Edit = ({ attributes, setAttributes }) => {
 					{mode === 'multiple' && !loading && availableAlbums.length > 0 && (
 						<div style={{ marginTop: '12px' }}>
 							<label style={{ fontWeight: 600, marginBottom: '8px', display: 'block' }}>
-								{__('Select Albums', 'immich-gallery')}
+								{__('Select Albums', 'gallery-for-immich')}
 							</label>
 							{availableAlbums.map(albumItem => (
 								<CheckboxControl
@@ -176,14 +176,14 @@ const Edit = ({ attributes, setAttributes }) => {
 					)}
 					
 					<SelectControl
-						label={__('Sort Order', 'immich-gallery')}
+						label={__('Sort Order', 'gallery-for-immich')}
 						value={order}
 						options={orderOptions}
 					onChange={(value) => setAttributes({ order: value })}
 				/>
 				
 				<RangeControl
-					label={__('Thumbnail Size', 'immich-gallery')}
+					label={__('Thumbnail Size', 'gallery-for-immich')}
 					value={size || 200}
 					onChange={(value) => setAttributes({ size: value })}
 					min={100}
@@ -192,9 +192,9 @@ const Edit = ({ attributes, setAttributes }) => {
 				/>
 			</PanelBody>
 			
-			<PanelBody title={__('Text Sizes', 'immich-gallery')} initialOpen={false}>
+			<PanelBody title={__('Text Sizes', 'gallery-for-immich')} initialOpen={false}>
 				<RangeControl
-					label={__('Title Size', 'immich-gallery')}
+					label={__('Title Size', 'gallery-for-immich')}
 					value={title_size || 16}
 					onChange={(value) => setAttributes({ title_size: value })}
 					min={10}
@@ -203,7 +203,7 @@ const Edit = ({ attributes, setAttributes }) => {
 				/>
 				
 				<RangeControl
-					label={__('Description Size', 'immich-gallery')}
+					label={__('Description Size', 'gallery-for-immich')}
 					value={description_size || 14}
 					onChange={(value) => setAttributes({ description_size: value })}
 					min={10}
@@ -212,14 +212,14 @@ const Edit = ({ attributes, setAttributes }) => {
 				/>
 				
 				<RangeControl
-					label={__('Date Size', 'immich-gallery')}
+					label={__('Date Size', 'gallery-for-immich')}
 					value={date_size || 13}
 					onChange={(value) => setAttributes({ date_size: value })}
 					min={10}
 					max={30}
 					step={1}
 				/>
-			</PanelBody>				<PanelBody title={__('Display Options', 'immich-gallery')} initialOpen={false}>
+			</PanelBody>				<PanelBody title={__('Display Options', 'gallery-for-immich')} initialOpen={false}>
 					{showOptions.map(option => (
 						<CheckboxControl
 							key={option.value}
@@ -240,11 +240,11 @@ const Edit = ({ attributes, setAttributes }) => {
 				border: (mode === 'single' && !album) || (mode === 'multiple' && albums.length === 0) || (mode === 'asset' && !asset) ? '2px solid #ef4444' : 'none'
 			}}>
 				{loading ? (
-					<p>{__('Loading albums...', 'immich-gallery')}</p>
+					<p>{__('Loading albums...', 'gallery-for-immich')}</p>
 				) : (
 					<div>
 						<p style={{ marginBottom: '8px', fontWeight: 'bold', fontSize: '14px' }}>
-							{__('Immich Gallery', 'immich-gallery')}
+							{__('Gallery for Immich', 'gallery-for-immich')}
 						</p>
 						
 						{mode === 'single' && !album && (
@@ -256,9 +256,9 @@ const Edit = ({ attributes, setAttributes }) => {
 								marginBottom: '12px',
 								color: '#991b1b'
 							}}>
-								<strong>{__('⚠️ No album selected', 'immich-gallery')}</strong>
+								<strong>{__('⚠️ No album selected', 'gallery-for-immich')}</strong>
 								<p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
-									{__('Please select an album from the sidebar to display.', 'immich-gallery')}
+									{__('Please select an album from the sidebar to display.', 'gallery-for-immich')}
 								</p>
 							</div>
 						)}
@@ -272,9 +272,9 @@ const Edit = ({ attributes, setAttributes }) => {
 								marginBottom: '12px',
 								color: '#991b1b'
 							}}>
-								<strong>{__('⚠️ No albums selected', 'immich-gallery')}</strong>
+								<strong>{__('⚠️ No albums selected', 'gallery-for-immich')}</strong>
 								<p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
-									{__('Please select at least one album from the sidebar to display.', 'immich-gallery')}
+									{__('Please select at least one album from the sidebar to display.', 'gallery-for-immich')}
 								</p>
 							</div>
 						)}
@@ -288,9 +288,9 @@ const Edit = ({ attributes, setAttributes }) => {
 								marginBottom: '12px',
 								color: '#991b1b'
 							}}>
-								<strong>{__('⚠️ No photo ID entered', 'immich-gallery')}</strong>
+								<strong>{__('⚠️ No photo ID entered', 'gallery-for-immich')}</strong>
 								<p style={{ margin: '4px 0 0 0', fontSize: '12px' }}>
-									{__('Please enter a photo ID from your Immich server.', 'immich-gallery')}
+									{__('Please enter a photo ID from your Immich server.', 'gallery-for-immich')}
 								</p>
 							</div>
 						)}
@@ -300,23 +300,23 @@ const Edit = ({ attributes, setAttributes }) => {
 						</code>
 						{mode === 'overview' && (
 							<p style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
-								{__('Will display all albums from Immich', 'immich-gallery')}
+								{__('Will display all albums from Immich', 'gallery-for-immich')}
 							</p>
 						)}
 						{mode === 'asset' && asset && (
 							<p style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
-								{__('Single photo: ', 'immich-gallery')}{asset.substring(0, 8)}...
+								{__('Single photo: ', 'gallery-for-immich')}{asset.substring(0, 8)}...
 							</p>
 						)}
 						{mode === 'single' && album && (
 							<p style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
-								{__('Selected: ', 'immich-gallery')}
+								{__('Selected: ', 'gallery-for-immich')}
 								{availableAlbums.find(a => a.id === album)?.name || album}
 							</p>
 						)}
 						{mode === 'multiple' && albums.length > 0 && (
 							<p style={{ marginTop: '8px', fontSize: '11px', color: '#666' }}>
-								{__('Selected albums: ', 'immich-gallery')}{albums.length}
+								{__('Selected albums: ', 'gallery-for-immich')}{albums.length}
 							</p>
 						)}
 					</div>
@@ -326,7 +326,7 @@ const Edit = ({ attributes, setAttributes }) => {
 	);
 };
 
-registerBlockType('immich-gallery/gallery', {
+registerBlockType('gallery-for-immich/gallery', {
 	edit: Edit,
 	save: () => null
 });

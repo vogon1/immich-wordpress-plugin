@@ -1,4 +1,4 @@
-# Immich WordPress Plugin
+# Gallery for Immich
 
 This plugin allows you to easily integrate photos and albums from [Immich](https://immich.app/) into your WordPress site.  
 A simple way to display galleries without uploading images manually.
@@ -9,21 +9,21 @@ A simple way to display galleries without uploading images manually.
 
 ## ✨ Features
 
-- Display list of albums from Immich.
-- Display entire albums from Immich.
-- Display individual photos.
-- Flexible sorting options (date/name, ascending/descending).
-- Shortcode support for posts and pages.
-- Visual Gutenberg block editor.
-- Configure Immich server URL and API key in the WordPress admin panel.
-- Multi-language support (Dutch, German, French).
+- Display list of albums from Immich
+- Display entire albums from Immich
+- Flexible sorting options (date/name, ascending/descending)
+- Beautiful responsive grid layouts with integrated lightbox
+- Configure Immich server URL and API key in the WordPress admin panel
+- **Gutenberg Block Editor** - Visual block for selecting albums, photos and settings
+- **Shortcode Support** - Classic `[gallery_for_immich]` shortcode works in any editor
+- Multi-language support (Dutch, German, French)
 
 ## 📦 Installation
 
 ### From WordPress.org (Recommended)
 
 1. In WordPress, go to **Plugins > Add New**
-2. Search for "Immich Gallery"
+2. Search for "Gallery for Immich"
 3. Click **Install Now** and then **Activate**
 
 ### Manual Installation
@@ -48,7 +48,7 @@ A simple way to display galleries without uploading images manually.
    **Note:** The plugin only needs read-only access. Never grant write permissions for security reasons.
 
 1. Click **Create** and copy the generated API key
-1. In WordPress, go to **Settings > Immich Gallery** and enter:
+1. In WordPress, go to **Settings > Gallery for Immich** and enter:
    - Your Immich server URL (e.g., `https://immich.example.com`)
    - The API key you just created
 1. Save the settings
@@ -59,7 +59,7 @@ A simple way to display galleries without uploading images manually.
 
 The easiest way to add an Immich gallery is through the Gutenberg block editor:
 
-1. Add a new block and search for **"Immich Gallery"**
+1. Add a new block and search for **"Gallery for Immich"**
 2. Select your display mode:
    - **All albums overview** - Show all albums from your Immich server
    - **Single album** - Display photos from one specific album
@@ -79,7 +79,7 @@ You can also use shortcodes directly in your content:
 **Basic Usage:**
 
 ```text
-[immich_gallery]
+[gallery_for_immich]
 ```
 
 Shows a list of all albums with thumbnails.
@@ -87,38 +87,40 @@ Shows a list of all albums with thumbnails.
 **Display specific albums:**
 
 ```text
-[immich_gallery albums=3c874076-ba9e-410a-8501-ef3cca897bcb,3c874076-ba9e-410a-8501-ef3cca897bcc]
+[gallery_for_immich albums=3c874076-ba9e-410a-8501-ef3cca897bcb,3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
 **Display single album:**
 
 ```text
-[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcc]
+[gallery_for_immich album=3c874076-ba9e-410a-8501-ef3cca897bcc]
 ```
 
 **Display single photo:**
 
 ```text
-[immich_gallery asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
 ```
 
 **Customize display options:**
 
 ```text
-[immich_gallery show="gallery_name,asset_description"]
+[gallery_for_immich show="gallery_name,asset_description"]
 ```
 
-Available show options (defaults: `gallery_name`, `asset_description`):
+Available show options (no defaults - must be explicitly specified):
 
 - `gallery_name` - Show the name of the album
 - `gallery_description` - Show description of the album
 - `asset_description` - Show description of photo/video
 - `asset_date` - Show date the photo/video was taken
 
+**Note:** If the `show` parameter is not specified, only thumbnails are displayed without any text.
+
 **Customize sizes:**
 
 ```text
-[immich_gallery size="300" title_size="18" description_size="15" date_size="12"]
+[gallery_for_immich size="300" title_size="18" description_size="15" date_size="12"]
 ```
 
 Size options:
@@ -131,7 +133,7 @@ Size options:
 **Sorting options:**
 
 ```text
-[immich_gallery order="date_desc"]
+[gallery_for_immich order="date_desc"]
 ```
 
 Available order options:
@@ -150,17 +152,17 @@ Available order options:
 Sort albums alphabetically:
 
 ```text
-[immich_gallery order="name_asc"]
+[gallery_for_immich order="name_asc"]
 ```
 
 Show photos in chronological order (oldest first):
 
 ```text
-[immich_gallery album=3c874076-ba9e-410a-8501-ef3cca897bcd order=date_asc]
+[gallery_for_immich album=3c874076-ba9e-410a-8501-ef3cca897bcd order=date_asc]
 ```
 
 Use the shortcode below to display just one photo:
 
 ```text
-[immich_gallery asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
 ```

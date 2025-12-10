@@ -1,14 +1,14 @@
 {
 	"$schema": "https://schemas.wp.org/trunk/block.json",
 	"apiVersion": 3,
-	"name": "immich-gallery/gallery",
-	"version": "0.4.1",
-	"title": "Immich Gallery",
+	"name": "gallery-for-immich/gallery",
+	"version": "0.4.0",
+	"title": "Gallery for Immich",
 	"category": "media",
 	"icon": "format-gallery",
 	"description": "Display photos and albums from your Immich server",
 	"keywords": ["gallery", "photos", "immich", "images"],
-	"textdomain": "immich-gallery",
+	"textdomain": "gallery-for-immich",
 	"attributes": {
 		"mode": {
 			"type": "string",
@@ -53,5 +53,6 @@
 	},
 	"supports": {
 		"html": false
-	}
+	},
+	"editorScript": "file:./build/index.js"
 }

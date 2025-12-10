@@ -1,6 +1,6 @@
 <?php
 /**
- * Uninstall script for Immich Gallery plugin
+ * Uninstall script for Gallery for Immich plugin
  * 
  * This file is executed when the plugin is deleted via WordPress admin.
  * It removes all plugin data from the database.
@@ -12,10 +12,10 @@ if (!defined('WP_UNINSTALL_PLUGIN')) {
 }
 
 // Delete plugin options
-delete_option('immich_gallery_settings');
+delete_option('gallery_for_immich_settings');
 
 // For multisite installations
-delete_site_option('immich_gallery_settings');
+delete_site_option('gallery_for_immich_settings');
 
 // Note: We don't delete the translations as they're just files
 // WordPress will remove the entire plugin directory automatically

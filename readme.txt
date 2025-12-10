@@ -1,31 +1,30 @@
-=== Immich Gallery ===
+=== Gallery for Immich ===
 Contributors: sietsevisser
 Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.1
-License: GPLv2 or later
-License URI: https://www.gnu.org/licenses/gpl-2.0.html
+Stable tag: 0.4.0
+License: GPLv3 or later
+License URI: https://www.gnu.org/licenses/gpl-3.0.html
 
 Display your Immich photo albums and galleries in WordPress using simple shortcodes.
 
 == Description ==
 
-Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted Immich photo server with your WordPress site. Display beautiful photo galleries and albums using simple shortcodes.
+Gallery for Immich is a WordPress plugin that seamlessly integrates your self-hosted Immich photo server with your WordPress site. Display beautiful photo galleries and albums using simple shortcodes.
 
 **Key Features:**
 
-* Display all albums from your Immich server
-* Show specific albums by ID
-* Display individual photos with EXIF data
+* **Gutenberg Block Editor** - Visual block for selecting albums, photos and settings
+* **Shortcode Support** - Classic `[gallery_for_immich]` shortcode for any editor
+* Display list of albums from Immich
+* Display entire albums from Immich
 * Beautiful responsive grid layouts
 * Integrated lightbox with GLightbox
-* Automatic sorting (albums by date, photos chronologically)
 * Flexible sorting options (date/name, ascending/descending)
-* Full internationalization support (includes Dutch translation)
-* Secure API integration with validation
-* HTTPS enforcement for production use
+* Full internationalization support (Dutch, German, French translations)
+* Configure Immich server URL and API key in the WordPress admin panel
 
 **Perfect for:**
 
@@ -37,24 +36,35 @@ Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted
 
 == Installation ==
 
-1. Upload the `immich-gallery` folder to the `/wp-content/plugins/` directory
-2. Activate the plugin through the 'Plugins' menu in WordPress
-3. Go to Settings > Immich Gallery
-4. Enter your Immich server URL (must be HTTPS)
-5. Enter your Immich API key
-6. Use shortcodes in your posts and pages
+1. Install via WordPress admin: Plugins > Add New > Search for "Gallery for Immich"
+2. Click "Install Now" and then "Activate"
+3. Or upload the plugin files to `/wp-content/plugins/gallery-for-immich/` directory and activate through the 'Plugins' menu
 
-== Configuration ==
+**Configuration:**
 
-**Settings:**
+After activation, configure your Immich server connection:
 
-1. Navigate to Settings > Immich Gallery in your WordPress admin
+**Step 1: Create an Immich API Key**
+
+1. Log in to your Immich server with the user account whose photos you want to display
+2. Go to **Account Settings** (click your profile picture in the top right)
+3. Navigate to **API Keys** tab
+4. Click **New API Key**
+5. Give it a descriptive name (e.g., "WordPress Plugin")
+6. Set the following **minimum required permissions**:
+   * `album.read` - Required to list and view albums
+   * `asset.read` - Required to access photo metadata (EXIF data, descriptions, dates)
+   * `asset.view` - Required to retrieve photo thumbnails
+   * `asset.download` - Required to retrieve original full-size photos
+7. **Important:** Only grant read-only access. Never grant write permissions for security reasons.
+8. Click **Create** and copy the generated API key
+
+**Step 2: Configure the Plugin in WordPress**
+
+1. Navigate to Settings > Gallery for Immich in your WordPress admin
 2. Enter your Immich server URL (e.g., https://immich.example.com)
-3. Generate an API key in your Immich server settings
-4. Paste the API key in the plugin settings
-5. Save changes
-
-**Security Note:** The plugin requires HTTPS for production servers. Localhost URLs are allowed for development.
+3. Paste the API key you created in Step 1
+4. Save changes
 
 == Usage ==
 
@@ -62,7 +72,7 @@ Immich Gallery is a WordPress plugin that seamlessly integrates your self-hosted
 
 The easiest way to add an Immich gallery is through the Gutenberg block editor:
 
-1. Add a new block and search for "Immich Gallery"
+1. Add a new block and search for "Gallery for Immich"
 2. Select your display mode (all albums, single album, multiple albums, or single photo)
 3. Configure display options using the sidebar controls
 4. Customize thumbnail size and text sizes as needed
@@ -73,28 +83,30 @@ The easiest way to add an Immich gallery is through the Gutenberg block editor:
 You can also use shortcodes directly in your content:
 
 **Display all albums:**
-`[immich_gallery]`
+`[gallery_for_immich]`
 
 **Display specific albums (comma-separated IDs):**
-`[immich_gallery albums="album-id-1,album-id-2"]`
+`[gallery_for_immich albums="album-id-1,album-id-2"]`
 
 **Display single album:**
-`[immich_gallery album="album-id"]`
+`[gallery_for_immich album="album-id"]`
 
 **Display single photo:**
-`[immich_gallery asset="photo-id"]`
+`[gallery_for_immich asset="photo-id"]`
 
 **Customize display options:**
-`[immich_gallery show="gallery_name,asset_description"]`
+`[gallery_for_immich show="gallery_name,asset_description"]`
 
-Available show options (defaults: gallery_name, asset_description):
+Available show options (no defaults - must be explicitly specified):
 * `gallery_name` - Show album/gallery name
 * `gallery_description` - Show album description
 * `asset_date` - Show photo date
 * `asset_description` - Show photo description
 
+Note: If the `show` parameter is not specified, only thumbnails are displayed without any text.
+
 **Customize sizes:**
-`[immich_gallery size="300" title_size="18" description_size="15" date_size="12"]`
+`[gallery_for_immich size="300" title_size="18" description_size="15" date_size="12"]`
 
 Size options:
 * `size` - Thumbnail size in pixels (100-500, default: 200)
@@ -103,8 +115,8 @@ Size options:
 * `date_size` - Date font size (10-30, default: 13)
 
 **Sort order:**
-`[immich_gallery order="date_desc"]`
-`[immich_gallery album="album-id" order="description_asc"]`
+`[gallery_for_immich order="date_desc"]`
+`[gallery_for_immich album="album-id" order="description_asc"]`
 
 Available order options:
 * `date_desc` - Newest first (default for albums)
@@ -140,7 +152,12 @@ Yes, the plugin generates standard HTML with CSS classes. You can override style
 
 = Is the plugin translated? =
 
-Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translations. Additional translations can be added via .po files.
+Yes, the plugin is fully internationalized and includes translations for:
+* Dutch (nl_NL) - Nederlands
+* German (de_DE) - Deutsch
+* French (fr_FR) - Français
+
+Additional translations can be contributed via .po files in the languages directory.
 
 == Screenshots ==
 
@@ -151,25 +168,22 @@ Yes, the plugin is fully internationalized and includes Dutch (nl_NL) translatio
 
 == Changelog ==
 
-= 0.4.1 =
-*Release Date - 5 December 2025*
-
-* Fixed: Default values now properly displayed in Gutenberg block controls (RangeControls show defaults)
-* Fixed: PHP no longer overrides display options set in Gutenberg block
-* Display options with sensible defaults (gallery name, asset description)
-* Improved: Display option defaults now consistent between block and shortcode
-* Updated: Documentation with Gutenberg block usage examples and default values
-* Tested with WordPress 6.9
-
 = 0.4.0 =
-*Release Date - 30 November 2025*
+*Release Date - 10 December 2025*
 
-* Added Gutenberg block editor
-* Visual block interface for easy gallery configuration
-* Display mode selection (all albums, single album, multiple albums, single photo)
-* Options added for thumbnail size and text sizes
-* Added German (de_DE) translation - complete internationalization
-* Added French (fr_FR) translation - complete internationalization
+* New: Gutenberg block "Gallery for Immich" with visual editor
+* New: Full Gutenberg block support with all shortcode features
+* New: Full translation support for Dutch, German, and French
+
+= 0.3.3 =
+*Release Date - 9 December 2025*
+
+* WordPress.org compliance improvements
+* Fixed: Removed direct file access
+* Fixed: Added translation support for plugin name and description
+* Updated: License changed to GPLv3 for consistency
+* Improved: Image proxy now uses query parameters instead of direct PHP files
+* Improved: glightbox in its own namespace
 
 = 0.3.1 =
 *Release Date - 29 November 2025*
