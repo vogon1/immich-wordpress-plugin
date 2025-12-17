@@ -142,6 +142,7 @@ const Edit = ({ attributes, setAttributes }) => {
 					/>
 					
 				{mode === 'asset' && (
+				<>
 					<TextControl
 						label={__('Photo ID', 'gallery-for-immich')}
 						value={asset}
@@ -149,6 +150,19 @@ const Edit = ({ attributes, setAttributes }) => {
 						placeholder="e.g., 3c874076-ba9e-410a-8501-ef3cca897bcd"
 						help={__('Enter the photo ID from your Immich URL', 'gallery-for-immich')}
 					/>
+					<SelectControl
+						label={__('Alignment', 'gallery-for-immich')}
+						value={attributes.align || 'none'}
+						onChange={(value) => setAttributes({ align: value })}
+						options={[
+							{ label: __('Default (none)', 'gallery-for-immich'), value: 'none' },
+							{ label: __('Left (text wraps right)', 'gallery-for-immich'), value: 'left' },
+							{ label: __('Right (text wraps left)', 'gallery-for-immich'), value: 'right' },
+							{ label: __('Center', 'gallery-for-immich'), value: 'center' }
+						]}
+						help={__('Choose alignment for text wrapping around the photo', 'gallery-for-immich')}
+					/>
+				</>
 				)}					{mode === 'single' && (
 						<SelectControl
 							label={__('Select Album', 'gallery-for-immich')}
@@ -175,12 +189,14 @@ const Edit = ({ attributes, setAttributes }) => {
 						</div>
 					)}
 					
-					<SelectControl
-						label={__('Sort Order', 'gallery-for-immich')}
-						value={order}
-						options={orderOptions}
-					onChange={(value) => setAttributes({ order: value })}
-				/>
+					{mode !== 'asset' && (
+						<SelectControl
+							label={__('Sort Order', 'gallery-for-immich')}
+							value={order}
+							options={orderOptions}
+							onChange={(value) => setAttributes({ order: value })}
+						/>
+					)}
 				
 				<RangeControl
 					label={__('Thumbnail Size', 'gallery-for-immich')}

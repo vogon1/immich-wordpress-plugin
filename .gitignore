@@ -1,3 +1,4 @@
 node_modules/
 build/*.asset.php
 .DS_Store
+/dist

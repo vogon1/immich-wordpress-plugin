@@ -10,10 +10,20 @@
 # Build tools
 /package.json
 /package-lock.json
+/build-release.sh
+/clean-build
+/dist
 
 # Documentation (README.md is for GitHub, readme.txt for WordPress)
 /README.md
 /TRANSLATION.md
+
+# Screenshots (for WordPress.org only, not in distribution)
+/assets/screenshot-*.png
+
+# Translation source files (only .mo files needed for production)
+/languages/*.pot
+/languages/*.po
 
 # Old/test files
 /block.js

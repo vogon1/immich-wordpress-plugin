@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Gallery for Immich 0.4.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gallery-for-"
 "immich\n"
-"POT-Creation-Date: 2025-12-10T17:58:17+00:00\n"
+"POT-Creation-Date: 2025-12-12T11:12:29+00:00\n"
 "PO-Revision-Date: 2025-12-10 17:30+0000\n"
 "Last-Translator: GitHub Copilot\n"
 "Language-Team: German\n"
@@ -15,7 +15,7 @@ msgstr ""
 
 #. Plugin Name of the plugin
 #: gallery-for-immich.php gallery-for-immich.php:131 gallery-for-immich.php:132
-#: gallery-for-immich.php:207 build/index.js:1 src/index.js:247
+#: gallery-for-immich.php:207 build/index.js:1 src/index.js:261
 msgid "Gallery for Immich"
 msgstr "Galerie für Immich"
 
@@ -78,39 +78,39 @@ msgstr ""
 "Sie haben nicht die erforderlichen Berechtigungen, um auf diese Seite "
 "zuzugreifen."
 
-#: gallery-for-immich.php:432
+#: gallery-for-immich.php:436
 msgid "Untitled Album"
 msgstr "Unbenanntes Album"
 
-#: gallery-for-immich.php:445
+#: gallery-for-immich.php:449
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
 msgstr ""
 "Plugin nicht konfiguriert. Bitte legen Sie Server-URL und API-Schlüssel in "
 "den Einstellungen fest."
 
 #. translators: %d: HTTP status code number
-#: gallery-for-immich.php:466
+#: gallery-for-immich.php:470
 #, php-format
 msgid "API returned status code: %d"
 msgstr "API hat Statuscode zurückgegeben: %d"
 
-#: gallery-for-immich.php:549
+#: gallery-for-immich.php:560
 msgid "Photo not found."
 msgstr "Foto nicht gefunden."
 
-#: gallery-for-immich.php:590
+#: gallery-for-immich.php:618
 msgid "No photos found in this album."
 msgstr "Keine Fotos in diesem Album gefunden."
 
-#: gallery-for-immich.php:670
+#: gallery-for-immich.php:698
 msgid "Return to gallery"
 msgstr "Zurück zur Galerie"
 
-#: gallery-for-immich.php:680
+#: gallery-for-immich.php:708
 msgid "Error from Immich API: "
 msgstr "Fehler von Immich API: "
 
-#: gallery-for-immich.php:684
+#: gallery-for-immich.php:712
 msgid "No albums found."
 msgstr "Keine Alben gefunden."
 
@@ -186,91 +186,115 @@ msgstr "Mehrere Alben"
 msgid "Single photo"
 msgstr "Einzelnes Foto"
 
-#: build/index.js:1 src/index.js:146
+#: build/index.js:1 src/index.js:147
 msgid "Photo ID"
 msgstr "Foto-ID"
 
-#: build/index.js:1 src/index.js:150
+#: build/index.js:1 src/index.js:151
 msgid "Enter the photo ID from your Immich URL"
 msgstr "Geben Sie die Foto-ID aus Ihrer Immich-URL ein"
 
 #: build/index.js:1 src/index.js:154
+msgid "Alignment"
+msgstr "Ausrichtung"
+
+#: build/index.js:1 src/index.js:158
+msgid "Default (none)"
+msgstr "Standard (keine)"
+
+#: build/index.js:1 src/index.js:159
+msgid "Left (text wraps right)"
+msgstr "Links (Text fließt rechts)"
+
+#: build/index.js:1 src/index.js:160
+msgid "Right (text wraps left)"
+msgstr "Rechts (Text fließt links)"
+
+#: build/index.js:1 src/index.js:161
+msgid "Center"
+msgstr "Zentriert"
+
+#: build/index.js:1 src/index.js:163
+msgid "Choose alignment for text wrapping around the photo"
+msgstr "Wählen Sie die Ausrichtung für den Textumfluss um das Foto"
+
+#: build/index.js:1 src/index.js:168
 msgid "Select Album"
 msgstr "Album auswählen"
 
-#: build/index.js:1 src/index.js:165
+#: build/index.js:1 src/index.js:179
 msgid "Select Albums"
 msgstr "Alben auswählen"
 
-#: build/index.js:1 src/index.js:179
+#: build/index.js:1 src/index.js:193
 msgid "Sort Order"
 msgstr "Sortierreihenfolge"
 
-#: build/index.js:1 src/index.js:186
+#: build/index.js:1 src/index.js:200
 msgid "Thumbnail Size"
 msgstr "Vorschaubildgröße"
 
-#: build/index.js:1 src/index.js:195
+#: build/index.js:1 src/index.js:209
 msgid "Text Sizes"
 msgstr "Textgrößen"
 
-#: build/index.js:1 src/index.js:197
+#: build/index.js:1 src/index.js:211
 msgid "Title Size"
 msgstr "Titelgröße"
 
-#: build/index.js:1 src/index.js:206
+#: build/index.js:1 src/index.js:220
 msgid "Description Size"
 msgstr "Beschreibungsgröße"
 
-#: build/index.js:1 src/index.js:215
+#: build/index.js:1 src/index.js:229
 msgid "Date Size"
 msgstr "Datumgröße"
 
-#: build/index.js:1 src/index.js:222
+#: build/index.js:1 src/index.js:236
 msgid "Display Options"
 msgstr "Anzeigeoptionen"
 
-#: build/index.js:1 src/index.js:243
+#: build/index.js:1 src/index.js:257
 msgid "Loading albums..."
 msgstr "Alben werden geladen..."
 
-#: build/index.js:1 src/index.js:259
+#: build/index.js:1 src/index.js:273
 msgid "⚠️ No album selected"
 msgstr "⚠️ Kein Album ausgewählt"
 
-#: build/index.js:1 src/index.js:261
+#: build/index.js:1 src/index.js:275
 msgid "Please select an album from the sidebar to display."
 msgstr "Bitte wählen Sie ein Album aus der Seitenleiste aus."
 
-#: build/index.js:1 src/index.js:275
+#: build/index.js:1 src/index.js:289
 msgid "⚠️ No albums selected"
 msgstr "⚠️ Keine Alben ausgewählt"
 
-#: build/index.js:1 src/index.js:277
+#: build/index.js:1 src/index.js:291
 msgid "Please select at least one album from the sidebar to display."
 msgstr "Bitte wählen Sie mindestens ein Album aus der Seitenleiste aus."
 
-#: build/index.js:1 src/index.js:291
+#: build/index.js:1 src/index.js:305
 msgid "⚠️ No photo ID entered"
 msgstr "⚠️ Keine Foto-ID eingegeben"
 
-#: build/index.js:1 src/index.js:293
+#: build/index.js:1 src/index.js:307
 msgid "Please enter a photo ID from your Immich server."
 msgstr "Bitte geben Sie eine Foto-ID von Ihrem Immich-Server ein."
 
-#: build/index.js:1 src/index.js:303
+#: build/index.js:1 src/index.js:317
 msgid "Will display all albums from Immich"
 msgstr "Zeigt alle Alben von Immich an"
 
-#: build/index.js:1 src/index.js:308
+#: build/index.js:1 src/index.js:322
 msgid "Single photo: "
 msgstr "Einzelnes Foto: "
 
-#: build/index.js:1 src/index.js:313
+#: build/index.js:1 src/index.js:327
 msgid "Selected: "
 msgstr "Ausgewählt: "
 
-#: build/index.js:1 src/index.js:319
+#: build/index.js:1 src/index.js:333
 msgid "Selected albums: "
 msgstr "Ausgewählte Alben: "
 

@@ -49,6 +49,10 @@
 		"date_size": {
 			"type": "number",
 			"default": 13
+		},
+		"align": {
+			"type": "string",
+			"default": "none"
 		}
 	},
 	"supports": {

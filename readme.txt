@@ -7,6 +7,7 @@ Requires PHP: 7.4
 Stable tag: 0.4.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
+Language packs available: nl_NL, de_DE, fr_FR
 
 Display your Immich photo albums and galleries in WordPress using simple shortcodes.
 

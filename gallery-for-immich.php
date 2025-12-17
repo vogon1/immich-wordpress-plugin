@@ -28,12 +28,12 @@ class Gallery_For_Immich {
 
     public function __construct() {
         // Load text domain for translations (required for JavaScript translations)
+        add_action('init', [$this, 'handle_image_proxy']);
         add_action('init', [$this, 'load_textdomain']);
         add_action('admin_menu', [$this, 'add_admin_menu']);
         add_action('admin_init', [$this, 'settings_init']);
         add_shortcode('gallery_for_immich', [$this, 'render_gallery']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
-        add_action('init', [$this, 'handle_image_proxy']);
         
         // Gutenberg block support
         add_action('init', [$this, 'register_block']);
@@ -103,7 +103,7 @@ class Gallery_For_Immich {
             $timeout = 30;
         }
 
-        // Fetch image from Immich
+        // For images, use wp_remote_get
         $resp = wp_remote_get($url, [
             'headers' => ['x-api-key' => $options['api_key']],
             'timeout' => $timeout,
@@ -112,7 +112,7 @@ class Gallery_For_Immich {
 
         if (is_wp_error($resp) || wp_remote_retrieve_response_code($resp) != 200) {
             status_header(404);
-            exit('Image not found');
+            exit('Asset not found');
         }
 
         // Security headers
@@ -244,7 +244,7 @@ class Gallery_For_Immich {
                 heught: auto !important;
                 object-fit: contain !important;
                 display: block !important;
-                margin 0 auto !important;
+                margin: 0 auto !important;
             }
             
             /* Remove blue focus outline */
@@ -400,6 +400,10 @@ class Gallery_For_Immich {
             $shortcode_atts['date_size'] = $attributes['date_size'];
         }
         
+        if (!empty($attributes['align'])) {
+            $shortcode_atts['align'] = $attributes['align'];
+        }
+        
         return $this->render_gallery($shortcode_atts);
     }
     
@@ -484,6 +488,8 @@ class Gallery_For_Immich {
         // Validate album parameter from GET or shortcode
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public gallery view, no privileged action
         $album = sanitize_text_field(wp_unslash($_GET['gallery_for_immich'] ?? ($atts['album'] ?? '')));
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Used for UI display logic only
+        $album_from_url = !empty($_GET['gallery_for_immich']); // Track if album came from URL (navigation)
         if ($album && !preg_match('/^[a-f0-9\-]{36}$/i', $album)) {
             $album = ''; // Invalid format, ignore
         }
@@ -537,6 +543,13 @@ class Gallery_For_Immich {
             $date_size = 13;
         }
         
+        // Sanitize align parameter for single photos - allows text wrapping
+        // Options: left, right, center, none (default)
+        $align = sanitize_text_field($atts['align'] ?? 'none');
+        if (!in_array($align, ['left', 'right', 'center', 'none'])) {
+            $align = 'none';
+        }
+        
         // Enable lazy loading for all images
         $lazy_attr = ' loading="lazy"';
 
@@ -552,7 +565,25 @@ class Gallery_For_Immich {
             $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset_data['id'];
             $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset_data['id'];
 
-            $html = '<div>';
+            // Build inline container with image + metadata
+            $html = '<div class="immich-single-photo">';
+
+            // Apply alignment with float for text wrapping
+            $img_wrapper_style = 'max-width:' . $size . 'px;margin-bottom:1em;';
+
+            if ($align === 'left') {
+                $img_wrapper_style = 'max-width:' . $size . 'px;float:left;margin:0 1.5em 1em 0;';
+            } elseif ($align === 'center') {
+                $img_wrapper_style = 'max-width:' . $size . 'px;margin:0 auto 1em auto;text-align:center;';
+            } elseif ($align === 'right') {
+                $img_wrapper_style = 'max-width:' . $size . 'px;float:right;margin:0 0 1em 1.5em;';
+            }
+            // 'none' uses default style without float
+
+            $html .= '<div style="' . esc_attr($img_wrapper_style) . '">';
+
+            $img_style = 'width:' . $size . 'px;max-width:100%;height:auto;border-radius:6px;display:block;margin-bottom:0.5em;';
+
             
             // Prepare description for lightbox
             $description = '';
@@ -570,7 +601,7 @@ class Gallery_For_Immich {
             
             $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
                         data-gallery="asset-' . esc_attr($asset_data['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="width:' . $size . 'px;max-width:100%;height:auto;border-radius:6px;margin-bottom:15px;"' . $lazy_attr . '>
+                        <img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>
                         </a>';
             if (in_array('asset_date', $show) && !empty($asset_data['exifInfo']['dateTimeOriginal'])) {
                 $date = wp_date('Y-m-d', strtotime($asset_data['exifInfo']['dateTimeOriginal']));
@@ -579,7 +610,7 @@ class Gallery_For_Immich {
             if (in_array('asset_description', $show)) {
                 $html .= '<div>' . esc_html($asset_data['exifInfo']['description'] ?? '') . '</div>';
             }
-            $html .= '</div>';
+            $html .= '</div></div>';
 
             return $html;
         } elseif ($album) {
@@ -667,7 +698,12 @@ class Gallery_For_Immich {
                 $html .= '</div>';
             }
             $html .= '</div>';
-            $html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Return to gallery', 'gallery-for-immich') . '</a></p>';
+            
+            // Only show "back to gallery" link if album was accessed via URL parameter
+            // (meaning user navigated from a gallery overview on the same page)
+            if ($album_from_url) {
+                $html .= '<p><a href="' . get_permalink() . '">&larr; ' . __('Return to gallery', 'gallery-for-immich') . '</a></p>';
+            }
 
             return $html;
         } else {
