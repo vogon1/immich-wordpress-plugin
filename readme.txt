@@ -4,7 +4,7 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.4.0
+Stable tag: 0.5.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -168,6 +168,12 @@ Additional translations can be contributed via .po files in the languages direct
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.5.0 =
+* Release date 17 December 2025*
+
+* New: Support for videos from Immich
+* For single asset: define alignment to allow text around the asset
 
 = 0.4.0 =
 *Release Date - 10 December 2025*

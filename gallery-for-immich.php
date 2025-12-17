@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.4.0
+ * Version: 0.5.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -75,7 +75,7 @@ class Gallery_For_Immich {
         $id = isset($_GET['id']) ? sanitize_text_field(wp_unslash($_GET['id'])) : '';
 
         // Validate type with strict whitelist
-        if (!in_array($type, ['thumbnail', 'original'], true)) {
+        if (!in_array($type, ['thumbnail', 'original', 'video'], true)) {
             status_header(400);
             exit('Invalid type');
         }
@@ -98,9 +98,108 @@ class Gallery_For_Immich {
         if ($type === 'thumbnail') {
             $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?w=300&h=300';
             $timeout = 10;
+        } elseif ($type === 'video') {
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/video/playback';
+            $timeout = 60;
         } else {
             $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/original';
             $timeout = 30;
+        }
+
+        // For video streaming, use curl with range request support
+        if ($type === 'video') {
+
+            if (headers_sent()) {
+                exit;
+            }
+
+            // Kill ALL output buffering
+            while (ob_get_level() > 0) {
+                ob_end_clean();
+            }
+
+            if (function_exists('set_time_limit')) {
+                // phpcs:ignore Squiz.PHP.DiscouragedFunctions.Discouraged -- Long-lived streaming request; prevents premature termination.
+                @set_time_limit(0);
+            }
+            ignore_user_abort(false);
+
+            $range = '';
+
+            if (isset($_SERVER['HTTP_RANGE'])) {
+                // phpcs:ignore WordPress.Security.ValidatedSanitizedInput.InputNotSanitized -- HTTP Range header is protocol-level input; validated via strict regex instead of sanitization.
+                $raw_range = wp_unslash($_SERVER['HTTP_RANGE']);
+
+                if (preg_match('/^bytes=\d*-\d*(,\d*-\d*)*$/', $raw_range)) {
+                    $range = $raw_range;
+                }
+            }
+
+            $headers = [
+                'x-api-key: ' . $options['api_key'],
+            ];
+
+            if ($range) {
+                $headers[] = 'Range: ' . $range;
+            }
+
+            $context = stream_context_create([
+                'http' => [
+                    'method'        => 'GET',
+                    'header'        => implode("\r\n", $headers),
+                    'ignore_errors' => true,
+                    'timeout'       => 60,
+                ]
+            ]);
+
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fopen -- Streaming remote HTTP resource; WP_Filesystem is not suitable for chunked streaming with backpressure.
+            $remote = @fopen($url, 'rb', false, $context);
+            if (!$remote) {
+                status_header(404);
+                exit('Video not found');
+            }
+
+            // Parse response headers
+            $meta = stream_get_meta_data($remote);
+            foreach ($meta['wrapper_data'] as $header) {
+                if (stripos($header, 'HTTP/') === 0) {
+                    if (str_contains($header, '206')) {
+                        status_header(206);
+                    } else {
+                        status_header(200);
+                    }
+                }
+
+                if (preg_match('/^(Content-Type|Content-Length|Content-Range|Accept-Ranges):/i', $header)) {
+                    header($header);
+                }
+            }
+
+            header('X-Content-Type-Options: nosniff');
+            header('Cache-Control: public, max-age=31536000');
+
+            // Stream in small chunks with backpressure
+            $chunkSize = 8192;
+
+            while (!feof($remote)) {
+                if (connection_aborted()) {
+                    break;
+                }
+
+                // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fread -- Required for safe chunked streaming; WP_Filesystem does not support backpressure.
+                $buffer = fread($remote, $chunkSize);
+                if ($buffer === false) {
+                    break;
+                }
+
+                // phpcs:ignore WordPress.Security.EscapeOutput.OutputNotEscaped -- Binary video data; escaping would corrupt output. Safe streaming to client.
+                echo $buffer;
+                flush();
+            }
+
+            // phpcs:ignore WordPress.WP.AlternativeFunctions.file_system_operations_fclose -- Required to explicitly close HTTP stream resource; WP_Filesystem does not manage stream lifecycles.
+            fclose($remote);
+            exit;
         }
 
         // For images, use wp_remote_get
@@ -247,6 +346,21 @@ class Gallery_For_Immich {
                 margin: 0 auto !important;
             }
             
+            .glightbox-container .gslide-inline video {
+                max-width: 100%;
+                max-height: 100%;
+                display: block;
+                margin: auto auto;
+            }
+            
+            .glightbox-container .gslide-inline,
+            .glightbox-container .ginlined-content {
+                background: transparent !important;
+                padding: 0 !important;f
+                align-items: center;
+                justify-content: center;
+            }
+
             /* Remove blue focus outline */
             .immich-lightbox {
                 outline: none !important;
@@ -558,10 +672,11 @@ class Gallery_For_Immich {
             $asset_data = $this->api_request('assets/' . $asset);
             // error_log(print_r($asset_data, true));
 
-            if (!$asset_data || empty($asset_data['id']) || $asset_data['type'] !== 'IMAGE') {
-                return '<p>' . __('Photo not found.', 'gallery-for-immich') . '</p>';
+            if (!$asset_data || empty($asset_data['id'])) {
+                return '<p>' . __('Asset not found.', 'gallery-for-immich') . '</p>';
             }
 
+            $is_video = ($asset_data['type'] === 'VIDEO');
             $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset_data['id'];
             $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset_data['id'];
 
@@ -599,10 +714,23 @@ class Gallery_For_Immich {
                 }
             }
             
-            $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
-                        data-gallery="asset-' . esc_attr($asset_data['id']) . '">
-                        <img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>
-                        </a>';
+            if ($is_video) {
+                // For videos, create inline video HTML for lightbox
+                $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset_data['id'];
+                $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata" >';
+                $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
+                $video_html .= '</video>';
+                
+                $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-gallery="asset-' . esc_attr($asset_data['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
+                $html .= '<img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>';
+                $html .= '</a>';
+            } else {
+                // For images, use lightbox
+                $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
+                            data-gallery="asset-' . esc_attr($asset_data['id']) . '">
+                            <img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>
+                            </a>';
+            }
             if (in_array('asset_date', $show) && !empty($asset_data['exifInfo']['dateTimeOriginal'])) {
                 $date = wp_date('Y-m-d', strtotime($asset_data['exifInfo']['dateTimeOriginal']));
                 $html .= '<div>' . esc_html($date) . '</div>';
@@ -666,6 +794,8 @@ class Gallery_For_Immich {
 
             foreach ($assets_to_render as $asset) {
                 if (empty($asset['id'])) continue;
+                
+                $is_video = ($asset['type'] === 'VIDEO');
                 $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset['id'];
                 $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset['id'];
                 
@@ -684,10 +814,23 @@ class Gallery_For_Immich {
                 }
                 
                 $html .= '<div>';
-                $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
-                            data-gallery="album-' . esc_attr($album['id']) . '">
-                            <img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>
-                          </a>';
+                
+                if ($is_video) {
+                    // For videos, create inline video HTML for lightbox
+                    $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset['id'];
+                    $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
+                    $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
+                    $video_html .= '</video>';
+                    
+                    $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-gallery="album-' . esc_attr($album['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
+                    $html .= '<img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>';
+                    $html .= '</a>';
+                } else {
+                    $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
+                                data-gallery="album-' . esc_attr($album['id']) . '">
+                                <img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>
+                              </a>';
+                }
                 if (in_array('asset_date', $show) && !empty($asset['exifInfo']['dateTimeOriginal'])) {
                     $date = wp_date('Y-m-d', strtotime($asset['exifInfo']['dateTimeOriginal']));
                     $html .= '<div style="text-align:center;margin-top:4px;margin-bottom:-2px;line-height:1;font-size:' . $date_size . 'px;">' . esc_html($date) . '</div>';
