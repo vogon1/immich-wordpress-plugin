@@ -587,6 +587,48 @@ class Gallery_For_Immich {
         return json_decode(wp_remote_retrieve_body($response), true);
     }
 
+    private function get_video_url_with_shared_link($asset_data) {
+        $options = get_option($this->option_name);
+        $expiresAt = gmdate('c', time() + 600); // 10 minuten
+
+        $share_response = wp_remote_post(
+            rtrim($options['server_url'], '/') . '/api/shared-links',
+            [
+                'headers' => [
+                    'x-api-key'    => $options['api_key'],
+                    'Content-Type' => 'application/json',
+                ],
+                'body' => wp_json_encode([
+                    'type'       => 'INDIVIDUAL',
+                    'assetIds'   => [$asset_data['id']],
+                    'expiresAt'  => $expiresAt,
+                    'allowDownload' => false,
+                ]),
+                'timeout' => 10,
+            ]
+        );
+
+        if (is_wp_error($share_response)) {
+            status_header(502);
+            exit('Failed to create shared link');
+        }
+
+        $code = wp_remote_retrieve_response_code($share_response);
+        if ($code !== 201 && $code !== 200) {
+            status_header(502);
+            exit('Invalid Immich response');
+        }
+
+        $data = json_decode(wp_remote_retrieve_body($share_response), true);
+        if (empty($data['key'])) {
+            status_header(502);
+            exit('Missing shared link key');
+        }
+
+        $video_url = rtrim($options['server_url'], '/') . '/api/assets/' . $asset_data['id'] . '/video/playback?key=' . $data['key'];
+        return $video_url;
+    }
+
     /* --- Shortcode: overview + detail --- */
     public function render_gallery($atts) {
         // Sanitize and validate all input parameters
@@ -716,7 +758,8 @@ class Gallery_For_Immich {
             
             if ($is_video) {
                 // For videos, create inline video HTML for lightbox
-                $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset_data['id'];
+                $video_url = $this->get_video_url_with_shared_link($asset_data);
+
                 $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata" >';
                 $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
                 $video_html .= '</video>';
@@ -798,7 +841,7 @@ class Gallery_For_Immich {
                 $is_video = ($asset['type'] === 'VIDEO');
                 $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset['id'];
                 $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset['id'];
-                
+
                 // Prepare description for lightbox
                 $description = '';
                 if (!empty($asset['exifInfo']['description'])) {
@@ -817,7 +860,7 @@ class Gallery_For_Immich {
                 
                 if ($is_video) {
                     // For videos, create inline video HTML for lightbox
-                    $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset['id'];
+                    $video_url = $this->get_video_url_with_shared_link($asset);
                     $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
                     $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
                     $video_html .= '</video>';
