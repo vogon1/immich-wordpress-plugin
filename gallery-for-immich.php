@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.5.0
+ * Version: 0.6.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -34,6 +34,7 @@ class Gallery_For_Immich {
         add_action('admin_init', [$this, 'settings_init']);
         add_shortcode('gallery_for_immich', [$this, 'render_gallery']);
         add_action('wp_enqueue_scripts', [$this, 'enqueue_scripts']);
+        add_action('gallery_for_immich_cleanup_shared_link', [$this, 'cleanup_shared_link']);
         
         // Gutenberg block support
         add_action('init', [$this, 'register_block']);
@@ -244,6 +245,7 @@ class Gallery_For_Immich {
 
         add_settings_field('server_url', __('Immich server URL', 'gallery-for-immich'), [$this, 'field_server_url'], 'gallery_for_immich', 'gallery_for_immich_section');
         add_settings_field('api_key', __('API Key', 'gallery-for-immich'), [$this, 'field_api_key'], 'gallery_for_immich', 'gallery_for_immich_section');
+        add_settings_field('video_mode', __('Video playback', 'gallery-for-immich'), [$this, 'field_video_mode'], 'gallery_for_immich', 'gallery_for_immich_section');
     }
 
     public function sanitize_settings($input) {
@@ -278,6 +280,14 @@ class Gallery_For_Immich {
                 );
             }
         }
+
+        // Sanitize video mode
+        if (!empty($input['video_mode'])) {
+            $video_mode = sanitize_text_field($input['video_mode']);
+            if (in_array($video_mode, ['shared', 'fopen', 'ignore'], true)) {
+                $sanitized['video_mode'] = $video_mode;
+            }
+        }
         
         return $sanitized;
     }
@@ -293,6 +303,24 @@ class Gallery_For_Immich {
         $options = get_option($this->option_name);
         ?>
         <input type="password" name="<?php echo esc_attr($this->option_name); ?>[api_key]" value="<?php echo esc_attr($options['api_key'] ?? ''); ?>" style="width:400px;" autocomplete="off">
+        <?php
+    }
+
+    public function field_video_mode() {
+        $options = get_option($this->option_name);
+        $current = $options['video_mode'] ?? 'shared';
+        ?>
+        <select name="<?php echo esc_attr($this->option_name); ?>[video_mode]">
+            <option value="shared" <?php selected($current, 'shared'); ?>><?php echo esc_html__('Shared links (default)', 'gallery-for-immich'); ?></option>
+            <option value="fopen" <?php selected($current, 'fopen'); ?>><?php echo esc_html__('Proxy via fopen', 'gallery-for-immich'); ?></option>
+            <option value="ignore" <?php selected($current, 'ignore'); ?>><?php echo esc_html__('Ignore videos', 'gallery-for-immich'); ?></option>
+        </select>
+        <p style="margin-top: 8px; font-size: 13px; color: #666;">
+            <strong><?php echo esc_html__('How it works:', 'gallery-for-immich'); ?></strong><br>
+            <?php echo esc_html__('Proxy via fopen: Streams videos through this WordPress site. Most elegant, but not all WordPress configurations support fopen. If it does not work for you, choose Shared Links.', 'gallery-for-immich'); ?><br>
+            <?php echo esc_html__('Shared links: Creates temporary shared links on Immich (bypasses WordPress server). The temporary links expire after a short period and will be removed from Immich.', 'gallery-for-immich'); ?><br>
+            <?php echo esc_html__('Ignore videos: Videos will not be displayed in galleries.', 'gallery-for-immich'); ?>
+        </p>
         <?php
     }
 
@@ -331,6 +359,57 @@ class Gallery_For_Immich {
                 closeEffect: "fade",
                 slideEffect: "slide",
                 type: "image"
+            });
+            
+            let currentSlideElement = null;
+            let videoAutoplayInterval = null;
+            
+            function tryPlayVideo() {
+                const container = document.querySelector(".glightbox-container");
+                if (!container) return;
+                
+                const slide = container.querySelector(".gslide.current");
+                if (!slide) return;
+                
+                // If we switched to a new slide
+                if (slide !== currentSlideElement) {
+                    // Stop video in previous slide
+                    if (currentSlideElement) {
+                        const prevVideo = currentSlideElement.querySelector(".gvideo-local");
+                        if (prevVideo && !prevVideo.paused) {
+                            prevVideo.pause();
+                            prevVideo.currentTime = 0;
+                        }
+                    }
+                    
+                    currentSlideElement = slide;
+                    
+                    // Look for video in this slide and play it
+                    const video = slide.querySelector(".gvideo-local");
+                    if (video) {
+                        setTimeout(function() {
+                            if (video.paused) {
+                                const playPromise = video.play();
+                                if (playPromise !== undefined) {
+                                    playPromise.catch(function(error) {
+                                        console.log("Video autoplay blocked");
+                                    });
+                                }
+                            }
+                        }, 150);
+                    }
+                }
+            }
+            
+            // Start checking for slide changes every 100ms
+            videoAutoplayInterval = setInterval(tryPlayVideo, 100);
+            
+            // Clean up when lightbox closes
+            document.addEventListener("keydown", function(e) {
+                if (e.key === "Escape" && !document.querySelector(".glightbox-container")) {
+                    clearInterval(videoAutoplayInterval);
+                    currentSlideElement = null;
+                }
             });
         ');
 
@@ -532,29 +611,52 @@ class Gallery_For_Immich {
         ]);
     }
     
-    public function rest_get_albums() {
-        $immich_albums = $this->api_request('albums');
+    public function rest_get_video_url($request) {
+        $asset_id = sanitize_text_field($request['asset_id']);
         
-        if (isset($immich_albums['error']) && $immich_albums['error']) {
-            return new WP_Error('api_error', $immich_albums['message'], ['status' => 500]);
+        if (!preg_match('/^[a-f0-9\-]{36}$/i', $asset_id)) {
+            return new WP_Error('invalid_id', 'Invalid asset ID', ['status' => 400]);
         }
         
-        if (!$immich_albums) {
-            return ['albums' => []];
+        // For REST API, only block if we're in admin/preview context (not public page loads)
+        if (is_admin()) {
+            return new WP_Error('preview_mode', 'Cannot generate video URL in preview mode', ['status' => 403]);
         }
         
-        // Format albums for the block editor
-        $formatted_albums = array_map(function($album) {
-            return [
-                'id' => $album['id'],
-                'name' => $album['albumName'] ?? __('Untitled Album', 'gallery-for-immich')
-            ];
-        }, $immich_albums);
+        // Get asset data
+        $asset_data = $this->api_request('assets/' . $asset_id);
+        if (!$asset_data || isset($asset_data['error'])) {
+            return new WP_Error('not_found', 'Asset not found', ['status' => 404]);
+        }
         
-        return ['albums' => $formatted_albums];
+        // Generate shared link
+        $options = get_option($this->option_name);
+        $video_mode = $options['video_mode'] ?? 'shared';
+        
+        if ($video_mode === 'fopen') {
+            $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset_id;
+        } else {
+            // Generate shared link on demand
+            $video_url = $this->get_video_url_with_shared_link($asset_data);
+        }
+        
+        return ['url' => $video_url];
     }
 
     /* --- API request helper --- */
+    private function should_create_shared_links() {
+        // Don't create shared links in preview/editor mode to avoid unnecessary API calls
+        // REST requests (block editor, REST API) should not create real shared links
+        if (defined('REST_REQUEST') && REST_REQUEST) {
+            return false;
+        }
+        // Also check for other preview contexts
+        if (is_admin() && !wp_doing_ajax()) {
+            return false;
+        }
+        return true;
+    }
+
     private function api_request($endpoint) {
         $options = get_option($this->option_name);
         
@@ -625,8 +727,69 @@ class Gallery_For_Immich {
             exit('Missing shared link key');
         }
 
+        if (!empty($data['id'])) {
+            $this->schedule_shared_link_cleanup($data['id'], $expiresAt);
+        }
+
         $video_url = rtrim($options['server_url'], '/') . '/api/assets/' . $asset_data['id'] . '/video/playback?key=' . $data['key'];
         return $video_url;
+    }
+
+    private function schedule_shared_link_cleanup($shared_link_id, $expiresAtIso) {
+        $shared_link_id = sanitize_text_field($shared_link_id);
+        if (empty($shared_link_id)) {
+            return;
+        }
+
+        $expires_ts = strtotime($expiresAtIso);
+        if (!$expires_ts) {
+            $expires_ts = time() + 600;
+        }
+
+        $delete_at = $expires_ts + 60; // Buffer to allow expiry on Immich side.
+        $transient_key = 'gallery_for_immich_cleanup_' . $shared_link_id;
+
+        if (!get_transient($transient_key)) {
+            set_transient($transient_key, 1, 2 * HOUR_IN_SECONDS);
+            wp_schedule_single_event($delete_at, 'gallery_for_immich_cleanup_shared_link', [$shared_link_id]);
+        }
+    }
+
+    public function cleanup_shared_link($shared_link_id) {
+        $shared_link_id = sanitize_text_field($shared_link_id);
+        if (empty($shared_link_id)) {
+            return;
+        }
+
+        $options = get_option($this->option_name);
+        if (empty($options['server_url']) || empty($options['api_key'])) {
+            return;
+        }
+
+        $url = rtrim($options['server_url'], '/') . '/api/shared-links/' . $shared_link_id;
+
+        $response = wp_remote_request($url, [
+            'method' => 'DELETE',
+            'headers' => [
+                'x-api-key' => $options['api_key'],
+            ],
+            'timeout' => 10,
+            'sslverify' => true,
+        ]);
+
+        // Log the result for debugging
+        if (is_wp_error($response)) {
+            if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+                // error_log('Gallery for Immich: Failed to delete shared link ' . $shared_link_id . ': ' . $response->get_error_message());
+            }
+        } else {
+            $status_code = wp_remote_retrieve_response_code($response);
+            if ($status_code !== 204 && $status_code !== 200) {
+                if (defined('WP_DEBUG_LOG') && WP_DEBUG_LOG) {
+                    // error_log('Gallery for Immich: Delete shared link returned status ' . $status_code . ' for ' . $shared_link_id);
+                }
+            }
+        }
     }
 
     /* --- Shortcode: overview + detail --- */
@@ -708,6 +871,8 @@ class Gallery_For_Immich {
         
         // Enable lazy loading for all images
         $lazy_attr = ' loading="lazy"';
+        $options = get_option($this->option_name);
+        $video_mode = $options['video_mode'] ?? 'shared';
 
         if ($asset_requested) {
             // Direct link to single asset
@@ -716,6 +881,14 @@ class Gallery_For_Immich {
 
             if (!$asset_data || empty($asset_data['id'])) {
                 return '<p>' . __('Asset not found.', 'gallery-for-immich') . '</p>';
+            }
+
+            // In preview/editor mode, show minimal placeholder
+            if (!$this->should_create_shared_links()) {
+                return '<div style="background:#f0f0f0;padding:20px;text-align:center;border-radius:6px;color:#999;">' . 
+                    ($asset_data['type'] === 'VIDEO' ? '🎬 ' : '🖼 ') . 
+                    esc_html($asset_data['originalFileName'] ?? 'Asset') . 
+                    '</div>';
             }
 
             $is_video = ($asset_data['type'] === 'VIDEO');
@@ -757,14 +930,28 @@ class Gallery_For_Immich {
             }
             
             if ($is_video) {
-                // For videos, create inline video HTML for lightbox
-                $video_url = $this->get_video_url_with_shared_link($asset_data);
+                if ($video_mode === 'ignore') {
+                    return '<p>' . __('Video is not displayed.', 'gallery-for-immich') . '</p>';
+                }
 
-                $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata" >';
+                // For videos, create inline video HTML for lightbox
+                if ($video_mode === 'fopen') {
+                    $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset_data['id'];
+                } else {
+                    // Only create shared links on public pages, not in editor/preview
+                    if ($this->should_create_shared_links()) {
+                        $video_url = $this->get_video_url_with_shared_link($asset_data);
+                    } else {
+                        // In preview mode, use a placeholder
+                        $video_url = '#';
+                    }
+                }
+
+                $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
                 $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
                 $video_html .= '</video>';
                 
-                $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-gallery="asset-' . esc_attr($asset_data['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
+                $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="asset-' . esc_attr($asset_data['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
                 $html .= '<img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>';
                 $html .= '</a>';
             } else {
@@ -786,6 +973,14 @@ class Gallery_For_Immich {
             return $html;
         } elseif ($album) {
             // Detail page
+            
+            // In preview/editor mode, show placeholder
+            if (!$this->should_create_shared_links()) {
+                return '<div style="background:#f0f0f0;padding:40px;text-align:center;border-radius:6px;color:#999;">' . 
+                    __('Gallery preview not available in editor. This will display on the published page.', 'gallery-for-immich') . 
+                    '</div>';
+            }
+            
             $album = $this->api_request('albums/' . $album);
             // error_log(print_r($album, true));
 
@@ -839,6 +1034,9 @@ class Gallery_For_Immich {
                 if (empty($asset['id'])) continue;
                 
                 $is_video = ($asset['type'] === 'VIDEO');
+                if ($is_video && $video_mode === 'ignore') {
+                    continue;
+                }
                 $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset['id'];
                 $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset['id'];
 
@@ -860,12 +1058,22 @@ class Gallery_For_Immich {
                 
                 if ($is_video) {
                     // For videos, create inline video HTML for lightbox
-                    $video_url = $this->get_video_url_with_shared_link($asset);
+                    if ($video_mode === 'fopen') {
+                        $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset['id'];
+                    } else {
+                        // Only create shared links on public pages, not in editor/preview
+                        if ($this->should_create_shared_links()) {
+                            $video_url = $this->get_video_url_with_shared_link($asset);
+                        } else {
+                            // In preview mode, use a placeholder
+                            $video_url = '#';
+                        }
+                    }
                     $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
                     $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
                     $video_html .= '</video>';
                     
-                    $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-gallery="album-' . esc_attr($album['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
+                    $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="album-' . esc_attr($album['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
                     $html .= '<img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>';
                     $html .= '</a>';
                 } else {
@@ -894,6 +1102,14 @@ class Gallery_For_Immich {
             return $html;
         } else {
             // Overview page
+            
+            // In preview/editor mode, show placeholder
+            if (!$this->should_create_shared_links()) {
+                return '<div style="background:#f0f0f0;padding:40px;text-align:center;border-radius:6px;color:#999;">' . 
+                    __('Gallery preview not available in editor. This will display on the published page.', 'gallery-for-immich') . 
+                    '</div>';
+            }
+            
             $immich_albums = $this->api_request('albums');
             // error_log(print_r($immich_albums, true));
 

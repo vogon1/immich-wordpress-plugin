@@ -4,7 +4,7 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.5.0
+Stable tag: 0.6.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -23,6 +23,7 @@ Gallery for Immich is a WordPress plugin that seamlessly integrates your self-ho
 * Display entire albums from Immich
 * Beautiful responsive grid layouts
 * Integrated lightbox with GLightbox
+* Video playback modes (shared links, proxy via fopen, or ignore videos)
 * Flexible sorting options (date/name, ascending/descending)
 * Full internationalization support (Dutch, German, French translations)
 * Configure Immich server URL and API key in the WordPress admin panel
@@ -57,6 +58,8 @@ After activation, configure your Immich server connection:
    * `asset.read` - Required to access photo metadata (EXIF data, descriptions, dates)
    * `asset.view` - Required to retrieve photo thumbnails
    * `asset.download` - Required to retrieve original full-size photos
+   * `sharedLink.create` - Required when using video mode 'Shared Link'
+   * `sharedLink.delete` - Required when using video mode 'Shared Link'
 7. **Important:** Only grant read-only access. Never grant write permissions for security reasons.
 8. Click **Create** and copy the generated API key
 
@@ -65,7 +68,14 @@ After activation, configure your Immich server connection:
 1. Navigate to Settings > Gallery for Immich in your WordPress admin
 2. Enter your Immich server URL (e.g., https://immich.example.com)
 3. Paste the API key you created in Step 1
-4. Save changes
+4. Choose **Video playback** mode (shared links, proxy via fopen, or ignore videos)
+5. Save changes
+
+**Video playback modes:**
+
+* **Shared links (default)** - Creates temporary shared links on Immich. Videos stream directly from Immich and links expire automatically.
+* **Proxy via fopen** - Streams videos through WordPress. Most elegant solution, but requires `fopen` support on the WordPress server which is not always supported.
+* **Ignore videos** - Hides videos in galleries and only shows photos.
 
 == Usage ==
 
@@ -168,6 +178,12 @@ Additional translations can be contributed via .po files in the languages direct
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.6.0 =
+*Release Date - 16 February 2026*
+
+* New: Video playback modes (shared links, proxy via fopen, ignore videos)
+* Improved: Video handling for editor/preview and shared link cleanup
 
 = 0.5.0 =
 * Release date 17 December 2025*

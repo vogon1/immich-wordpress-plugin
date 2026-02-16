@@ -13,6 +13,7 @@ A simple way to display galleries without uploading images manually.
 - Display entire albums from Immich
 - Flexible sorting options (date/name, ascending/descending)
 - Beautiful responsive grid layouts with integrated lightbox
+- Video playback modes (shared links, proxy via fopen, or ignore videos)
 - Configure Immich server URL and API key in the WordPress admin panel
 - **Gutenberg Block Editor** - Visual block for selecting albums, photos and settings
 - **Shortcode Support** - Classic `[gallery_for_immich]` shortcode works in any editor
@@ -44,6 +45,8 @@ A simple way to display galleries without uploading images manually.
    - `asset.read` - Required to access photo metadata (EXIF data, descriptions, dates)
    - `asset.view` - Required to retrieve photo thumbnails
    - `asset.download` - Required to retrieve original full-size photos
+   - `sharedLink.create` - Required when using video mode 'Shared Link'
+   - `sharedLink.delete` - Required when using video mode 'Shared Link'
 
    **Note:** The plugin only needs read-only access. Never grant write permissions for security reasons.
 
@@ -52,6 +55,14 @@ A simple way to display galleries without uploading images manually.
    - Your Immich server URL (e.g., `https://immich.example.com`)
    - The API key you just created
 1. Save the settings
+
+### Video playback modes
+
+Configure **Settings > Gallery for Immich > Video playback**:
+
+- **Shared links (default):** creates temporary shared links on Immich. Videos stream directly from Immich and links expire automatically.
+- **Proxy via fopen:** streams videos through WordPress. Moste elagant solution, but requires `fopen` support on Wordpress server which is not always supported.
+- **Ignore videos:** hides videos from galleries and only shows photos.
 
 ## 🖼️ Usage
 
@@ -70,6 +81,7 @@ The easiest way to add an Immich gallery is through the Gutenberg block editor:
    - **Sort order**: Control the sorting of albums/photos
    - **Thumbnail size**: Adjust thumbnail size (100-500px, default: 200px)
    - **Text sizes**: Customize title, description, and date font sizes
+   - **Text around a single asset**: Place asset left or right for text around the asset
 4. The preview shows the shortcode that will be used
 
 ### Using Shortcodes

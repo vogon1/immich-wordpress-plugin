@@ -1,9 +1,9 @@
 msgid ""
 msgstr ""
-"Project-Id-Version: Gallery for Immich 0.5.0\n"
+"Project-Id-Version: Gallery for Immich 0.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gallery-for-"
 "immich\n"
-"POT-Creation-Date: 2025-12-17T18:53:05+00:00\n"
+"POT-Creation-Date: 2026-02-16T18:15:30+00:00\n"
 "PO-Revision-Date: 2025-12-16 17:30+0000\n"
 "Last-Translator: GitHub Copilot\n"
 "Language-Team: German\n"
@@ -14,19 +14,18 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Plugin Name of the plugin
-#: gallery-for-immich.php gallery-for-immich.php:230 gallery-for-immich.php:231
-#: gallery-for-immich.php:306 build/index.js:1 src/index.js:263
+#: gallery-for-immich.php gallery-for-immich.php:231 gallery-for-immich.php:232
+#: gallery-for-immich.php:334 build/index.js:1 src/index.js:263
 msgid "Gallery for Immich"
 msgstr "Galerie für Immich"
 
 #. Plugin URI of the plugin
 #: gallery-for-immich.php
 msgid "https://github.com/vogon1/immich-wordpress-plugin"
-msgstr ""
+msgstr "https://github.com/vogon1/immich-wordpress-plugin"
 
 #. Description of the plugin
 #: gallery-for-immich.php
-#, fuzzy
 msgid ""
 "Show Immich albums and photos in a WordPress site. Requires Immich server "
 "with API access."
@@ -37,14 +36,14 @@ msgstr ""
 #. Author of the plugin
 #: gallery-for-immich.php
 msgid "Sietse Visser"
-msgstr ""
+msgstr "Sietse Visser"
 
 #. Author URI of the plugin
 #: gallery-for-immich.php
 msgid "https://github.com/vogon1"
-msgstr ""
+msgstr "https://github.com/vogon1"
 
-#: gallery-for-immich.php:20 gallery-for-immich.php:59
+#: gallery-for-immich.php:20 gallery-for-immich.php:60
 msgid ""
 "Show Immich albums and photos in a WordPress site using shortcodes. Requires "
 "Immich server with API access."
@@ -52,66 +51,117 @@ msgstr ""
 "Zeigen Sie Immich-Alben und Fotos auf einer WordPress-Website mit Shortcodes "
 "an. Erfordert Immich-Server mit API-Zugriff."
 
-#: gallery-for-immich.php:243
+#: gallery-for-immich.php:244
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: gallery-for-immich.php:245
+#: gallery-for-immich.php:246
 msgid "Immich server URL"
 msgstr "Immich-Server-URL"
 
-#: gallery-for-immich.php:246
+#: gallery-for-immich.php:247
 msgid "API Key"
 msgstr "API-Schlüssel"
 
-#: gallery-for-immich.php:262
+#: gallery-for-immich.php:248
+msgid "Video playback"
+msgstr "Videowiedergabe"
+
+#: gallery-for-immich.php:264
 msgid "Server URL must use HTTPS (or localhost for development)."
 msgstr "Server-URL muss HTTPS verwenden (oder localhost für Entwicklung)."
 
-#: gallery-for-immich.php:277
+#: gallery-for-immich.php:279
 msgid "API Key contains invalid characters."
 msgstr "API-Schlüssel enthält ungültige Zeichen."
 
-#: gallery-for-immich.php:302
+#: gallery-for-immich.php:314
+msgid "Shared links (default)"
+msgstr "Geteilte Links (Standard)"
+
+#: gallery-for-immich.php:315
+msgid "Proxy via fopen"
+msgstr "Proxy über fopen"
+
+#: gallery-for-immich.php:316
+msgid "Ignore videos"
+msgstr "Videos ignorieren"
+
+#: gallery-for-immich.php:319
+msgid "How it works:"
+msgstr "So funktioniert es:"
+
+#: gallery-for-immich.php:320
+msgid ""
+"Proxy via fopen: Streams videos through this WordPress site. Most elegant, "
+"but not all WordPress configurations support fopen. If it does not work for "
+"you, choose Shared Links."
+msgstr ""
+"Proxy über fopen: streamt Videos über diese WordPress-Website. Am "
+"elegantesten, aber nicht alle WordPress-Konfigurationen unterstützen fopen. "
+"Wenn es nicht für Sie funktioniert, wählen Sie Freigegebene Links."
+
+#: gallery-for-immich.php:321
+msgid ""
+"Shared links: Creates temporary shared links on Immich (bypasses WordPress "
+"server). The temporary links expire after a short period and will be removed "
+"from Immich."
+msgstr ""
+"Freigegebene Links: erstellt temporäre freigegebene Links auf Immich (umgeht "
+"die WordPress-Server). Die temporären Links verfallen nach kurzer Zeit und "
+"werden aus Immich entfernt."
+
+#: gallery-for-immich.php:322
+msgid "Ignore videos: Videos will not be displayed in galleries."
+msgstr "Videos ignorieren: Videos werden nicht in Galerien angezeigt."
+
+#: gallery-for-immich.php:330
 msgid "You do not have sufficient permissions to access this page."
 msgstr ""
 "Sie haben nicht die erforderlichen Berechtigungen, um auf diese Seite "
 "zuzugreifen."
 
-#: gallery-for-immich.php:550
-msgid "Untitled Album"
-msgstr "Unbenanntes Album"
-
-#: gallery-for-immich.php:563
+#: gallery-for-immich.php:665
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
 msgstr ""
 "Plugin nicht konfiguriert. Bitte legen Sie Server-URL und API-Schlüssel in "
 "den Einstellungen fest."
 
 #. translators: %d: HTTP status code number
-#: gallery-for-immich.php:584
+#: gallery-for-immich.php:686
 #, php-format
 msgid "API returned status code: %d"
 msgstr "API hat Statuscode zurückgegeben: %d"
 
-#: gallery-for-immich.php:676
-#, fuzzy
+#: gallery-for-immich.php:883
 msgid "Asset not found."
 msgstr "Foto nicht gefunden."
 
-#: gallery-for-immich.php:749
+#: gallery-for-immich.php:934
+msgid "Video is not displayed."
+msgstr "Video wird nicht angezeigt."
+
+#: gallery-for-immich.php:980 gallery-for-immich.php:1109
+msgid ""
+"Gallery preview not available in editor. This will display on the published "
+"page."
+msgstr ""
+"Galerie-Vorschau im Editor nicht verfügbar. Dies wird auf der "
+"veröffentlichten Seite angezeigt."
+
+#: gallery-for-immich.php:987
 msgid "No photos found in this album."
 msgstr "Keine Fotos in diesem Album gefunden."
 
-#: gallery-for-immich.php:848
+#: gallery-for-immich.php:1099
 msgid "Return to gallery"
 msgstr "Zurück zur Galerie"
 
-#: gallery-for-immich.php:859
+#: gallery-for-immich.php:1118
 msgid "Error from Immich API: "
 msgstr "Fehler von Immich API: "
 
-#: gallery-for-immich.php:863
+#: gallery-for-immich.php:1122
 msgid "No albums found."
 msgstr "Keine Alben gefunden."
 
@@ -328,3 +378,6 @@ msgstr "immich"
 msgctxt "block keyword"
 msgid "images"
 msgstr "Bilder"
+
+#~ msgid "Untitled Album"
+#~ msgstr "Unbenanntes Album"
