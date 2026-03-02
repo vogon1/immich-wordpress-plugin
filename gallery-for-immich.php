@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.6.0
+ * Version: 0.6.1
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -611,6 +611,28 @@ class Gallery_For_Immich {
         ]);
     }
     
+   public function rest_get_albums() {
+        $immich_albums = $this->api_request('albums');
+        
+        if (isset($immich_albums['error']) && $immich_albums['error']) {
+            return new WP_Error('api_error', $immich_albums['message'], ['status' => 500]);
+        }
+        
+        if (!$immich_albums) {
+            return ['albums' => []];
+        }
+        
+        // Format albums for the block editor
+        $formatted_albums = array_map(function($album) {
+            return [
+                'id' => $album['id'],
+                'name' => $album['albumName'] ?? __('Untitled Album', 'gallery-for-immich')
+            ];
+        }, $immich_albums);
+        
+        return ['albums' => $formatted_albums];
+    }
+
     public function rest_get_video_url($request) {
         $asset_id = sanitize_text_field($request['asset_id']);
         
