@@ -76,7 +76,7 @@ class Gallery_For_Immich {
         $id = isset($_GET['id']) ? sanitize_text_field(wp_unslash($_GET['id'])) : '';
 
         // Validate type with strict whitelist
-        if (!in_array($type, ['thumbnail', 'original', 'video'], true)) {
+        if (!in_array($type, ['thumbnail', 'preview', 'original', 'video'], true)) {
             status_header(400);
             exit('Invalid type');
         }
@@ -99,6 +99,9 @@ class Gallery_For_Immich {
         if ($type === 'thumbnail') {
             $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?w=300&h=300';
             $timeout = 10;
+        } elseif ($type === 'preview') {
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?size=preview';
+            $timeout = 20;
         } elseif ($type === 'video') {
             $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/video/playback';
             $timeout = 60;
@@ -349,6 +352,8 @@ class Gallery_For_Immich {
         wp_enqueue_script('glightbox-js', plugins_url('assets/glightbox/js/glightbox.min.js', __FILE__), ['jquery'], '3.2.0', true);
 
         // JS config for Lightbox
+        wp_add_inline_script('glightbox-js', 'var immichLivePhotoUrl = ' . wp_json_encode(rest_url('gallery-for-immich/v1/live-photo-url')) . '; var immichNonce = ' . wp_json_encode(wp_create_nonce('wp_rest')) . ';', 'before');
+
         wp_add_inline_script('glightbox-js', '
             const lightbox = GLightbox({
                 selector: ".immich-lightbox",
@@ -411,6 +416,76 @@ class Gallery_For_Immich {
                     currentSlideElement = null;
                 }
             });
+
+            // --- Live Photo support ---
+            // Build a map of preview-URL asset-id → live-photo-video-id from anchor tags
+            var livePhotoMap = {};
+            document.querySelectorAll(".immich-lightbox[data-live-photo-id]").forEach(function(el) {
+                var match = el.href && el.href.match(/id=([a-f0-9-]{36})/i);
+                if (match) {
+                    livePhotoMap[match[1]] = el.getAttribute("data-live-photo-id");
+                }
+            });
+
+            function removeLivePhotoUI() {
+                var btn = document.querySelector(".immich-live-btn");
+                if (btn) btn.remove();
+                var vid = document.querySelector(".immich-live-video");
+                if (vid) { vid.pause(); vid.src = ""; vid.remove(); }
+                var hiddenImg = document.querySelector(".gslide.current .gslide-media img[style*=\"visibility\"]");
+                if (hiddenImg) hiddenImg.style.visibility = "";
+            }
+
+            function checkForLivePhoto() {
+                removeLivePhotoUI();
+                setTimeout(function() {
+                    var slide = document.querySelector(".gslide.current .gslide-media");
+                    if (!slide) return;
+                    var img = slide.querySelector("img");
+                    if (!img) return;
+                    var match = img.src.match(/id=([a-f0-9-]{36})/i);
+                    if (!match) return;
+                    var liveId = livePhotoMap[match[1]];
+                    if (!liveId) return;
+
+                    var btn = document.createElement("button");
+                    btn.className = "immich-live-btn";
+                    btn.setAttribute("aria-label", "Play live photo");
+                    btn.innerHTML = "Live";
+                    slide.style.position = "relative";
+                    slide.appendChild(btn);
+
+                    btn.addEventListener("click", function(e) {
+                        e.preventDefault();
+                        e.stopPropagation();
+                        btn.disabled = true;
+                        btn.innerHTML = "&#8230;";
+                        fetch(immichLivePhotoUrl + "?asset_id=" + liveId, {
+                            headers: { "X-WP-Nonce": immichNonce }
+                        })
+                        .then(function(r) { return r.json(); })
+                        .then(function(data) {
+                            if (!data.url) { btn.disabled = false; btn.innerHTML = "Live"; return; }
+                            img.style.visibility = "hidden";
+                            btn.style.display = "none";
+                            var video = document.createElement("video");
+                            video.className = "immich-live-video";
+                            video.src = data.url;
+                            video.autoplay = true;
+                            video.loop = true;
+                            video.playsInline = true;
+                            video.controls = false;
+                            video.style.cssText = "position:absolute;top:0;left:0;width:100%;height:100%;object-fit:contain;display:block;";
+                            slide.appendChild(video);
+                            video.play().catch(function() {});
+                        })
+                        .catch(function() { btn.disabled = false; btn.innerHTML = "Live"; });
+                    });
+                }, 350);
+            }
+
+            lightbox.on("open", function() { checkForLivePhoto(); });
+            lightbox.on("slide_changed", function() { checkForLivePhoto(); });
         ');
 
         // CSS fix for full scale, centered, maintaining aspect ratio
@@ -449,6 +524,36 @@ class Gallery_For_Immich {
             .immich-lightbox:focus {
                 outline: none !important;
                 box-shadow: none !important;
+            }
+
+            /* Live Photo play button */
+            .immich-live-btn::before {
+                content: "\25BA";
+                margin-right: 4px;
+            }
+            .immich-live-btn {
+                position: absolute;
+                bottom: 10px;
+                right: 10px;
+                background: rgba(0, 0, 0, 0.55);
+                color: #fff;
+                border: none;
+                border-radius: 20px;
+                padding: 6px 18px;
+                font-size: 14px;
+                font-family: inherit;
+                cursor: pointer;
+                z-index: 100;
+                transition: background 0.2s;
+                backdrop-filter: blur(4px);
+                pointer-events: auto;
+            }
+            .immich-live-btn:hover:not(:disabled) {
+                background: rgba(0, 0, 0, 0.8);
+            }
+            .immich-live-btn:disabled {
+                cursor: default;
+                opacity: 0.7;
             }
             
             /* Album grid hover effects and shadows */
@@ -609,6 +714,21 @@ class Gallery_For_Immich {
                 return current_user_can('edit_posts');
             }
         ]);
+
+        register_rest_route('gallery-for-immich/v1', '/live-photo-url', [
+            'methods' => 'GET',
+            'callback' => [$this, 'rest_get_video_url'],
+            'permission_callback' => '__return_true',
+            'args' => [
+                'asset_id' => [
+                    'required'          => true,
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'validate_callback' => function($value) {
+                        return (bool) preg_match('/^[a-f0-9\-]{36}$/i', $value);
+                    },
+                ],
+            ],
+        ]);
     }
     
    public function rest_get_albums() {
@@ -654,7 +774,11 @@ class Gallery_For_Immich {
         // Generate shared link
         $options = get_option($this->option_name);
         $video_mode = $options['video_mode'] ?? 'shared';
-        
+
+        if ($video_mode === 'ignore') {
+            return new WP_Error('videos_disabled', 'Video playback is disabled', ['status' => 403]);
+        }
+
         if ($video_mode === 'fopen') {
             $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset_id;
         } else {
@@ -915,7 +1039,7 @@ class Gallery_For_Immich {
 
             $is_video = ($asset_data['type'] === 'VIDEO');
             $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset_data['id'];
-            $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset_data['id'];
+            $full_url  = home_url('/?gallery_for_immich_proxy=preview&id=') . $asset_data['id'];
 
             // Build inline container with image + metadata
             $html = '<div class="immich-single-photo">';
@@ -978,7 +1102,12 @@ class Gallery_For_Immich {
                 $html .= '</a>';
             } else {
                 // For images, use lightbox
-                $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
+                $live_photo_id = '';
+                if ($video_mode !== 'ignore' && !empty($asset_data['livePhotoVideoId']) && preg_match('/^[a-f0-9\-]{36}$/i', $asset_data['livePhotoVideoId'])) {
+                    $live_photo_id = $asset_data['livePhotoVideoId'];
+                }
+                $live_attr = $live_photo_id ? ' data-live-photo-id="' . esc_attr($live_photo_id) . '"' : '';
+                $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox"' . $live_attr . '
                             data-gallery="asset-' . esc_attr($asset_data['id']) . '">
                             <img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>
                             </a>';
@@ -1060,7 +1189,7 @@ class Gallery_For_Immich {
                     continue;
                 }
                 $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset['id'];
-                $full_url  = home_url('/?gallery_for_immich_proxy=original&id=') . $asset['id'];
+                $full_url  = home_url('/?gallery_for_immich_proxy=preview&id=') . $asset['id'];
 
                 // Prepare description for lightbox
                 $description = '';
@@ -1099,7 +1228,12 @@ class Gallery_For_Immich {
                     $html .= '<img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>';
                     $html .= '</a>';
                 } else {
-                    $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox" 
+                    $live_photo_id = '';
+                    if ($video_mode !== 'ignore' && !empty($asset['livePhotoVideoId']) && preg_match('/^[a-f0-9\-]{36}$/i', $asset['livePhotoVideoId'])) {
+                        $live_photo_id = $asset['livePhotoVideoId'];
+                    }
+                    $live_attr = $live_photo_id ? ' data-live-photo-id="' . esc_attr($live_photo_id) . '"' : '';
+                    $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox"' . $live_attr . '
                                 data-gallery="album-' . esc_attr($album['id']) . '">
                                 <img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>
                               </a>';
