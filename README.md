@@ -44,7 +44,6 @@ A simple way to display galleries without uploading images manually.
    - `album.read` - Required to list and view albums
    - `asset.read` - Required to access photo metadata (EXIF data, descriptions, dates)
    - `asset.view` - Required to retrieve photo thumbnails
-   - `asset.download` - Required to retrieve original full-size photos
    - `sharedLink.create` - Required when using video mode 'Shared Link'
    - `sharedLink.delete` - Required when using video mode 'Shared Link'
 

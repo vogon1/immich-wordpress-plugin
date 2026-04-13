@@ -371,7 +371,7 @@ class Gallery_For_Immich {
             var nonce      = <?php echo wp_json_encode(wp_create_nonce('gallery_for_immich_test')); ?>;
             var ajaxUrl    = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
             var videoMode  = <?php echo wp_json_encode($options['video_mode'] ?? 'shared'); ?>;
-            var permissions = ['album.read', 'asset.read', 'asset.view', 'asset.download'];
+            var permissions = ['album.read', 'asset.read', 'asset.view'];
             if (videoMode === 'shared') {
                 permissions.push('sharedLink.create', 'sharedLink.delete');
             }
@@ -815,8 +815,7 @@ class Gallery_For_Immich {
         $asset_read_code = is_wp_error($asset_read_response) ? 0 : wp_remote_retrieve_response_code($asset_read_response);
         $results['asset.read'] = $asset_id ? ($asset_read_code === 200) : in_array($asset_read_code, [200, 404], true);
 
-        // 3 & 4. asset.view / asset.download — same probe pattern.
-        //        200/404 → permission exists; 403 → permission missing.
+        // 3. asset.view — 200/404 → permission exists; 403 → permission missing.
         $view_response = wp_remote_get($server_url . '/api/assets/' . $probe_id . '/thumbnail', [
             'headers'             => ['x-api-key' => $api_key],
             'timeout'             => 10,
@@ -825,15 +824,6 @@ class Gallery_For_Immich {
         ]);
         $view_code = is_wp_error($view_response) ? 0 : wp_remote_retrieve_response_code($view_response);
         $results['asset.view'] = $asset_id ? ($view_code === 200) : in_array($view_code, [200, 404], true);
-
-        $orig_response = wp_remote_get($server_url . '/api/assets/' . $probe_id . '/original', [
-            'headers'             => ['x-api-key' => $api_key],
-            'timeout'             => 10,
-            'sslverify'           => true,
-            'limit_response_size' => 1024,
-        ]);
-        $orig_code = is_wp_error($orig_response) ? 0 : wp_remote_retrieve_response_code($orig_response);
-        $results['asset.download'] = $asset_id ? ($orig_code === 200) : in_array($orig_code, [200, 404], true);
 
         // 6 & 7. sharedLink.create / sharedLink.delete — only needed for 'shared' video mode
         $video_mode = $options['video_mode'] ?? 'shared';
