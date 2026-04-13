@@ -40,6 +40,9 @@ class Gallery_For_Immich {
         add_action('init', [$this, 'register_block']);
         add_action('enqueue_block_editor_assets', [$this, 'enqueue_block_editor_assets']);
         add_action('rest_api_init', [$this, 'register_rest_routes']);
+
+        // AJAX handler for API connection test (admin only)
+        add_action('wp_ajax_gallery_for_immich_test_connection', [$this, 'ajax_test_connection']);
         
         // Plugin description translation for plugin list
         add_filter('all_plugins', [$this, 'translate_plugin_description']);
@@ -332,6 +335,7 @@ class Gallery_For_Immich {
         if (!current_user_can('manage_options')) {
             wp_die(esc_html__('You do not have sufficient permissions to access this page.', 'gallery-for-immich'));
         }
+        $options = get_option($this->option_name);
         ?>
         <div class="wrap">
             <h1><?php echo esc_html__('Gallery for Immich', 'gallery-for-immich'); ?></h1>
@@ -342,7 +346,114 @@ class Gallery_For_Immich {
                 submit_button();
                 ?>
             </form>
+
+            <hr>
+            <h2><?php echo esc_html__('Test connection & permissions', 'gallery-for-immich'); ?></h2>
+            <p><?php echo esc_html__('After saving your settings, click the button below to verify that your API key works and has all required permissions.', 'gallery-for-immich'); ?></p>
+            <button id="gfi-test-btn" class="button button-secondary"><?php echo esc_html__('Test connection & permissions', 'gallery-for-immich'); ?></button>
+            <div id="gfi-test-results" style="margin-top:15px;"></div>
         </div>
+        <script>
+        (function() {
+            var btn        = document.getElementById('gfi-test-btn');
+            var resultsDiv = document.getElementById('gfi-test-results');
+            if (!btn) return;
+
+            var labels = {
+                check:       <?php echo wp_json_encode(__('Test connection & permissions', 'gallery-for-immich')); ?>,
+                checking:    <?php echo wp_json_encode(__('Testing…', 'gallery-for-immich')); ?>,
+                connection:  <?php echo wp_json_encode(__('Connection', 'gallery-for-immich')); ?>,
+                permission:  <?php echo wp_json_encode(__('Permission', 'gallery-for-immich')); ?>,
+                status:      <?php echo wp_json_encode(__('Status', 'gallery-for-immich')); ?>,
+                ok:          <?php echo wp_json_encode(__('OK', 'gallery-for-immich')); ?>,
+                missing:     <?php echo wp_json_encode(__('Missing', 'gallery-for-immich')); ?>,
+                unknown:     <?php echo wp_json_encode(__('Could not test (no assets on server)', 'gallery-for-immich')); ?>,
+                allOk:       <?php echo wp_json_encode(__('All required permissions are set.', 'gallery-for-immich')); ?>,
+                someKo:      <?php echo wp_json_encode(__('One or more required permissions are missing.', 'gallery-for-immich')); ?>
+            };
+            var nonce      = <?php echo wp_json_encode(wp_create_nonce('gallery_for_immich_test')); ?>;
+            var ajaxUrl    = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
+            var videoMode  = <?php echo wp_json_encode($options['video_mode'] ?? 'shared'); ?>;
+            var permissions = ['album.read', 'asset.read', 'asset.view'];
+            if (videoMode === 'shared') {
+                permissions.push('sharedLink.create', 'sharedLink.delete');
+            }
+
+            btn.addEventListener('click', function () {
+                btn.disabled    = true;
+                btn.textContent = labels.checking;
+                resultsDiv.innerHTML = '';
+
+                var data = new FormData();
+                data.append('action', 'gallery_for_immich_test_connection');
+                data.append('nonce', nonce);
+
+                fetch(ajaxUrl, { method: 'POST', body: data, credentials: 'same-origin' })
+                    .then(function (r) { return r.json(); })
+                    .then(function (resp) {
+                        btn.disabled    = false;
+                        btn.textContent = labels.check;
+
+                        if (!resp.success) {
+                            resultsDiv.innerHTML =
+                                '<div class="notice notice-error inline" style="margin:0;"><p>' +
+                                escHtml(resp.data.message) + '</p></div>';
+                            return;
+                        }
+
+                        var r       = resp.data.results;
+                        var allGood = true;
+                        var rows    = '';
+
+                        /* Connection row */
+                        var connOk = r['connection'] === true;
+                        if (!connOk) allGood = false;
+                        rows += row(labels.connection, connOk ? true : false);
+
+                        /* Permission rows */
+                        permissions.forEach(function (p) {
+                            var val = r[p];
+                            if (val !== true) allGood = false;
+                            rows += row(p, val);
+                        });
+
+                        var summary = allGood
+                            ? '<div class="notice notice-success inline" style="margin:0 0 12px;"><p>' + escHtml(labels.allOk) + '</p></div>'
+                            : '<div class="notice notice-warning inline" style="margin:0 0 12px;"><p>' + escHtml(labels.someKo) + '</p></div>';
+
+                        resultsDiv.innerHTML =
+                            summary +
+                            '<table class="widefat fixed striped" style="max-width:480px;">' +
+                            '<thead><tr><th>' + escHtml(labels.permission) + '</th><th style="width:200px;">' + escHtml(labels.status) + '</th></tr></thead>' +
+                            '<tbody>' + rows + '</tbody></table>';
+                    })
+                    .catch(function (err) {
+                        btn.disabled    = false;
+                        btn.textContent = labels.check;
+                        resultsDiv.innerHTML =
+                            '<div class="notice notice-error inline" style="margin:0;"><p>' +
+                            escHtml(err.message) + '</p></div>';
+                    });
+            });
+
+            function row(label, val) {
+                var color, text;
+                if (val === true)  { color = '#00a32a'; text = '✓ ' + labels.ok; }
+                else if (val === false) { color = '#d63638'; text = '✗ ' + labels.missing; }
+                else               { color = '#996800'; text = '? ' + labels.unknown; }
+                return '<tr><td><code>' + escHtml(label) + '</code></td>' +
+                       '<td style="color:' + color + ';font-weight:600;">' + escHtml(text) + '</td></tr>';
+            }
+
+            function escHtml(s) {
+                return String(s)
+                    .replace(/&/g, '&amp;')
+                    .replace(/</g, '&lt;')
+                    .replace(/>/g, '&gt;')
+                    .replace(/"/g, '&quot;');
+            }
+        })();
+        </script>
         <?php
     }
 
@@ -751,6 +862,143 @@ class Gallery_For_Immich {
         }, $immich_albums);
         
         return ['albums' => $formatted_albums];
+    }
+
+    /* --- AJAX: test Immich connection and permissions --- */
+    public function ajax_test_connection() {
+        check_ajax_referer('gallery_for_immich_test', 'nonce');
+
+        if (!current_user_can('manage_options')) {
+            wp_send_json_error(['message' => __('Unauthorized', 'gallery-for-immich')]);
+            return;
+        }
+
+        $options = get_option($this->option_name);
+        if (empty($options['server_url']) || empty($options['api_key'])) {
+            wp_send_json_error(['message' => __('Please save your Server URL and API Key first.', 'gallery-for-immich')]);
+            return;
+        }
+
+        $server_url = rtrim($options['server_url'], '/');
+        $api_key    = $options['api_key'];
+        $results    = [];
+        $asset_id   = null;
+
+        // 1. Test basic connectivity + album.read simultaneously.
+        //    GET /api/albums: 200 = connected + album.read OK
+        //                     401 = invalid API key (fail early)
+        //                     403 = connected but album.read missing
+        //    Using /api/albums avoids needing `user.read` permission which is not required.
+        $album_response = wp_remote_get($server_url . '/api/albums', [
+            'headers'   => ['x-api-key' => $api_key],
+            'timeout'   => 10,
+            'sslverify' => true,
+        ]);
+        $album_code = is_wp_error($album_response) ? 0 : wp_remote_retrieve_response_code($album_response);
+
+        // 401 / 0 means connection failed or token is completely invalid
+        if ($album_code === 401 || $album_code === 0) {
+            $error_msg = is_wp_error($album_response)
+                ? $album_response->get_error_message()
+                : 'HTTP ' . $album_code;
+            wp_send_json_error([
+                'message' => sprintf(
+                    /* translators: %s: error description */
+                    __('Connection failed: %s', 'gallery-for-immich'),
+                    $error_msg
+                ),
+                'results' => [],
+            ]);
+            return;
+        }
+
+        $results['connection']  = true;
+        $results['album.read']  = ($album_code === 200);
+
+        // Extract a real asset ID from the album thumbnail — needed for subsequent probes.
+        if ($results['album.read']) {
+            $albums_data = json_decode(wp_remote_retrieve_body($album_response), true);
+            if (!empty($albums_data[0]['albumThumbnailAssetId'])) {
+                $asset_id = $albums_data[0]['albumThumbnailAssetId'];
+            }
+        }
+
+        // 2. asset.read: GET /api/assets/{id}
+        //    This is the exact endpoint the plugin uses to read asset metadata.
+        //    200/404 = permission OK (404 just means fake ID); 403 = permission missing.
+        $probe_id = $asset_id ?? '00000000-0000-0000-0000-000000000001';
+        $asset_read_response = wp_remote_get($server_url . '/api/assets/' . $probe_id, [
+            'headers'   => ['x-api-key' => $api_key],
+            'timeout'   => 10,
+            'sslverify' => true,
+        ]);
+        $asset_read_code = is_wp_error($asset_read_response) ? 0 : wp_remote_retrieve_response_code($asset_read_response);
+        $results['asset.read'] = $asset_id ? ($asset_read_code === 200) : in_array($asset_read_code, [200, 404], true);
+
+        // 3. asset.view — 200/404 → permission exists; 403 → permission missing.
+        $view_response = wp_remote_get($server_url . '/api/assets/' . $probe_id . '/thumbnail', [
+            'headers'             => ['x-api-key' => $api_key],
+            'timeout'             => 10,
+            'sslverify'           => true,
+            'limit_response_size' => 1024,
+        ]);
+        $view_code = is_wp_error($view_response) ? 0 : wp_remote_retrieve_response_code($view_response);
+        $results['asset.view'] = $asset_id ? ($view_code === 200) : in_array($view_code, [200, 404], true);
+
+        // 6 & 7. sharedLink.create / sharedLink.delete — only needed for 'shared' video mode
+        $video_mode = $options['video_mode'] ?? 'shared';
+        if ($video_mode !== 'shared') {
+            wp_send_json_success(['results' => $results]);
+            return;
+        }
+
+        $link_body = $asset_id
+            ? ['type' => 'INDIVIDUAL', 'assetIds' => [$asset_id], 'expiresAt' => gmdate('c', time() + 60)]
+            : ['type' => 'INDIVIDUAL', 'assetIds' => []];
+
+        $create_response = wp_remote_post($server_url . '/api/shared-links', [
+            'headers'   => ['x-api-key' => $api_key, 'Content-Type' => 'application/json'],
+            'body'      => wp_json_encode($link_body),
+            'timeout'   => 10,
+            'sslverify' => true,
+        ]);
+        $create_code = is_wp_error($create_response) ? 0 : wp_remote_retrieve_response_code($create_response);
+
+        if ($asset_id) {
+            $results['sharedLink.create'] = in_array($create_code, [200, 201], true);
+        } else {
+            // 400/422 = permission OK but bad input (no assets); 403 = permission missing
+            $results['sharedLink.create'] = in_array($create_code, [200, 201, 400, 422], true);
+        }
+
+        if (in_array($create_code, [200, 201], true)) {
+            // A real link was created — delete it immediately
+            $link_data = json_decode(wp_remote_retrieve_body($create_response), true);
+            if (!empty($link_data['id'])) {
+                $delete_response = wp_remote_request($server_url . '/api/shared-links/' . $link_data['id'], [
+                    'method'    => 'DELETE',
+                    'headers'   => ['x-api-key' => $api_key],
+                    'timeout'   => 10,
+                    'sslverify' => true,
+                ]);
+                $delete_code = is_wp_error($delete_response) ? 0 : wp_remote_retrieve_response_code($delete_response);
+                $results['sharedLink.delete'] = in_array($delete_code, [200, 204], true);
+            } else {
+                $results['sharedLink.delete'] = null;
+            }
+        } else {
+            // Probe with fake link ID: 404 = permission OK; 403 = permission missing
+            $delete_response = wp_remote_request($server_url . '/api/shared-links/00000000-0000-0000-0000-000000000001', [
+                'method'    => 'DELETE',
+                'headers'   => ['x-api-key' => $api_key],
+                'timeout'   => 10,
+                'sslverify' => true,
+            ]);
+            $delete_code = is_wp_error($delete_response) ? 0 : wp_remote_retrieve_response_code($delete_response);
+            $results['sharedLink.delete'] = in_array($delete_code, [200, 204, 404], true);
+        }
+
+        wp_send_json_success(['results' => $results]);
     }
 
     public function rest_get_video_url($request) {
