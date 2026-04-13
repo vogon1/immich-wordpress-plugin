@@ -259,15 +259,14 @@ class Gallery_For_Immich {
         
         // Sanitize and validate server URL
         if (!empty($input['server_url'])) {
-            $url = esc_url_raw($input['server_url']);
-            // Ensure it's HTTPS in production (or localhost for dev)
-            if (strpos($url, 'https://') === 0 || strpos($url, 'http://localhost') === 0 || strpos($url, 'http://127.0.0.1') === 0) {
+            $url = esc_url_raw($input['server_url'], ['http', 'https']);
+            if (strpos($url, 'http://') === 0 || strpos($url, 'https://') === 0) {
                 $sanitized['server_url'] = rtrim($url, '/');
             } else {
                 add_settings_error(
                     $this->option_name,
                     'invalid_url',
-                    __('Server URL must use HTTPS (or localhost for development).', 'gallery-for-immich')
+                    __('Server URL must start with http:// or https://.', 'gallery-for-immich')
                 );
             }
         }
@@ -301,7 +300,75 @@ class Gallery_For_Immich {
     public function field_server_url() {
         $options = get_option($this->option_name);
         ?>
-        <input type="url" name="<?php echo esc_attr($this->option_name); ?>[server_url]" value="<?php echo esc_attr($options['server_url'] ?? ''); ?>" style="width:400px;" placeholder="https://immich.example.com">
+        <input type="url" id="gfi-server-url" name="<?php echo esc_attr($this->option_name); ?>[server_url]" value="<?php echo esc_attr($options['server_url'] ?? ''); ?>" style="width:400px;" placeholder="https://immich.example.com">
+
+        <!-- HTTP warning modal -->
+        <div id="gfi-http-modal" style="display:none;position:fixed;inset:0;z-index:100000;align-items:center;justify-content:center;">
+            <div style="position:absolute;inset:0;background:rgba(0,0,0,.5);"></div>
+            <div style="position:relative;background:#fff;border-radius:8px;box-shadow:0 8px 32px rgba(0,0,0,.25);max-width:480px;width:calc(100% - 40px);padding:28px 32px;font-family:inherit;">
+                <div style="display:flex;align-items:center;gap:14px;margin-bottom:16px;">
+                    <span style="font-size:32px;line-height:1;">⚠️</span>
+                    <h2 style="margin:0;font-size:17px;font-weight:600;color:#1d2327;"><?php echo esc_html__('Unencrypted connection', 'gallery-for-immich'); ?></h2>
+                </div>
+                <p style="margin:0 0 8px;color:#3c434a;line-height:1.6;"><?php echo esc_html__('You are using an unencrypted HTTP connection.', 'gallery-for-immich'); ?></p>
+                <p style="margin:0 0 24px;color:#3c434a;line-height:1.6;"><?php echo esc_html__('Your API key and photo data will be transmitted without encryption. This is not recommended unless you are on a private local network.', 'gallery-for-immich'); ?></p>
+                <div style="display:flex;gap:10px;justify-content:flex-end;">
+                    <button id="gfi-http-cancel" type="button" class="button"><?php echo esc_html__('Cancel', 'gallery-for-immich'); ?></button>
+                    <button id="gfi-http-confirm" type="button" class="button" style="background:#d63638;border-color:#d63638;color:#fff;"><?php echo esc_html__('Continue with HTTP', 'gallery-for-immich'); ?></button>
+                </div>
+            </div>
+        </div>
+
+        <script>
+        (function() {
+            var input  = document.getElementById('gfi-server-url');
+            var modal  = document.getElementById('gfi-http-modal');
+            var btnOk  = document.getElementById('gfi-http-confirm');
+            var btnNo  = document.getElementById('gfi-http-cancel');
+            if (!input || !modal) return;
+
+            var form = input.closest('form');
+            if (!form) return;
+
+            var confirmed = false;
+
+            function showModal() {
+                modal.style.display = 'flex';
+                btnNo.focus();
+            }
+            function hideModal() {
+                modal.style.display = 'none';
+            }
+
+            form.addEventListener('submit', function(e) {
+                if (confirmed) return; // already approved, let it through
+                var val  = input.value.trim();
+                var host = val.replace(/^http:\/\//i, '').split('/')[0].split(':')[0];
+                if (val.toLowerCase().indexOf('http://') === 0 && host !== 'localhost' && host !== '127.0.0.1') {
+                    e.preventDefault();
+                    showModal();
+                }
+            });
+
+            btnOk.addEventListener('click', function() {
+                hideModal();
+                confirmed = true;
+                form.requestSubmit ? form.requestSubmit() : form.submit();
+            });
+
+            btnNo.addEventListener('click', hideModal);
+
+            // Close on backdrop click
+            modal.addEventListener('click', function(e) {
+                if (e.target === modal || e.target === modal.firstElementChild) hideModal();
+            });
+
+            // Close on Escape
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape' && modal.style.display === 'flex') hideModal();
+            });
+        })();
+        </script>
         <?php
     }
 
