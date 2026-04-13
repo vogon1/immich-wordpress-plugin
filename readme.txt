@@ -4,7 +4,7 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 6.9
 Requires PHP: 7.4
-Stable tag: 0.6.1
+Stable tag: 0.7.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -177,6 +177,14 @@ Additional translations can be contributed via .po files in the languages direct
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.7.0 =
+*Release Date - 13 April 2026*
+
+* New: Apple Live Photos support — play button in the lightbox for photos with a Live Photo video component
+* New: Connection & permissions check button on the settings page
+* New: HTTP server URLs are now allowed (with a confirmation warning modal)
+* Removed: `asset.download` is no longer a required API permission
 
 = 0.6.1 =
 * Fix for missing album list.

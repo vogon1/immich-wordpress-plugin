@@ -13,8 +13,10 @@ A simple way to display galleries without uploading images manually.
 - Display entire albums from Immich
 - Flexible sorting options (date/name, ascending/descending)
 - Beautiful responsive grid layouts with integrated lightbox
+- **Apple Live Photos** - Play the video component of Live Photos directly in the lightbox
 - Video playback modes (shared links, proxy via fopen, or ignore videos)
 - Configure Immich server URL and API key in the WordPress admin panel
+- **Connection & permissions check** - Test your API key and verify all required permissions from the settings page
 - **Gutenberg Block Editor** - Visual block for selecting albums, photos and settings
 - **Shortcode Support** - Classic `[gallery_for_immich]` shortcode works in any editor
 - Multi-language support (Dutch, German, French)
@@ -177,3 +179,11 @@ Use the shortcode below to display just one photo:
 ```text
 [gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
 ```
+
+## 📋 Changelog
+
+### 0.7.0
+- Added Apple Live Photos support: a play button appears in the lightbox for photos that have a Live Photo video component
+- Added connection & permissions check button on the settings page
+- HTTP server URLs are now allowed (with a confirmation warning)
+- Removed `asset.download` as a required API permission (no longer needed)

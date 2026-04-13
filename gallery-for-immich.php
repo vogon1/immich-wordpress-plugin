@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.6.1
+ * Version: 0.7.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
