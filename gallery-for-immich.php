@@ -221,6 +221,14 @@ class Gallery_For_Immich {
             exit('Asset not found');
         }
 
+        // Kill ALL output buffering to prevent stray bytes corrupting binary image output.
+        // Servers with output_buffering enabled in php.ini (common on shared hosts) accumulate
+        // buffered output during WordPress bootstrap, which prepends garbage bytes to the image
+        // data and breaks the JPEG header. This mirrors the pattern already used for video streaming.
+        while (ob_get_level() > 0) {
+            ob_end_clean();
+        }
+
         // Security headers
         header('Content-Type: image/jpeg');
         header('X-Content-Type-Options: nosniff');
@@ -672,7 +680,7 @@ class Gallery_For_Immich {
                 max-width: 95vw !important;
                 max-height: 95vh !important;
                 width: auto !important;
-                heught: auto !important;
+                height: auto !important;
                 object-fit: contain !important;
                 display: block !important;
                 margin: 0 auto !important;
@@ -688,7 +696,7 @@ class Gallery_For_Immich {
             .glightbox-container .gslide-inline,
             .glightbox-container .ginlined-content {
                 background: transparent !important;
-                padding: 0 !important;f
+                padding: 0 !important;
                 align-items: center;
                 justify-content: center;
             }
