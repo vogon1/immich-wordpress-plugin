@@ -983,26 +983,37 @@ class Gallery_For_Immich {
         $results['album.read']  = ($album_code === 200);
 
         // Extract a real asset ID from the album thumbnail — needed for subsequent probes.
+        // Iterate all albums because the first album(s) may be empty folders with a null thumbnail.
         if ($results['album.read']) {
             $albums_data = json_decode(wp_remote_retrieve_body($album_response), true);
-            if (!empty($albums_data[0]['albumThumbnailAssetId'])) {
-                $asset_id = $albums_data[0]['albumThumbnailAssetId'];
+            if (is_array($albums_data)) {
+                foreach ($albums_data as $album) {
+                    if (!empty($album['albumThumbnailAssetId'])) {
+                        $asset_id = $album['albumThumbnailAssetId'];
+                        break;
+                    }
+                }
             }
         }
 
         // 2. asset.read: GET /api/assets/{id}
         //    This is the exact endpoint the plugin uses to read asset metadata.
-        //    200/404 = permission OK (404 just means fake ID); 403 = permission missing.
-        $probe_id = $asset_id ?? '00000000-0000-0000-0000-000000000001';
+        //    200 = permission OK (real asset); 400/404 = permission OK (fake/missing asset);
+        //    403 = permission missing.
+        //    Note: Immich v2.7+ returns 400 (not 404) for UUIDs that fail server-side validation,
+        //    so we must accept 400 as a "permission granted" signal when using a fallback probe ID.
+        //    The fallback UUID must be a valid v4 UUID format to avoid a different 400 from format
+        //    validation (Immich rejects non-v4 UUIDs like 00000000-0000-0000-0000-000000000001).
+        $probe_id = $asset_id ?? 'a4138866-79fa-4e8a-af6a-1708463301b4';
         $asset_read_response = wp_remote_get($server_url . '/api/assets/' . $probe_id, [
             'headers'   => ['x-api-key' => $api_key],
             'timeout'   => 10,
             'sslverify' => true,
         ]);
         $asset_read_code = is_wp_error($asset_read_response) ? 0 : wp_remote_retrieve_response_code($asset_read_response);
-        $results['asset.read'] = $asset_id ? ($asset_read_code === 200) : in_array($asset_read_code, [200, 404], true);
+        $results['asset.read'] = $asset_id ? ($asset_read_code === 200) : in_array($asset_read_code, [200, 400, 404], true);
 
-        // 3. asset.view — 200/404 → permission exists; 403 → permission missing.
+        // 3. asset.view — 200 = OK (real asset); 400/404 = OK (fake/missing asset); 403 = missing.
         $view_response = wp_remote_get($server_url . '/api/assets/' . $probe_id . '/thumbnail', [
             'headers'             => ['x-api-key' => $api_key],
             'timeout'             => 10,
@@ -1010,7 +1021,7 @@ class Gallery_For_Immich {
             'limit_response_size' => 1024,
         ]);
         $view_code = is_wp_error($view_response) ? 0 : wp_remote_retrieve_response_code($view_response);
-        $results['asset.view'] = $asset_id ? ($view_code === 200) : in_array($view_code, [200, 404], true);
+        $results['asset.view'] = $asset_id ? ($view_code === 200) : in_array($view_code, [200, 400, 404], true);
 
         // 6 & 7. sharedLink.create / sharedLink.delete — only needed for 'shared' video mode
         $video_mode = $options['video_mode'] ?? 'shared';
@@ -1054,15 +1065,17 @@ class Gallery_For_Immich {
                 $results['sharedLink.delete'] = null;
             }
         } else {
-            // Probe with fake link ID: 404 = permission OK; 403 = permission missing
-            $delete_response = wp_remote_request($server_url . '/api/shared-links/00000000-0000-0000-0000-000000000001', [
+            // Probe with fake link ID: 400/404 = permission OK; 403 = permission missing.
+            // Immich v2.7+ returns 400 for UUIDs that pass format validation but don't exist,
+            // so accept 400 alongside 404. Use a valid v4 UUID to avoid format-level rejection.
+            $delete_response = wp_remote_request($server_url . '/api/shared-links/a4138866-79fa-4e8a-af6a-1708463301b4', [
                 'method'    => 'DELETE',
                 'headers'   => ['x-api-key' => $api_key],
                 'timeout'   => 10,
                 'sslverify' => true,
             ]);
             $delete_code = is_wp_error($delete_response) ? 0 : wp_remote_retrieve_response_code($delete_response);
-            $results['sharedLink.delete'] = in_array($delete_code, [200, 204, 404], true);
+            $results['sharedLink.delete'] = in_array($delete_code, [200, 204, 400, 404], true);
         }
 
         wp_send_json_success(['results' => $results]);
