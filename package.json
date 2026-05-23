@@ -10,9 +10,14 @@
 		"i18n:mo": "msgfmt -o languages/gallery-for-immich-nl_NL.mo languages/gallery-for-immich-nl_NL.po && msgfmt -o languages/gallery-for-immich-de_DE.mo languages/gallery-for-immich-de_DE.po && msgfmt -o languages/gallery-for-immich-fr_FR.mo languages/gallery-for-immich-fr_FR.po",
 		"i18n:json": "wp i18n make-json languages/ --no-purge",
 		"i18n:build": "npm run i18n:mo && npm run i18n:json",
-		"translate": "npm run i18n:pot && npm run i18n:update && npm run i18n:build && node scripts/sync-translations.js"
+		"translate": "npm run i18n:pot && npm run i18n:update && npm run i18n:build && node scripts/sync-translations.js",
+		"wp-env:start": "wp-env start",
+		"wp-env:stop": "wp-env stop",
+		"wp-env:destroy": "wp-env destroy",
+		"wp-env:setup": "wp-env run cli wp option update gallery_for_immich_settings '{\"server_url\":\"https://fotos.sietse.nl\",\"api_key\":\"JOUW_KEY\",\"video_mode\":\"shared\"}' --format=json"
 	},
 	"devDependencies": {
+		"@wordpress/env": "^11.6.0",
 		"@wordpress/scripts": "^27.0.0"
 	}
 }

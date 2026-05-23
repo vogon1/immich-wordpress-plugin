@@ -8,6 +8,7 @@ Follow these steps before tagging and publishing a new release.
 
 - Go to https://wordpress.org/download/ and find the latest stable WP version.
 - Test the plugin on that version (or check the changelog for breaking changes).
+- Use the wp-env test environment: `npm run wp-env:start` (see [TESTING.md](TESTING.md) for the full checklist).
 - If compatible, update **Tested up to** in:
   - `readme.txt` (line: `Tested up to: x.x`)
   - `gallery-for-immich.php` is not required to carry this field, but the value in `readme.txt` is authoritative for the WordPress plugin directory.
@@ -29,10 +30,12 @@ Follow these steps before tagging and publishing a new release.
 ## 3. Check and update translations
 
 - Generate the POT template and update all `.po` files with new/changed strings:
+
   ```bash
   npm run i18n:pot
   npm run i18n:update
   ```
+
 - Review the `.po` files (nl_NL, de_DE, fr_FR) in `languages/` for untranslated strings (`msgstr ""`).
 - Fill in any missing translations manually in the `.po` files.
 - **Do not compile yet** — run the full pipeline after bumping the version in step 6.

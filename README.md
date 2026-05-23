@@ -183,6 +183,7 @@ Use the shortcode below to display just one photo:
 ## 📋 Changelog
 
 ### 0.7.0
+
 - Added Apple Live Photos support: a play button appears in the lightbox for photos that have a Live Photo video component
 - Added connection & permissions check button on the settings page
 - HTTP server URLs are now allowed (with a confirmation warning)

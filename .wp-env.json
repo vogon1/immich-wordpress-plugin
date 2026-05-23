@@ -1,0 +1,10 @@
+{
+    "core": "https://wordpress.org/wordpress-7.0.zip",
+    "phpVersion": "8.2",
+    "plugins": ["."],
+    "testsEnvironment": false,
+    "config": {
+        "WP_DEBUG": true,
+        "WP_DEBUG_LOG": true
+    }
+}
