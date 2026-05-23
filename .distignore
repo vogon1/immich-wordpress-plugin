@@ -17,6 +17,12 @@
 # Documentation (README.md is for GitHub, readme.txt for WordPress)
 /README.md
 /TRANSLATION.md
+/TESTING.md
+/RELEASE.md
+/CLAUDE.md
+
+# Development environment
+/.wp-env.json
 
 # Screenshots (for WordPress.org only, not in distribution)
 /assets/screenshot-*.png

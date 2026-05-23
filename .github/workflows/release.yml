@@ -16,7 +16,7 @@ jobs:
     steps:
       # 1. Haal code binnen
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v6
         with:
           path: 'gallery-for-immich'
 
@@ -59,7 +59,7 @@ jobs:
 
       # 5. Upload ZIP naar de GitHub Release
       - name: Upload release asset
-        uses: softprops/action-gh-release@v2
+        uses: softprops/action-gh-release@v3
         with:
           files: dist/*.zip
         env:
