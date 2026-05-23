@@ -6,7 +6,7 @@
 	"title": "Gallery for Immich",
 	"category": "media",
 	"icon": "format-gallery",
-	"description": "Display photos and albums from your Immich server",
+	"description": "Display Immich albums and single photos with lightbox, sorting, alignment, and link behavior.",
 	"keywords": ["gallery", "photos", "immich", "images"],
 	"textdomain": "gallery-for-immich",
 	"attributes": {
@@ -53,6 +53,14 @@
 		"align": {
 			"type": "string",
 			"default": "none"
+		},
+		"link": {
+			"type": "string",
+			"default": "lightbox"
+		},
+		"link_url": {
+			"type": "string",
+			"default": ""
 		}
 	},
 	"supports": {

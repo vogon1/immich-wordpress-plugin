@@ -7,6 +7,8 @@ import apiFetch from '@wordpress/api-fetch';
 
 const Edit = ({ attributes, setAttributes }) => {
 	const { mode, album, albums, asset, show, order, size, title_size, description_size, date_size } = attributes;
+	const link     = attributes.link     || 'lightbox';
+	const link_url = attributes.link_url || '';
 	const blockProps = useBlockProps();
 	
 	const [availableAlbums, setAvailableAlbums] = useState([]);
@@ -62,7 +64,21 @@ const Edit = ({ attributes, setAttributes }) => {
 		if (date_size && date_size !== 13) {
 			shortcode += ` date_size="${date_size}"`;
 		}
-		
+
+		// align (only for single photo mode)
+		if (mode === 'asset' && attributes.align && attributes.align !== 'none') {
+			shortcode += ` align="${attributes.align}"`;
+		}
+
+		// link (only for single photo mode; omit when default 'lightbox')
+		if (mode === 'asset' && link !== 'lightbox') {
+			if (link === 'custom' && link_url) {
+				shortcode += ` link="${link_url}"`;   // URL goes directly into link=
+			} else if (link !== 'custom') {
+				shortcode += ` link="${link}"`;
+			}
+		}
+
 		shortcode += ']';
 		return shortcode;
 	};
@@ -162,6 +178,27 @@ const Edit = ({ attributes, setAttributes }) => {
 						]}
 						help={__('Choose alignment for text wrapping around the photo', 'gallery-for-immich')}
 					/>
+					<SelectControl
+						label={__('Link behavior', 'gallery-for-immich')}
+						value={link}
+						onChange={(value) => setAttributes({ link: value, link_url: '' })}
+						options={[
+							{ label: __('Lightbox (default)', 'gallery-for-immich'), value: 'lightbox' },
+							{ label: __('No link',            'gallery-for-immich'), value: 'none'     },
+							{ label: __('Custom URL',         'gallery-for-immich'), value: 'custom'   },
+						]}
+						help={__('Choose how the photo behaves when clicked', 'gallery-for-immich')}
+					/>
+					{link === 'custom' && (
+						<TextControl
+							label={__('Link URL', 'gallery-for-immich')}
+							value={link_url}
+							onChange={(value) => setAttributes({ link_url: value })}
+							placeholder="https://..."
+							type="url"
+							help={__('The URL to open when the photo is clicked', 'gallery-for-immich')}
+						/>
+					)}
 				</>
 				)}					{mode === 'single' && (
 						<SelectControl
@@ -199,11 +236,11 @@ const Edit = ({ attributes, setAttributes }) => {
 					)}
 				
 				<RangeControl
-					label={__('Thumbnail Size', 'gallery-for-immich')}
+					label={mode === 'asset' ? __('Max width', 'gallery-for-immich') : __('Thumbnail Size', 'gallery-for-immich')}
 					value={size || 200}
 					onChange={(value) => setAttributes({ size: value })}
 					min={100}
-					max={500}
+					max={mode === 'asset' ? 1200 : 500}
 					step={50}
 				/>
 			</PanelBody>

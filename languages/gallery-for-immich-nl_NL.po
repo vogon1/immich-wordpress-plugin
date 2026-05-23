@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Gallery for Immich 0.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gallery-for-"
 "immich\n"
-"POT-Creation-Date: 2026-04-13T18:23:45+00:00\n"
+"POT-Creation-Date: 2026-05-23T09:57:16+00:00\n"
 "PO-Revision-Date: 2025-12-16 17:30+0000\n"
 "Last-Translator: Sietse Visser\n"
 "Language-Team: Dutch\n"
@@ -14,8 +14,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Plugin Name of the plugin
-#: gallery-for-immich.php gallery-for-immich.php:237 gallery-for-immich.php:238
-#: gallery-for-immich.php:408 build/index.js:1 src/index.js:263
+#: gallery-for-immich.php gallery-for-immich.php:245 gallery-for-immich.php:246
+#: gallery-for-immich.php:416 build/index.js:1 src/index.js:300
 msgid "Gallery for Immich"
 msgstr "Galerij voor Immich"
 
@@ -51,39 +51,39 @@ msgstr ""
 "Toon Immich albums en foto's in een WordPress site met behulp van "
 "shortcodes. Vereist Immich server met API toegang."
 
-#: gallery-for-immich.php:250
+#: gallery-for-immich.php:258
 msgid "Settings"
 msgstr "Instellingen"
 
-#: gallery-for-immich.php:252
+#: gallery-for-immich.php:260
 msgid "Immich server URL"
 msgstr "Immich server URL"
 
-#: gallery-for-immich.php:253
+#: gallery-for-immich.php:261
 msgid "API Key"
 msgstr "API-sleutel"
 
-#: gallery-for-immich.php:254
+#: gallery-for-immich.php:262
 msgid "Video playback"
 msgstr "Video afspelen"
 
-#: gallery-for-immich.php:269
+#: gallery-for-immich.php:277
 msgid "Server URL must start with http:// or https://."
 msgstr "Server URL moet beginnen met http:// of https://."
 
-#: gallery-for-immich.php:284
+#: gallery-for-immich.php:292
 msgid "API Key contains invalid characters."
 msgstr "API-sleutel bevat ongeldige tekens."
 
-#: gallery-for-immich.php:311
+#: gallery-for-immich.php:319
 msgid "Unencrypted connection"
 msgstr "Onversleutelde verbinding"
 
-#: gallery-for-immich.php:313
+#: gallery-for-immich.php:321
 msgid "You are using an unencrypted HTTP connection."
 msgstr "U gebruikt een onversleutelde HTTP-verbinding."
 
-#: gallery-for-immich.php:314
+#: gallery-for-immich.php:322
 msgid ""
 "Your API key and photo data will be transmitted without encryption. This is "
 "not recommended unless you are on a private local network."
@@ -91,31 +91,31 @@ msgstr ""
 "Uw API-sleutel en fotogegevens worden verzonden zonder versleuteling. Dit "
 "wordt afgeraden tenzij u zich op een privé lokaal netwerk bevindt."
 
-#: gallery-for-immich.php:316
+#: gallery-for-immich.php:324
 msgid "Cancel"
 msgstr "Annuleren"
 
-#: gallery-for-immich.php:317
+#: gallery-for-immich.php:325
 msgid "Continue with HTTP"
 msgstr "Doorgaan met HTTP"
 
-#: gallery-for-immich.php:387
+#: gallery-for-immich.php:395
 msgid "Shared links (default)"
 msgstr "Shared links (standaard)"
 
-#: gallery-for-immich.php:388
+#: gallery-for-immich.php:396
 msgid "Proxy via fopen"
 msgstr "Proxy via fopen"
 
-#: gallery-for-immich.php:389
+#: gallery-for-immich.php:397
 msgid "Ignore videos"
 msgstr "Video's negeren"
 
-#: gallery-for-immich.php:392
+#: gallery-for-immich.php:400
 msgid "How it works:"
 msgstr "Hoe het werkt:"
 
-#: gallery-for-immich.php:393
+#: gallery-for-immich.php:401
 msgid ""
 "Proxy via fopen: Streams videos through this WordPress site. Most elegant, "
 "but not all WordPress configurations support fopen. If it does not work for "
@@ -125,7 +125,7 @@ msgstr ""
 "maar niet alle WordPress-configuraties ondersteunen fopen. Als het niet voor "
 "u werkt, kies Shared Links."
 
-#: gallery-for-immich.php:394
+#: gallery-for-immich.php:402
 msgid ""
 "Shared links: Creates temporary shared links on Immich (bypasses WordPress "
 "server). The temporary links expire after a short period and will be removed "
@@ -135,20 +135,20 @@ msgstr ""
 "server). De tijdelijke links verlopen na korte tijd en worden uit Immich "
 "verwijderd."
 
-#: gallery-for-immich.php:395
+#: gallery-for-immich.php:403
 msgid "Ignore videos: Videos will not be displayed in galleries."
 msgstr "Video's negeren: video's worden niet weergegeven in galerijen."
 
-#: gallery-for-immich.php:403
+#: gallery-for-immich.php:411
 msgid "You do not have sufficient permissions to access this page."
 msgstr "Je hebt onvoldoende rechten om deze pagina te bekijken."
 
-#: gallery-for-immich.php:418 gallery-for-immich.php:420
-#: gallery-for-immich.php:430
+#: gallery-for-immich.php:426 gallery-for-immich.php:428
+#: gallery-for-immich.php:438
 msgid "Test connection & permissions"
 msgstr "Verbinding & rechten testen"
 
-#: gallery-for-immich.php:419
+#: gallery-for-immich.php:427
 msgid ""
 "After saving your settings, click the button below to verify that your API "
 "key works and has all required permissions."
@@ -156,81 +156,81 @@ msgstr ""
 "Sla uw instellingen op en klik op de knop hieronder om te controleren of uw "
 "API-sleutel werkt en alle vereiste rechten heeft."
 
-#: gallery-for-immich.php:431
+#: gallery-for-immich.php:439
 msgid "Testing…"
 msgstr "Bezig met testen…"
 
-#: gallery-for-immich.php:432
+#: gallery-for-immich.php:440
 msgid "Connection"
 msgstr "Verbinding"
 
-#: gallery-for-immich.php:433
+#: gallery-for-immich.php:441
 msgid "Permission"
 msgstr "Recht"
 
-#: gallery-for-immich.php:434
+#: gallery-for-immich.php:442
 msgid "Status"
 msgstr "Status"
 
-#: gallery-for-immich.php:435
+#: gallery-for-immich.php:443
 msgid "OK"
 msgstr "OK"
 
-#: gallery-for-immich.php:436
+#: gallery-for-immich.php:444
 msgid "Missing"
 msgstr "Ontbreekt"
 
-#: gallery-for-immich.php:437
+#: gallery-for-immich.php:445
 msgid "Could not test (no assets on server)"
 msgstr "Kon niet testen (geen foto's op server)"
 
-#: gallery-for-immich.php:438
+#: gallery-for-immich.php:446
 msgid "All required permissions are set."
 msgstr "Alle vereiste rechten zijn ingesteld."
 
-#: gallery-for-immich.php:439
+#: gallery-for-immich.php:447
 msgid "One or more required permissions are missing."
 msgstr "Een of meer vereiste rechten ontbreken."
 
-#: gallery-for-immich.php:927
+#: gallery-for-immich.php:946
 msgid "Untitled Album"
 msgstr "Naamloos album"
 
-#: gallery-for-immich.php:939
+#: gallery-for-immich.php:958
 msgid "Unauthorized"
 msgstr "Niet geautoriseerd"
 
-#: gallery-for-immich.php:945
+#: gallery-for-immich.php:964
 msgid "Please save your Server URL and API Key first."
 msgstr "Sla eerst uw Server URL en API-sleutel op."
 
 #. translators: %s: error description
-#: gallery-for-immich.php:974
+#: gallery-for-immich.php:993
 #, php-format
 msgid "Connection failed: %s"
 msgstr "Verbinding mislukt: %s"
 
-#: gallery-for-immich.php:1126
+#: gallery-for-immich.php:1158
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
 msgstr ""
 "Plugin niet geconfigureerd. Stel Server URL en API-sleutel in bij "
 "instellingen."
 
 #. translators: %d: HTTP status code number
-#: gallery-for-immich.php:1147
+#: gallery-for-immich.php:1179
 #, php-format
 msgid "API returned status code: %d"
 msgstr "API gaf statuscode: %d"
 
-#: gallery-for-immich.php:1344
+#: gallery-for-immich.php:1392
 msgid "Asset not found."
 msgstr "Foto niet gevonden."
 
-#: gallery-for-immich.php:1395
+#: gallery-for-immich.php:1443
 msgid "Video is not displayed."
 msgstr "Video wordt niet weergegeven."
 
-#: gallery-for-immich.php:1446 gallery-for-immich.php:1580
+#: gallery-for-immich.php:1517 gallery-for-immich.php:1651
 msgid ""
 "Gallery preview not available in editor. This will display on the published "
 "page."
@@ -238,203 +238,235 @@ msgstr ""
 "Galerij voorbeeld niet beschikbaar in editor. Dit wordt weergegeven op de "
 "gepubliceerde pagina."
 
-#: gallery-for-immich.php:1453
+#: gallery-for-immich.php:1524
 msgid "No photos found in this album."
 msgstr "Geen foto's gevonden in dit album."
 
-#: gallery-for-immich.php:1570
+#: gallery-for-immich.php:1641
 msgid "Return to gallery"
 msgstr "Terug naar galerij"
 
-#: gallery-for-immich.php:1589
+#: gallery-for-immich.php:1660
 msgid "Error from Immich API: "
 msgstr "Fout van Immich API: "
 
-#: gallery-for-immich.php:1593
+#: gallery-for-immich.php:1664
 msgid "No albums found."
 msgstr "Geen albums gevonden."
 
-#: build/index.js:1 src/index.js:71
+#: build/index.js:1 src/index.js:87
 msgid "Select an album..."
 msgstr "Selecteer een album..."
 
-#: build/index.js:1 src/index.js:81
+#: build/index.js:1 src/index.js:97
 msgid "Gallery name"
 msgstr "Galerijnaam"
 
-#: build/index.js:1 src/index.js:82
+#: build/index.js:1 src/index.js:98
 msgid "Gallery description"
 msgstr "Galerij omschrijving"
 
-#: build/index.js:1 src/index.js:83
+#: build/index.js:1 src/index.js:99
 msgid "Asset date"
 msgstr "Foto datum"
 
-#: build/index.js:1 src/index.js:84
+#: build/index.js:1 src/index.js:100
 msgid "Asset description"
 msgstr "Foto omschrijving"
 
-#: build/index.js:1 src/index.js:88
+#: build/index.js:1 src/index.js:104
 msgid "Default"
 msgstr "Standaard"
 
-#: build/index.js:1 src/index.js:89
+#: build/index.js:1 src/index.js:105
 msgid "Newest first"
 msgstr "Nieuwste eerst"
 
-#: build/index.js:1 src/index.js:90
+#: build/index.js:1 src/index.js:106
 msgid "Oldest first"
 msgstr "Oudste eerst"
 
-#: build/index.js:1 src/index.js:91
+#: build/index.js:1 src/index.js:107
 msgid "A-Z (albums only)"
 msgstr "A-Z (alleen albums)"
 
-#: build/index.js:1 src/index.js:92
+#: build/index.js:1 src/index.js:108
 msgid "Z-A (albums only)"
 msgstr "Z-A (alleen albums)"
 
-#: build/index.js:1 src/index.js:93
+#: build/index.js:1 src/index.js:109
 msgid "A-Z by description (photos only)"
 msgstr "A-Z op omschrijving (alleen foto's)"
 
-#: build/index.js:1 src/index.js:94
+#: build/index.js:1 src/index.js:110
 msgid "Z-A by description (photos only)"
 msgstr "Z-A op omschrijving (alleen foto's)"
 
-#: build/index.js:1 src/index.js:131
+#: build/index.js:1 src/index.js:147
 msgid "Gallery Settings"
 msgstr "Galerij instellingen"
 
-#: build/index.js:1 src/index.js:133
+#: build/index.js:1 src/index.js:149
 msgid "Display Mode"
 msgstr "Weergavemodus"
 
-#: build/index.js:1 src/index.js:136
+#: build/index.js:1 src/index.js:152
 msgid "All albums overview"
 msgstr "Alle albums overzicht"
 
-#: build/index.js:1 src/index.js:137
+#: build/index.js:1 src/index.js:153
 msgid "Single album"
 msgstr "Enkel album"
 
-#: build/index.js:1 src/index.js:138
+#: build/index.js:1 src/index.js:154
 msgid "Multiple albums"
 msgstr "Meerdere albums"
 
-#: build/index.js:1 src/index.js:139
+#: build/index.js:1 src/index.js:155
 msgid "Single photo"
 msgstr "Enkele foto"
 
-#: build/index.js:1 src/index.js:147
+#: build/index.js:1 src/index.js:163
 msgid "Photo ID"
 msgstr "Foto ID"
 
-#: build/index.js:1 src/index.js:151
+#: build/index.js:1 src/index.js:167
 msgid "Enter the photo ID from your Immich URL"
 msgstr "Voer het foto ID in van je Immich URL"
 
-#: build/index.js:1 src/index.js:154
+#: build/index.js:1 src/index.js:170
 msgid "Alignment"
 msgstr "Uitlijning"
 
-#: build/index.js:1 src/index.js:158
+#: build/index.js:1 src/index.js:174
 msgid "Default (none)"
 msgstr "Standaard (geen)"
 
-#: build/index.js:1 src/index.js:159
+#: build/index.js:1 src/index.js:175
 msgid "Left (text wraps right)"
 msgstr "Links (tekst loopt rechts)"
 
-#: build/index.js:1 src/index.js:160
+#: build/index.js:1 src/index.js:176
 msgid "Right (text wraps left)"
 msgstr "Rechts (tekst loopt links)"
 
-#: build/index.js:1 src/index.js:161
+#: build/index.js:1 src/index.js:177
 msgid "Center"
 msgstr "Gecentreerd"
 
-#: build/index.js:1 src/index.js:163
+#: build/index.js:1 src/index.js:179
 msgid "Choose alignment for text wrapping around the photo"
 msgstr "Kies uitlijning voor tekstomloop rond de foto"
 
-#: build/index.js:1 src/index.js:168
+#: build/index.js:1 src/index.js:182
+msgid "Link behavior"
+msgstr "Klikgedrag"
+
+#: build/index.js:1 src/index.js:186
+msgid "Lightbox (default)"
+msgstr "Lightbox (standaard)"
+
+#: build/index.js:1 src/index.js:187
+msgid "No link"
+msgstr "Geen link"
+
+#: build/index.js:1 src/index.js:188
+msgid "Custom URL"
+msgstr "Eigen URL"
+
+#: build/index.js:1 src/index.js:190
+msgid "Choose how the photo behaves when clicked"
+msgstr "Kies wat er gebeurt als op de foto wordt geklikt"
+
+#: build/index.js:1 src/index.js:194
+msgid "Link URL"
+msgstr "Link-URL"
+
+#: build/index.js:1 src/index.js:199
+msgid "The URL to open when the photo is clicked"
+msgstr "De URL die wordt geopend als op de foto wordt geklikt"
+
+#: build/index.js:1 src/index.js:205
 msgid "Select Album"
 msgstr "Selecteer album"
 
-#: build/index.js:1 src/index.js:179
+#: build/index.js:1 src/index.js:216
 msgid "Select Albums"
 msgstr "Selecteer albums"
 
-#: build/index.js:1 src/index.js:194
+#: build/index.js:1 src/index.js:231
 msgid "Sort Order"
 msgstr "Sorteervolgorde"
 
-#: build/index.js:1 src/index.js:202
+#: build/index.js:1 src/index.js:239
+msgid "Max width"
+msgstr "Maximale breedte"
+
+#: build/index.js:1 src/index.js:239
 msgid "Thumbnail Size"
 msgstr "Miniatuurgrootte"
 
-#: build/index.js:1 src/index.js:211
+#: build/index.js:1 src/index.js:248
 msgid "Text Sizes"
 msgstr "Tekstgroottes"
 
-#: build/index.js:1 src/index.js:213
+#: build/index.js:1 src/index.js:250
 msgid "Title Size"
 msgstr "Titelgrootte"
 
-#: build/index.js:1 src/index.js:222
+#: build/index.js:1 src/index.js:259
 msgid "Description Size"
 msgstr "Omschrijvingsgrootte"
 
-#: build/index.js:1 src/index.js:231
+#: build/index.js:1 src/index.js:268
 msgid "Date Size"
 msgstr "Datumgrootte"
 
-#: build/index.js:1 src/index.js:238
+#: build/index.js:1 src/index.js:275
 msgid "Display Options"
 msgstr "Weergaveopties"
 
-#: build/index.js:1 src/index.js:259
+#: build/index.js:1 src/index.js:296
 msgid "Loading albums..."
 msgstr "Albums laden..."
 
-#: build/index.js:1 src/index.js:275
+#: build/index.js:1 src/index.js:312
 msgid "⚠️ No album selected"
 msgstr "⚠️ Geen album geselecteerd"
 
-#: build/index.js:1 src/index.js:277
+#: build/index.js:1 src/index.js:314
 msgid "Please select an album from the sidebar to display."
 msgstr "Selecteer een album in de zijbalk om weer te geven."
 
-#: build/index.js:1 src/index.js:291
+#: build/index.js:1 src/index.js:328
 msgid "⚠️ No albums selected"
 msgstr "⚠️ Geen albums geselecteerd"
 
-#: build/index.js:1 src/index.js:293
+#: build/index.js:1 src/index.js:330
 msgid "Please select at least one album from the sidebar to display."
 msgstr "Selecteer minstens één album in de zijbalk om weer te geven."
 
-#: build/index.js:1 src/index.js:307
+#: build/index.js:1 src/index.js:344
 msgid "⚠️ No photo ID entered"
 msgstr "⚠️ Geen foto-ID ingevoerd"
 
-#: build/index.js:1 src/index.js:309
+#: build/index.js:1 src/index.js:346
 msgid "Please enter a photo ID from your Immich server."
 msgstr "Voer een foto-ID in van je Immich server."
 
-#: build/index.js:1 src/index.js:319
+#: build/index.js:1 src/index.js:356
 msgid "Will display all albums from Immich"
 msgstr "Toont alle albums van Immich"
 
-#: build/index.js:1 src/index.js:324
+#: build/index.js:1 src/index.js:361
 msgid "Single photo: "
 msgstr "Enkele foto: "
 
-#: build/index.js:1 src/index.js:329
+#: build/index.js:1 src/index.js:366
 msgid "Selected: "
 msgstr "Geselecteerd: "
 
-#: build/index.js:1 src/index.js:335
+#: build/index.js:1 src/index.js:372
 msgid "Selected albums: "
 msgstr "Geselecteerde albums: "
 
@@ -445,8 +477,10 @@ msgstr "Galerij voor Immich"
 
 #: block.json
 msgctxt "block description"
-msgid "Display photos and albums from your Immich server"
-msgstr "Toon foto's en albums van je Immich server"
+msgid ""
+"Display Immich albums and single photos with lightbox, sorting, alignment, "
+"and link behavior."
+msgstr ""
 
 #: block.json
 msgctxt "block keyword"
@@ -467,6 +501,14 @@ msgstr "immich"
 msgctxt "block keyword"
 msgid "images"
 msgstr "afbeeldingen"
+
+#~ msgctxt "block description"
+#~ msgid "Display photos and albums from your Immich server"
+#~ msgstr "Toon foto's en albums van je Immich server"
+
+#, fuzzy
+#~ msgid "Full image"
+#~ msgstr "afbeeldingen"
 
 #~ msgid "Server URL must use HTTPS (or localhost for development)."
 #~ msgstr "Server URL moet HTTPS gebruiken (of localhost voor ontwikkeling)."

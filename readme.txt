@@ -2,9 +2,9 @@
 Contributors: sietsevisser
 Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
-Tested up to: 6.9
+Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.7.0
+Stable tag: 0.8.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -25,6 +25,7 @@ Gallery for Immich is a WordPress plugin that seamlessly integrates your self-ho
 * Integrated lightbox with GLightbox
 * Video playback modes (shared links, proxy via fopen, or ignore videos)
 * Flexible sorting options (date/name, ascending/descending)
+* **Single photo embedding** - Display one photo with alignment (left/right/center) and configurable link behavior (lightbox, no link, or custom URL)
 * Full internationalization support (Dutch, German, French translations)
 * Configure Immich server URL and API key in the WordPress admin panel
 
@@ -119,10 +120,17 @@ Note: If the `show` parameter is not specified, only thumbnails are displayed wi
 `[gallery_for_immich size="300" title_size="18" description_size="15" date_size="12"]`
 
 Size options:
-* `size` - Thumbnail size in pixels (100-500, default: 200)
+* `size` - Thumbnail size for albums (100-500, default: 200); max-width for single photos (100-1200, default: 200)
 * `title_size` - Title font size (10-30, default: 16)
 * `description_size` - Description font size (10-30, default: 14)
 * `date_size` - Date font size (10-30, default: 13)
+
+**Single photo alignment and link behavior:**
+`[gallery_for_immich asset="photo-id" align="left" link="none"]`
+`[gallery_for_immich asset="photo-id" align="right" link="https://example.com"]`
+
+Align options: `left`, `right`, `center` (default: no float)
+Link options: `lightbox` (default — opens in overlay), `none` (no link), or any `https://...` URL (opens in new tab)
 
 **Sort order:**
 `[gallery_for_immich order="date_desc"]`
@@ -177,6 +185,15 @@ Additional translations can be contributed via .po files in the languages direct
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.8.0 =
+*Release Date - 23 May 2026*
+
+* New: `link=` attribute for single photos — lightbox (default), no link, or custom URL
+* New: Single photos always display the Immich preview image; `size` controls max-width (up to 1200px)
+* New: `align=` attribute for single photos — left, right, or center for text wrapping
+* Fix: Image proxy output buffering issue and CSS typos (PR #11)
+* Fix: Connection test false negatives on Immich v2.7+ (PR #12)
 
 = 0.7.0 =
 *Release Date - 13 April 2026*
@@ -287,6 +304,9 @@ Additional translations can be contributed via .po files in the languages direct
 * Dutch translation included
 
 == Upgrade Notice ==
+
+= 0.8.0 =
+New link behavior and alignment controls for single photo embedding. Single photos now show the Immich preview image by default.
 
 = 0.3.0 =
 Improved lightbox experience and enhanced documentation. Recommended update for better usability.

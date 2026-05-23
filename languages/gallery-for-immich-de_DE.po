@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Gallery for Immich 0.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gallery-for-"
 "immich\n"
-"POT-Creation-Date: 2026-04-13T18:23:45+00:00\n"
+"POT-Creation-Date: 2026-05-23T09:57:16+00:00\n"
 "PO-Revision-Date: 2025-12-16 17:30+0000\n"
 "Last-Translator: GitHub Copilot\n"
 "Language-Team: German\n"
@@ -14,8 +14,8 @@ msgstr ""
 "Plural-Forms: nplurals=2; plural=(n != 1);\n"
 
 #. Plugin Name of the plugin
-#: gallery-for-immich.php gallery-for-immich.php:237 gallery-for-immich.php:238
-#: gallery-for-immich.php:408 build/index.js:1 src/index.js:263
+#: gallery-for-immich.php gallery-for-immich.php:245 gallery-for-immich.php:246
+#: gallery-for-immich.php:416 build/index.js:1 src/index.js:300
 msgid "Gallery for Immich"
 msgstr "Galerie für Immich"
 
@@ -51,39 +51,39 @@ msgstr ""
 "Zeigen Sie Immich-Alben und Fotos auf einer WordPress-Website mit Shortcodes "
 "an. Erfordert Immich-Server mit API-Zugriff."
 
-#: gallery-for-immich.php:250
+#: gallery-for-immich.php:258
 msgid "Settings"
 msgstr "Einstellungen"
 
-#: gallery-for-immich.php:252
+#: gallery-for-immich.php:260
 msgid "Immich server URL"
 msgstr "Immich-Server-URL"
 
-#: gallery-for-immich.php:253
+#: gallery-for-immich.php:261
 msgid "API Key"
 msgstr "API-Schlüssel"
 
-#: gallery-for-immich.php:254
+#: gallery-for-immich.php:262
 msgid "Video playback"
 msgstr "Videowiedergabe"
 
-#: gallery-for-immich.php:269
+#: gallery-for-immich.php:277
 msgid "Server URL must start with http:// or https://."
 msgstr "Server-URL muss mit http:// oder https:// beginnen."
 
-#: gallery-for-immich.php:284
+#: gallery-for-immich.php:292
 msgid "API Key contains invalid characters."
 msgstr "API-Schlüssel enthält ungültige Zeichen."
 
-#: gallery-for-immich.php:311
+#: gallery-for-immich.php:319
 msgid "Unencrypted connection"
 msgstr "Unverschlüsselte Verbindung"
 
-#: gallery-for-immich.php:313
+#: gallery-for-immich.php:321
 msgid "You are using an unencrypted HTTP connection."
 msgstr "Sie verwenden eine unverschlüsselte HTTP-Verbindung."
 
-#: gallery-for-immich.php:314
+#: gallery-for-immich.php:322
 msgid ""
 "Your API key and photo data will be transmitted without encryption. This is "
 "not recommended unless you are on a private local network."
@@ -92,31 +92,31 @@ msgstr ""
 "Dies wird nicht empfohlen, es sei denn, Sie befinden sich in einem privaten "
 "lokalen Netzwerk."
 
-#: gallery-for-immich.php:316
+#: gallery-for-immich.php:324
 msgid "Cancel"
 msgstr "Abbrechen"
 
-#: gallery-for-immich.php:317
+#: gallery-for-immich.php:325
 msgid "Continue with HTTP"
 msgstr "Mit HTTP fortfahren"
 
-#: gallery-for-immich.php:387
+#: gallery-for-immich.php:395
 msgid "Shared links (default)"
 msgstr "Geteilte Links (Standard)"
 
-#: gallery-for-immich.php:388
+#: gallery-for-immich.php:396
 msgid "Proxy via fopen"
 msgstr "Proxy über fopen"
 
-#: gallery-for-immich.php:389
+#: gallery-for-immich.php:397
 msgid "Ignore videos"
 msgstr "Videos ignorieren"
 
-#: gallery-for-immich.php:392
+#: gallery-for-immich.php:400
 msgid "How it works:"
 msgstr "So funktioniert es:"
 
-#: gallery-for-immich.php:393
+#: gallery-for-immich.php:401
 msgid ""
 "Proxy via fopen: Streams videos through this WordPress site. Most elegant, "
 "but not all WordPress configurations support fopen. If it does not work for "
@@ -126,7 +126,7 @@ msgstr ""
 "elegantesten, aber nicht alle WordPress-Konfigurationen unterstützen fopen. "
 "Wenn es nicht für Sie funktioniert, wählen Sie Freigegebene Links."
 
-#: gallery-for-immich.php:394
+#: gallery-for-immich.php:402
 msgid ""
 "Shared links: Creates temporary shared links on Immich (bypasses WordPress "
 "server). The temporary links expire after a short period and will be removed "
@@ -136,22 +136,22 @@ msgstr ""
 "die WordPress-Server). Die temporären Links verfallen nach kurzer Zeit und "
 "werden aus Immich entfernt."
 
-#: gallery-for-immich.php:395
+#: gallery-for-immich.php:403
 msgid "Ignore videos: Videos will not be displayed in galleries."
 msgstr "Videos ignorieren: Videos werden nicht in Galerien angezeigt."
 
-#: gallery-for-immich.php:403
+#: gallery-for-immich.php:411
 msgid "You do not have sufficient permissions to access this page."
 msgstr ""
 "Sie haben nicht die erforderlichen Berechtigungen, um auf diese Seite "
 "zuzugreifen."
 
-#: gallery-for-immich.php:418 gallery-for-immich.php:420
-#: gallery-for-immich.php:430
+#: gallery-for-immich.php:426 gallery-for-immich.php:428
+#: gallery-for-immich.php:438
 msgid "Test connection & permissions"
 msgstr "Verbindung & Berechtigungen testen"
 
-#: gallery-for-immich.php:419
+#: gallery-for-immich.php:427
 msgid ""
 "After saving your settings, click the button below to verify that your API "
 "key works and has all required permissions."
@@ -160,81 +160,81 @@ msgstr ""
 "um zu überprüfen, ob Ihr API-Schlüssel funktioniert und alle erforderlichen "
 "Berechtigungen hat."
 
-#: gallery-for-immich.php:431
+#: gallery-for-immich.php:439
 msgid "Testing…"
 msgstr "Teste…"
 
-#: gallery-for-immich.php:432
+#: gallery-for-immich.php:440
 msgid "Connection"
 msgstr "Verbindung"
 
-#: gallery-for-immich.php:433
+#: gallery-for-immich.php:441
 msgid "Permission"
 msgstr "Berechtigung"
 
-#: gallery-for-immich.php:434
+#: gallery-for-immich.php:442
 msgid "Status"
 msgstr "Status"
 
-#: gallery-for-immich.php:435
+#: gallery-for-immich.php:443
 msgid "OK"
 msgstr "OK"
 
-#: gallery-for-immich.php:436
+#: gallery-for-immich.php:444
 msgid "Missing"
 msgstr "Fehlt"
 
-#: gallery-for-immich.php:437
+#: gallery-for-immich.php:445
 msgid "Could not test (no assets on server)"
 msgstr "Konnte nicht getestet werden (keine Fotos auf dem Server)"
 
-#: gallery-for-immich.php:438
+#: gallery-for-immich.php:446
 msgid "All required permissions are set."
 msgstr "Alle erforderlichen Berechtigungen sind gesetzt."
 
-#: gallery-for-immich.php:439
+#: gallery-for-immich.php:447
 msgid "One or more required permissions are missing."
 msgstr "Eine oder mehrere erforderliche Berechtigungen fehlen."
 
-#: gallery-for-immich.php:927
+#: gallery-for-immich.php:946
 msgid "Untitled Album"
 msgstr "Unbenanntes Album"
 
-#: gallery-for-immich.php:939
+#: gallery-for-immich.php:958
 msgid "Unauthorized"
 msgstr "Nicht autorisiert"
 
-#: gallery-for-immich.php:945
+#: gallery-for-immich.php:964
 msgid "Please save your Server URL and API Key first."
 msgstr "Bitte speichern Sie zuerst Ihre Server-URL und den API-Schlüssel."
 
 #. translators: %s: error description
-#: gallery-for-immich.php:974
+#: gallery-for-immich.php:993
 #, php-format
 msgid "Connection failed: %s"
 msgstr "Verbindung fehlgeschlagen: %s"
 
-#: gallery-for-immich.php:1126
+#: gallery-for-immich.php:1158
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
 msgstr ""
 "Plugin nicht konfiguriert. Bitte legen Sie Server-URL und API-Schlüssel in "
 "den Einstellungen fest."
 
 #. translators: %d: HTTP status code number
-#: gallery-for-immich.php:1147
+#: gallery-for-immich.php:1179
 #, php-format
 msgid "API returned status code: %d"
 msgstr "API hat Statuscode zurückgegeben: %d"
 
-#: gallery-for-immich.php:1344
+#: gallery-for-immich.php:1392
 msgid "Asset not found."
 msgstr "Foto nicht gefunden."
 
-#: gallery-for-immich.php:1395
+#: gallery-for-immich.php:1443
 msgid "Video is not displayed."
 msgstr "Video wird nicht angezeigt."
 
-#: gallery-for-immich.php:1446 gallery-for-immich.php:1580
+#: gallery-for-immich.php:1517 gallery-for-immich.php:1651
 msgid ""
 "Gallery preview not available in editor. This will display on the published "
 "page."
@@ -242,203 +242,235 @@ msgstr ""
 "Galerie-Vorschau im Editor nicht verfügbar. Dies wird auf der "
 "veröffentlichten Seite angezeigt."
 
-#: gallery-for-immich.php:1453
+#: gallery-for-immich.php:1524
 msgid "No photos found in this album."
 msgstr "Keine Fotos in diesem Album gefunden."
 
-#: gallery-for-immich.php:1570
+#: gallery-for-immich.php:1641
 msgid "Return to gallery"
 msgstr "Zurück zur Galerie"
 
-#: gallery-for-immich.php:1589
+#: gallery-for-immich.php:1660
 msgid "Error from Immich API: "
 msgstr "Fehler von Immich API: "
 
-#: gallery-for-immich.php:1593
+#: gallery-for-immich.php:1664
 msgid "No albums found."
 msgstr "Keine Alben gefunden."
 
-#: build/index.js:1 src/index.js:71
+#: build/index.js:1 src/index.js:87
 msgid "Select an album..."
 msgstr "Wählen Sie ein Album aus..."
 
-#: build/index.js:1 src/index.js:81
+#: build/index.js:1 src/index.js:97
 msgid "Gallery name"
 msgstr "Galeriename"
 
-#: build/index.js:1 src/index.js:82
+#: build/index.js:1 src/index.js:98
 msgid "Gallery description"
 msgstr "Galeriebeschreibung"
 
-#: build/index.js:1 src/index.js:83
+#: build/index.js:1 src/index.js:99
 msgid "Asset date"
 msgstr "Fotodatum"
 
-#: build/index.js:1 src/index.js:84
+#: build/index.js:1 src/index.js:100
 msgid "Asset description"
 msgstr "Fotobeschreibung"
 
-#: build/index.js:1 src/index.js:88
+#: build/index.js:1 src/index.js:104
 msgid "Default"
 msgstr "Standard"
 
-#: build/index.js:1 src/index.js:89
+#: build/index.js:1 src/index.js:105
 msgid "Newest first"
 msgstr "Neueste zuerst"
 
-#: build/index.js:1 src/index.js:90
+#: build/index.js:1 src/index.js:106
 msgid "Oldest first"
 msgstr "Älteste zuerst"
 
-#: build/index.js:1 src/index.js:91
+#: build/index.js:1 src/index.js:107
 msgid "A-Z (albums only)"
 msgstr "A-Z (nur Alben)"
 
-#: build/index.js:1 src/index.js:92
+#: build/index.js:1 src/index.js:108
 msgid "Z-A (albums only)"
 msgstr "Z-A (nur Alben)"
 
-#: build/index.js:1 src/index.js:93
+#: build/index.js:1 src/index.js:109
 msgid "A-Z by description (photos only)"
 msgstr "A-Z nach Beschreibung (nur Fotos)"
 
-#: build/index.js:1 src/index.js:94
+#: build/index.js:1 src/index.js:110
 msgid "Z-A by description (photos only)"
 msgstr "Z-A nach Beschreibung (nur Fotos)"
 
-#: build/index.js:1 src/index.js:131
+#: build/index.js:1 src/index.js:147
 msgid "Gallery Settings"
 msgstr "Galerieeinstellungen"
 
-#: build/index.js:1 src/index.js:133
+#: build/index.js:1 src/index.js:149
 msgid "Display Mode"
 msgstr "Anzeigemodus"
 
-#: build/index.js:1 src/index.js:136
+#: build/index.js:1 src/index.js:152
 msgid "All albums overview"
 msgstr "Alle Alben Übersicht"
 
-#: build/index.js:1 src/index.js:137
+#: build/index.js:1 src/index.js:153
 msgid "Single album"
 msgstr "Einzelnes Album"
 
-#: build/index.js:1 src/index.js:138
+#: build/index.js:1 src/index.js:154
 msgid "Multiple albums"
 msgstr "Mehrere Alben"
 
-#: build/index.js:1 src/index.js:139
+#: build/index.js:1 src/index.js:155
 msgid "Single photo"
 msgstr "Einzelnes Foto"
 
-#: build/index.js:1 src/index.js:147
+#: build/index.js:1 src/index.js:163
 msgid "Photo ID"
 msgstr "Foto-ID"
 
-#: build/index.js:1 src/index.js:151
+#: build/index.js:1 src/index.js:167
 msgid "Enter the photo ID from your Immich URL"
 msgstr "Geben Sie die Foto-ID aus Ihrer Immich-URL ein"
 
-#: build/index.js:1 src/index.js:154
+#: build/index.js:1 src/index.js:170
 msgid "Alignment"
 msgstr "Ausrichtung"
 
-#: build/index.js:1 src/index.js:158
+#: build/index.js:1 src/index.js:174
 msgid "Default (none)"
 msgstr "Standard (keine)"
 
-#: build/index.js:1 src/index.js:159
+#: build/index.js:1 src/index.js:175
 msgid "Left (text wraps right)"
 msgstr "Links (Text fließt rechts)"
 
-#: build/index.js:1 src/index.js:160
+#: build/index.js:1 src/index.js:176
 msgid "Right (text wraps left)"
 msgstr "Rechts (Text fließt links)"
 
-#: build/index.js:1 src/index.js:161
+#: build/index.js:1 src/index.js:177
 msgid "Center"
 msgstr "Zentriert"
 
-#: build/index.js:1 src/index.js:163
+#: build/index.js:1 src/index.js:179
 msgid "Choose alignment for text wrapping around the photo"
 msgstr "Wählen Sie die Ausrichtung für den Textumfluss um das Foto"
 
-#: build/index.js:1 src/index.js:168
+#: build/index.js:1 src/index.js:182
+msgid "Link behavior"
+msgstr "Linkverhalten"
+
+#: build/index.js:1 src/index.js:186
+msgid "Lightbox (default)"
+msgstr "Lightbox (Standard)"
+
+#: build/index.js:1 src/index.js:187
+msgid "No link"
+msgstr "Kein Link"
+
+#: build/index.js:1 src/index.js:188
+msgid "Custom URL"
+msgstr "Benutzerdefinierte URL"
+
+#: build/index.js:1 src/index.js:190
+msgid "Choose how the photo behaves when clicked"
+msgstr "Wählen Sie, was beim Klicken auf das Foto passiert"
+
+#: build/index.js:1 src/index.js:194
+msgid "Link URL"
+msgstr "Link-URL"
+
+#: build/index.js:1 src/index.js:199
+msgid "The URL to open when the photo is clicked"
+msgstr "Die URL, die beim Klicken auf das Foto geöffnet wird"
+
+#: build/index.js:1 src/index.js:205
 msgid "Select Album"
 msgstr "Album auswählen"
 
-#: build/index.js:1 src/index.js:179
+#: build/index.js:1 src/index.js:216
 msgid "Select Albums"
 msgstr "Alben auswählen"
 
-#: build/index.js:1 src/index.js:194
+#: build/index.js:1 src/index.js:231
 msgid "Sort Order"
 msgstr "Sortierreihenfolge"
 
-#: build/index.js:1 src/index.js:202
+#: build/index.js:1 src/index.js:239
+msgid "Max width"
+msgstr "Maximale Breite"
+
+#: build/index.js:1 src/index.js:239
 msgid "Thumbnail Size"
 msgstr "Vorschaubildgröße"
 
-#: build/index.js:1 src/index.js:211
+#: build/index.js:1 src/index.js:248
 msgid "Text Sizes"
 msgstr "Textgrößen"
 
-#: build/index.js:1 src/index.js:213
+#: build/index.js:1 src/index.js:250
 msgid "Title Size"
 msgstr "Titelgröße"
 
-#: build/index.js:1 src/index.js:222
+#: build/index.js:1 src/index.js:259
 msgid "Description Size"
 msgstr "Beschreibungsgröße"
 
-#: build/index.js:1 src/index.js:231
+#: build/index.js:1 src/index.js:268
 msgid "Date Size"
 msgstr "Datumgröße"
 
-#: build/index.js:1 src/index.js:238
+#: build/index.js:1 src/index.js:275
 msgid "Display Options"
 msgstr "Anzeigeoptionen"
 
-#: build/index.js:1 src/index.js:259
+#: build/index.js:1 src/index.js:296
 msgid "Loading albums..."
 msgstr "Alben werden geladen..."
 
-#: build/index.js:1 src/index.js:275
+#: build/index.js:1 src/index.js:312
 msgid "⚠️ No album selected"
 msgstr "⚠️ Kein Album ausgewählt"
 
-#: build/index.js:1 src/index.js:277
+#: build/index.js:1 src/index.js:314
 msgid "Please select an album from the sidebar to display."
 msgstr "Bitte wählen Sie ein Album aus der Seitenleiste aus."
 
-#: build/index.js:1 src/index.js:291
+#: build/index.js:1 src/index.js:328
 msgid "⚠️ No albums selected"
 msgstr "⚠️ Keine Alben ausgewählt"
 
-#: build/index.js:1 src/index.js:293
+#: build/index.js:1 src/index.js:330
 msgid "Please select at least one album from the sidebar to display."
 msgstr "Bitte wählen Sie mindestens ein Album aus der Seitenleiste aus."
 
-#: build/index.js:1 src/index.js:307
+#: build/index.js:1 src/index.js:344
 msgid "⚠️ No photo ID entered"
 msgstr "⚠️ Keine Foto-ID eingegeben"
 
-#: build/index.js:1 src/index.js:309
+#: build/index.js:1 src/index.js:346
 msgid "Please enter a photo ID from your Immich server."
 msgstr "Bitte geben Sie eine Foto-ID von Ihrem Immich-Server ein."
 
-#: build/index.js:1 src/index.js:319
+#: build/index.js:1 src/index.js:356
 msgid "Will display all albums from Immich"
 msgstr "Zeigt alle Alben von Immich an"
 
-#: build/index.js:1 src/index.js:324
+#: build/index.js:1 src/index.js:361
 msgid "Single photo: "
 msgstr "Einzelnes Foto: "
 
-#: build/index.js:1 src/index.js:329
+#: build/index.js:1 src/index.js:366
 msgid "Selected: "
 msgstr "Ausgewählt: "
 
-#: build/index.js:1 src/index.js:335
+#: build/index.js:1 src/index.js:372
 msgid "Selected albums: "
 msgstr "Ausgewählte Alben: "
 
@@ -449,8 +481,10 @@ msgstr "Galerie für Immich"
 
 #: block.json
 msgctxt "block description"
-msgid "Display photos and albums from your Immich server"
-msgstr "Zeigen Sie Fotos und Alben von Ihrem Immich-Server an"
+msgid ""
+"Display Immich albums and single photos with lightbox, sorting, alignment, "
+"and link behavior."
+msgstr ""
 
 #: block.json
 msgctxt "block keyword"
@@ -471,6 +505,14 @@ msgstr "immich"
 msgctxt "block keyword"
 msgid "images"
 msgstr "Bilder"
+
+#~ msgctxt "block description"
+#~ msgid "Display photos and albums from your Immich server"
+#~ msgstr "Zeigen Sie Fotos und Alben von Ihrem Immich-Server an"
+
+#, fuzzy
+#~ msgid "Full image"
+#~ msgstr "Bilder"
 
 #~ msgid "Server URL must use HTTPS (or localhost for development)."
 #~ msgstr "Server-URL muss HTTPS verwenden (oder localhost für Entwicklung)."

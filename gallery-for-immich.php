@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.7.0
+ * Version: 0.8.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -887,7 +887,18 @@ class Gallery_For_Immich {
         if (!empty($attributes['align'])) {
             $shortcode_atts['align'] = $attributes['align'];
         }
-        
+
+        if (!empty($attributes['link'])) {
+            $shortcode_atts['link'] = $attributes['link'];
+        }
+
+        // link_url is used when link === 'custom'; pass the URL directly as the link value
+        // so render_gallery() can detect it as a URL via filter_var(FILTER_VALIDATE_URL).
+        if ( isset( $attributes['link'] ) && $attributes['link'] === 'custom'
+             && !empty( $attributes['link_url'] ) ) {
+            $shortcode_atts['link'] = $attributes['link_url'];
+        }
+
         return $this->render_gallery($shortcode_atts);
     }
     
@@ -1320,10 +1331,12 @@ class Gallery_For_Immich {
             $order = $default_order;
         }
         
-        // Sanitize size parameter - thumbnail size in pixels
-        // Default: 200px, allowed range: 100-500
+        // Sanitize size parameter.
+        // For album grids: thumbnail size in pixels (100–500).
+        // For single assets: max-width of the displayed preview (100–1200).
         $size = intval($atts['size'] ?? 200);
-        if ($size < 100 || $size > 500) {
+        $size_max = $asset_requested ? 1200 : 500;
+        if ($size < 100 || $size > $size_max) {
             $size = 200;
         }
         
@@ -1350,7 +1363,21 @@ class Gallery_For_Immich {
         if (!in_array($align, ['left', 'right', 'center', 'none'])) {
             $align = 'none';
         }
-        
+
+        // Sanitize link parameter for single photos.
+        // Accepted: 'lightbox' (default), 'none', or a valid URL (custom link).
+        $link_raw = sanitize_text_field( $atts['link'] ?? 'lightbox' );
+        if ( in_array( $link_raw, [ 'lightbox', 'none' ], true ) ) {
+            $link_type    = $link_raw;
+            $link_url_val = '';
+        } elseif ( filter_var( $link_raw, FILTER_VALIDATE_URL ) ) {
+            $link_type    = 'custom';
+            $link_url_val = esc_url( $link_raw );
+        } else {
+            $link_type    = 'lightbox'; // Unknown value → safe default.
+            $link_url_val = '';
+        }
+
         // Enable lazy loading for all images
         $lazy_attr = ' loading="lazy"';
         $options = get_option($this->option_name);
@@ -1416,37 +1443,60 @@ class Gallery_For_Immich {
                     return '<p>' . __('Video is not displayed.', 'gallery-for-immich') . '</p>';
                 }
 
-                // For videos, create inline video HTML for lightbox
-                if ($video_mode === 'fopen') {
-                    $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset_data['id'];
+                if ( $link_type === 'none' ) {
+                    // No link: show thumbnail only, no click action.
+                    $html .= '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>';
+                } elseif ( $link_type === 'custom' ) {
+                    // Custom URL: thumbnail linked to provided URL.
+                    $html .= '<a href="' . esc_url( $link_url_val ) . '" target="_blank" rel="noopener noreferrer">'
+                           . '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>'
+                           . '</a>';
                 } else {
-                    // Only create shared links on public pages, not in editor/preview
-                    if ($this->should_create_shared_links()) {
-                        $video_url = $this->get_video_url_with_shared_link($asset_data);
+                    // 'lightbox' or 'full': open video in lightbox (inline embed not supported for videos).
+                    if ($video_mode === 'fopen') {
+                        $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset_data['id'];
                     } else {
-                        // In preview mode, use a placeholder
-                        $video_url = '#';
+                        // Only create shared links on public pages, not in editor/preview.
+                        if ($this->should_create_shared_links()) {
+                            $video_url = $this->get_video_url_with_shared_link($asset_data);
+                        } else {
+                            // In preview mode, use a placeholder.
+                            $video_url = '#';
+                        }
                     }
-                }
 
-                $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
-                $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
-                $video_html .= '</video>';
-                
-                $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="asset-' . esc_attr($asset_data['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
-                $html .= '<img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>';
-                $html .= '</a>';
+                    $video_html  = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
+                    $video_html .= '<source src="' . esc_url( $video_url ) . '" type="video/mp4">';
+                    $video_html .= '</video>';
+
+                    $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="asset-' . esc_attr( $asset_data['id'] ) . '" data-content="' . esc_attr( $video_html ) . '" data-width="90vw" data-height="90vh">';
+                    $html .= '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>';
+                    $html .= '</a>';
+                }
             } else {
-                // For images, use lightbox
+                // For images, always show the preview (not the small thumbnail).
+                // link= controls only click behaviour: lightbox (default), none, or a custom URL.
+                $preview_style = 'width:100%;max-width:' . $size . 'px;height:auto;border-radius:6px;display:block;margin-bottom:0.5em;';
+
                 $live_photo_id = '';
                 if ($video_mode !== 'ignore' && !empty($asset_data['livePhotoVideoId']) && preg_match('/^[a-f0-9\-]{36}$/i', $asset_data['livePhotoVideoId'])) {
                     $live_photo_id = $asset_data['livePhotoVideoId'];
                 }
                 $live_attr = $live_photo_id ? ' data-live-photo-id="' . esc_attr($live_photo_id) . '"' : '';
-                $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox"' . $live_attr . '
-                            data-gallery="asset-' . esc_attr($asset_data['id']) . '">
-                            <img src="' . esc_url($thumb_url) . '" style="' . esc_attr($img_style) . '"' . $lazy_attr . '>
-                            </a>';
+
+                if ( $link_type === 'lightbox' ) {
+                    $html .= '<a href="' . esc_url( $full_url ) . '" class="immich-lightbox"' . $live_attr
+                           . ' data-gallery="asset-' . esc_attr( $asset_data['id'] ) . '">'
+                           . '<img src="' . esc_url( $full_url ) . '" style="' . esc_attr( $preview_style ) . '"' . $lazy_attr . '>'
+                           . '</a>';
+                } elseif ( $link_type === 'none' ) {
+                    $html .= '<img src="' . esc_url( $full_url ) . '" style="' . esc_attr( $preview_style ) . '"' . $lazy_attr . '>';
+                } elseif ( $link_type === 'custom' ) {
+                    // Custom URL: preview image linked to provided URL, opens in new tab.
+                    $html .= '<a href="' . esc_url( $link_url_val ) . '" target="_blank" rel="noopener noreferrer">'
+                           . '<img src="' . esc_url( $full_url ) . '" style="' . esc_attr( $preview_style ) . '"' . $lazy_attr . '>'
+                           . '</a>';
+                }
             }
             if (in_array('asset_date', $show) && !empty($asset_data['exifInfo']['dateTimeOriginal'])) {
                 $date = wp_date('Y-m-d', strtotime($asset_data['exifInfo']['dateTimeOriginal']));

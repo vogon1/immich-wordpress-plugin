@@ -15,6 +15,7 @@ A simple way to display galleries without uploading images manually.
 - Beautiful responsive grid layouts with integrated lightbox
 - **Apple Live Photos** - Play the video component of Live Photos directly in the lightbox
 - Video playback modes (shared links, proxy via fopen, or ignore videos)
+- **Single photo embedding** - Display one photo with alignment (left/right/center) and configurable link behavior (lightbox, no link, or custom URL)
 - Configure Immich server URL and API key in the WordPress admin panel
 - **Connection & permissions check** - Test your API key and verify all required permissions from the settings page
 - **Gutenberg Block Editor** - Visual block for selecting albums, photos and settings
@@ -80,9 +81,10 @@ The easiest way to add an Immich gallery is through the Gutenberg block editor:
 3. Configure display options in the sidebar:
    - **Show options**: Choose what to display (defaults: gallery name, asset description)
    - **Sort order**: Control the sorting of albums/photos
-   - **Thumbnail size**: Adjust thumbnail size (100-500px, default: 200px)
+   - **Thumbnail size** (albums) / **Max width** (single photo): Adjust size (default: 200px)
    - **Text sizes**: Customize title, description, and date font sizes
-   - **Text around a single asset**: Place asset left or right for text around the asset
+   - **Alignment** (single photo): Place the photo left, right, or center for text wrapping
+   - **Link behavior** (single photo): Lightbox (default), no link, or custom URL
 4. The preview shows the shortcode that will be used
 
 ### Using Shortcodes
@@ -115,6 +117,29 @@ Shows a list of all albums with thumbnails.
 [gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd]
 ```
 
+**Single photo — alignment (wrap text around the photo):**
+
+```text
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd align="left"]
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd align="right"]
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd align="center"]
+```
+
+Available `align` values: `left`, `right`, `center` (default: no float).
+
+**Single photo — link behavior:**
+
+```text
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd link="none"]
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd link="https://example.com/my-page"]
+```
+
+Available `link` values:
+
+- *(omit)* or `lightbox` — opens the full-size photo in a lightbox overlay (default)
+- `none` — displays the photo without any link
+- `https://...` — wraps the photo in a link to your URL, opens in a new tab
+
 **Customize display options:**
 
 ```text
@@ -138,7 +163,7 @@ Available show options (no defaults - must be explicitly specified):
 
 Size options:
 
-- `size` - Thumbnail size in pixels (100-500, default: 200)
+- `size` - Thumbnail size in pixels for albums (100–500, default: 200); max-width in pixels for single photos (100–1200, default: 200)
 - `title_size` - Title font size (10-30, default: 16)
 - `description_size` - Description font size (10-30, default: 14)
 - `date_size` - Date font size (10-30, default: 13)
@@ -181,6 +206,14 @@ Use the shortcode below to display just one photo:
 ```
 
 ## 📋 Changelog
+
+### 0.8.0
+
+- New: `link=` attribute for single photos — choose between lightbox (default), no link, or a custom URL
+- New: Single photos now always display the Immich preview image (web-optimised); `size` controls max-width (up to 1200px)
+- New: `align=` attribute for single photos — float left, right, or center for text wrapping
+- Fix: Image proxy output buffering issue and CSS typos (PR #11)
+- Fix: Connection test false negatives on Immich v2.7+ (PR #12)
 
 ### 0.7.0
 
