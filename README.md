@@ -207,6 +207,10 @@ Use the shortcode below to display just one photo:
 
 ## 📋 Changelog
 
+### 0.8.1
+
+- Fix: Album detail pages showed "No photos found" on Immich v3+, because Immich removed the `assets` property from the album API response. Assets are now fetched via the metadata search endpoint instead. Tested against Immich v2.7.5 and v3.0.1. (issue #14)
+
 ### 0.8.0
 
 - New: `link=` attribute for single photos — choose between lightbox (default), no link, or a custom URL

@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Gallery for Immich 0.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gallery-for-"
 "immich\n"
-"POT-Creation-Date: 2026-05-23T09:57:16+00:00\n"
+"POT-Creation-Date: 2026-07-04T07:52:49+00:00\n"
 "PO-Revision-Date: 2025-12-16 17:30+0000\n"
 "Last-Translator: GitHub Copilot\n"
 "Language-Team: French\n"
@@ -213,27 +213,27 @@ msgstr "Veuillez d'abord enregistrer votre URL de serveur et votre clé API."
 msgid "Connection failed: %s"
 msgstr "Échec de la connexion : %s"
 
-#: gallery-for-immich.php:1158
+#: gallery-for-immich.php:1158 gallery-for-immich.php:1193
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
 msgstr ""
 "Plugin non configuré. Veuillez définir l'URL du serveur et la clé API dans "
 "les paramètres."
 
 #. translators: %d: HTTP status code number
-#: gallery-for-immich.php:1179
+#: gallery-for-immich.php:1179 gallery-for-immich.php:1216
 #, php-format
 msgid "API returned status code: %d"
 msgstr "L'API a renvoyé le code d'état : %d"
 
-#: gallery-for-immich.php:1392
+#: gallery-for-immich.php:1454
 msgid "Asset not found."
 msgstr "Photo introuvable."
 
-#: gallery-for-immich.php:1443
+#: gallery-for-immich.php:1505
 msgid "Video is not displayed."
 msgstr "La vidéo n'est pas affichée."
 
-#: gallery-for-immich.php:1517 gallery-for-immich.php:1651
+#: gallery-for-immich.php:1579 gallery-for-immich.php:1716
 msgid ""
 "Gallery preview not available in editor. This will display on the published "
 "page."
@@ -241,19 +241,19 @@ msgstr ""
 "Aperçu de la galerie non disponible dans l'éditeur. Cela s'affichera sur la "
 "page publiée."
 
-#: gallery-for-immich.php:1524
+#: gallery-for-immich.php:1586 gallery-for-immich.php:1590
 msgid "No photos found in this album."
 msgstr "Aucune photo trouvée dans cet album."
 
-#: gallery-for-immich.php:1641
+#: gallery-for-immich.php:1706
 msgid "Return to gallery"
 msgstr "Retour à la galerie"
 
-#: gallery-for-immich.php:1660
+#: gallery-for-immich.php:1725
 msgid "Error from Immich API: "
 msgstr "Erreur de l'API Immich : "
 
-#: gallery-for-immich.php:1664
+#: gallery-for-immich.php:1729
 msgid "No albums found."
 msgstr "Aucun album trouvé."
 

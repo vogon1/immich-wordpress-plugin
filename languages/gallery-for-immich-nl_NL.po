@@ -3,7 +3,7 @@ msgstr ""
 "Project-Id-Version: Gallery for Immich 0.6.0\n"
 "Report-Msgid-Bugs-To: https://wordpress.org/support/plugin/gallery-for-"
 "immich\n"
-"POT-Creation-Date: 2026-05-23T09:57:16+00:00\n"
+"POT-Creation-Date: 2026-07-04T07:52:49+00:00\n"
 "PO-Revision-Date: 2025-12-16 17:30+0000\n"
 "Last-Translator: Sietse Visser\n"
 "Language-Team: Dutch\n"
@@ -210,27 +210,27 @@ msgstr "Sla eerst uw Server URL en API-sleutel op."
 msgid "Connection failed: %s"
 msgstr "Verbinding mislukt: %s"
 
-#: gallery-for-immich.php:1158
+#: gallery-for-immich.php:1158 gallery-for-immich.php:1193
 msgid "Plugin not configured. Please set Server URL and API Key in settings."
 msgstr ""
 "Plugin niet geconfigureerd. Stel Server URL en API-sleutel in bij "
 "instellingen."
 
 #. translators: %d: HTTP status code number
-#: gallery-for-immich.php:1179
+#: gallery-for-immich.php:1179 gallery-for-immich.php:1216
 #, php-format
 msgid "API returned status code: %d"
 msgstr "API gaf statuscode: %d"
 
-#: gallery-for-immich.php:1392
+#: gallery-for-immich.php:1454
 msgid "Asset not found."
 msgstr "Foto niet gevonden."
 
-#: gallery-for-immich.php:1443
+#: gallery-for-immich.php:1505
 msgid "Video is not displayed."
 msgstr "Video wordt niet weergegeven."
 
-#: gallery-for-immich.php:1517 gallery-for-immich.php:1651
+#: gallery-for-immich.php:1579 gallery-for-immich.php:1716
 msgid ""
 "Gallery preview not available in editor. This will display on the published "
 "page."
@@ -238,19 +238,19 @@ msgstr ""
 "Galerij voorbeeld niet beschikbaar in editor. Dit wordt weergegeven op de "
 "gepubliceerde pagina."
 
-#: gallery-for-immich.php:1524
+#: gallery-for-immich.php:1586 gallery-for-immich.php:1590
 msgid "No photos found in this album."
 msgstr "Geen foto's gevonden in dit album."
 
-#: gallery-for-immich.php:1641
+#: gallery-for-immich.php:1706
 msgid "Return to gallery"
 msgstr "Terug naar galerij"
 
-#: gallery-for-immich.php:1660
+#: gallery-for-immich.php:1725
 msgid "Error from Immich API: "
 msgstr "Fout van Immich API: "
 
-#: gallery-for-immich.php:1664
+#: gallery-for-immich.php:1729
 msgid "No albums found."
 msgstr "Geen albums gevonden."
 

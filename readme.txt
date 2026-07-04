@@ -4,7 +4,7 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 7.0
 Requires PHP: 7.4
-Stable tag: 0.8.0
+Stable tag: 0.8.1
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -185,6 +185,11 @@ Additional translations can be contributed via .po files in the languages direct
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.8.1 =
+*Release Date - 4 July 2026*
+
+* Fix: Album detail pages showed "No photos found" on Immich v3+ (removed `assets` from the album API response); assets are now fetched via the metadata search endpoint (issue #14)
 
 = 0.8.0 =
 *Release Date - 23 May 2026*

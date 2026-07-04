@@ -18,6 +18,8 @@ Follow these steps before tagging and publishing a new release.
 - Go to https://github.com/immich-app/immich/releases and find the latest release.
 - Check the API changelog for any breaking changes to endpoints the plugin uses:
   - `GET /api/albums`
+  - `GET /api/albums/{id}`
+  - `POST /api/search/metadata`
   - `GET /api/assets/{id}`
   - `GET /api/assets/{id}/thumbnail`
   - `GET /api/assets/{id}/video/playback`
@@ -73,7 +75,25 @@ Now that the version is bumped, run the full translation pipeline. This ensures 
 npm run translate
 ```
 
-## 8. Commit, tag and push
+## 8. Verify release contents
+
+Check that no development files end up in the ZIP. Run a dry-run of the rsync step locally:
+
+```bash
+rsync -av --dry-run --exclude-from=.distignore . /tmp/release-check/
+```
+
+Verify the output does **not** contain any of the following:
+
+- `CLAUDE.md`, `TESTING.md`, `RELEASE.md`, `TRANSLATION.md`, `README.md`
+- `.wp-env.json`, `.distignore`, `.gitignore`
+- `src/`, `scripts/`, `node_modules/`
+- `package.json`, `package-lock.json`
+- `languages/*.po`, `languages/*.pot`
+
+If any of these appear, add them to `.distignore` before continuing.
+
+## 9. Commit, tag and push
 
 ```bash
 git add -A
@@ -82,6 +102,6 @@ git tag vx.x.x
 git push origin main --tags
 ```
 
-## 9. Release archive
+## 10. Release archive
 
 The GitHub Action in `.github/workflows/release.yml` triggers automatically on any `v*` tag and builds + publishes the release ZIP. No manual steps needed.

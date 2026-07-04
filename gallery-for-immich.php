@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.8.0
+ * Version: 0.8.1
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -1182,6 +1182,68 @@ class Gallery_For_Immich {
         return json_decode(wp_remote_retrieve_body($response), true);
     }
 
+    /**
+     * Immich v3 removed the `assets` property from AlbumResponseDto; album assets
+     * must now be fetched via the metadata search endpoint filtered by albumIds.
+     */
+    private function api_search_metadata($body) {
+        $options = get_option($this->option_name);
+
+        if (empty($options['server_url']) || empty($options['api_key'])) {
+            return ['error' => true, 'message' => __('Plugin not configured. Please set Server URL and API Key in settings.', 'gallery-for-immich')];
+        }
+
+        $url = rtrim($options['server_url'], '/') . '/api/search/metadata';
+
+        $response = wp_remote_post($url, [
+            'headers' => [
+                'x-api-key' => $options['api_key'],
+                'Content-Type' => 'application/json',
+                'User-Agent' => 'WordPress-Gallery-for-Immich/' . get_bloginfo('version')
+            ],
+            'body' => wp_json_encode($body),
+            'timeout' => 15,
+            'sslverify' => true // Enforce SSL verification
+        ]);
+
+        if (is_wp_error($response)) {
+            return ['error' => true, 'message' => $response->get_error_message()];
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code !== 200) {
+            /* translators: %d: HTTP status code number */
+            return ['error' => true, 'message' => sprintf(__('API returned status code: %d', 'gallery-for-immich'), $status_code)];
+        }
+
+        return json_decode(wp_remote_retrieve_body($response), true);
+    }
+
+    private function get_album_assets($album_id) {
+        $assets = [];
+        $page = 1;
+        $max_pages = 20; // Safety cap: Immich's max page size is 1000, so this covers up to 20,000 assets.
+
+        do {
+            $result = $this->api_search_metadata([
+                'albumIds' => [$album_id],
+                'withExif' => true,
+                'size'     => 1000,
+                'page'     => $page,
+            ]);
+
+            if (empty($result) || !empty($result['error']) || empty($result['assets']['items'])) {
+                break;
+            }
+
+            $assets = array_merge($assets, $result['assets']['items']);
+            $next_page = $result['assets']['nextPage'] ?? null;
+            $page = $next_page ? (int) $next_page : null;
+        } while ($page && $page <= $max_pages);
+
+        return $assets;
+    }
+
     private function get_video_url_with_shared_link($asset_data) {
         $options = get_option($this->option_name);
         $expiresAt = gmdate('c', time() + 600); // 10 minuten
@@ -1521,12 +1583,15 @@ class Gallery_For_Immich {
             $album = $this->api_request('albums/' . $album);
             // error_log(print_r($album, true));
 
-            if (!$album || empty($album['assets'])) return '<p>' . __('No photos found in this album.', 'gallery-for-immich') . '</p>';
+            if (!$album || empty($album['id'])) return '<p>' . __('No photos found in this album.', 'gallery-for-immich') . '</p>';
+
+            $assets_to_render = $this->get_album_assets($album['id']);
+
+            if (empty($assets_to_render)) return '<p>' . __('No photos found in this album.', 'gallery-for-immich') . '</p>';
 
             // Sort album photos based on order parameter
             // date_asc: oldest first (chronological), date_desc: newest first
             // description_asc: A-Z by description, description_desc: Z-A by description
-            $assets_to_render = $album['assets'];
             
             usort($assets_to_render, function($a, $b) use ($order) {
                 if ($order === 'description_asc' || $order === 'description_desc') {
