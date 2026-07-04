@@ -105,3 +105,52 @@ git push origin main --tags
 ## 10. Release archive
 
 The GitHub Action in `.github/workflows/release.yml` triggers automatically on any `v*` tag and builds + publishes the release ZIP. No manual steps needed.
+
+## 11. Publish to the WordPress.org SVN repository
+
+Prerequisite: a local SVN working copy of the plugin (e.g. `~/wp-svn`, containing `trunk/`, `tags/`, `assets/`).
+
+1. Download and extract the release ZIP built in step 10 into a scratch directory, e.g. `~/gallery-for-immich`. The ZIP is already filtered per `.distignore`, so its contents are exactly what should ship.
+
+2. Update the local SVN working copy first, to avoid conflicts:
+
+   ```bash
+   cd ~/wp-svn
+   svn update
+   ```
+
+3. Sync the release contents into `trunk/`, **including deletions** of files removed in this release (plain `cp` won't remove files that no longer exist in the new version):
+
+   ```bash
+   rsync -a --delete --exclude='.svn' ~/gallery-for-immich/ ~/wp-svn/trunk/
+   ```
+
+4. Register additions and removals with SVN — copying files in does not automatically version new files or mark deleted ones:
+
+   ```bash
+   cd ~/wp-svn/trunk
+   svn add --force .
+   svn status | awk '/^!/ {print $2}' | xargs -r svn rm
+   ```
+
+5. Review the changes before committing:
+
+   ```bash
+   svn diff
+   ```
+
+6. Commit trunk:
+
+   ```bash
+   svn ci -m "Release vx.x.x"
+   ```
+
+7. Tag the release:
+
+   ```bash
+   cd ~/wp-svn
+   svn cp trunk tags/x.x.x
+   svn ci -m "Tagging version x.x.x"
+   ```
+
+**Screenshots/banners/icons:** `.distignore` excludes `assets/screenshot-*.png` from the release ZIP on purpose — those belong in SVN's `assets/` directory, not `trunk/`. If a screenshot changed, copy it into `~/wp-svn/assets/` directly (from the git repo, not the ZIP) and commit separately.

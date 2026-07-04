@@ -170,7 +170,7 @@ class Gallery_For_Immich {
             $meta = stream_get_meta_data($remote);
             foreach ($meta['wrapper_data'] as $header) {
                 if (stripos($header, 'HTTP/') === 0) {
-                    if (str_contains($header, '206')) {
+                    if (strpos($header, '206') !== false) {
                         status_header(206);
                     } else {
                         status_header(200);
