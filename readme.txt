@@ -2,9 +2,9 @@
 Contributors: sietsevisser
 Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
-Tested up to: 7.0
+Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.8.1
+Stable tag: 0.8.2
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -61,6 +61,7 @@ After activation, configure your Immich server connection:
    * `sharedLink.create` - Required when using video mode 'Shared Link'
    * `sharedLink.delete` - Required when using video mode 'Shared Link'
 7. **Important:** Only grant read-only access. Never grant write permissions for security reasons.
+   **Note:** Shared links can only be created for photos and videos this Immich user *owns*. If you use a separate display account with albums shared to it, choose a different video mode (see below).
 8. Click **Create** and copy the generated API key
 
 **Step 2: Configure the Plugin in WordPress**
@@ -73,7 +74,7 @@ After activation, configure your Immich server connection:
 
 **Video playback modes:**
 
-* **Shared links (default)** - Creates temporary shared links on Immich. Videos stream directly from Immich and links expire automatically.
+* **Shared links (default)** - Creates temporary shared links on Immich. Videos stream directly from Immich and links expire automatically. Requires that the API key's Immich user *owns* the videos; this mode does not work for albums that are only shared with that user.
 * **Proxy via fopen** - Streams videos through WordPress. Most elegant solution, but requires `fopen` support on the WordPress server which is not always supported.
 * **Ignore videos** - Hides videos in galleries and only shows photos.
 
@@ -164,6 +165,12 @@ You can find IDs in your Immich server's URL when viewing albums or photos, or t
 
 Yes, for development purposes localhost URLs (http://localhost or http://127.0.0.1) are allowed. Production servers must use HTTPS.
 
+= Can I use a separate Immich account instead of the owner account? =
+
+Yes. You can create a secondary Immich account, share the albums you want to publish with it, and use that account's API key. This keeps your main account's credentials off the WordPress server.
+
+One limitation: Immich only allows shared links to be created for assets a user actually owns, not for assets that are merely shared with them. Photos work normally, but videos in the default 'Shared links' video mode will not play for such a display account. Choose 'Proxy via fopen' or 'Ignore videos' instead. The connection & permissions test on the settings page detects this situation and explains it.
+
 = Can I customize the appearance? =
 
 Yes, the plugin generates standard HTML with CSS classes. You can override styles in your theme's CSS.
@@ -185,6 +192,15 @@ Additional translations can be contributed via .po files in the languages direct
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.8.2 =
+*Release Date - 3 September 2026*
+
+* Tested against WordPress 7.1 and Immich v3.1
+* Fix: Photos rotated, cropped or filtered in Immich showed their original, unedited version. The plugin now requests the edited render (`edited=true`, Immich v2.5+) (issue #15)
+* Fix: Edited photos stayed stale in visitors' browsers because proxied images are cached for a year. Image URLs now carry the asset's modification timestamp, so an edit in Immich becomes visible right away
+* Fix: A video that could not be shared aborted the page halfway through rendering. The gallery now falls back to showing the thumbnail without a lightbox link
+* Fix: The connection test reported `sharedLink.create` as missing for an Immich user who can see an album but does not own it. This is now shown as a warning with an explanation instead of a false negative
 
 = 0.8.1 =
 *Release Date - 4 July 2026*
@@ -309,6 +325,9 @@ Additional translations can be contributed via .po files in the languages direct
 * Dutch translation included
 
 == Upgrade Notice ==
+
+= 0.8.2 =
+Fixes photos edited in Immich showing their original orientation, and stops a single unshareable video from breaking the page. Recommended for all users.
 
 = 0.8.0 =
 New link behavior and alignment controls for single photo embedding. Single photos now show the Immich preview image by default.

@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.8.1
+ * Version: 0.8.2
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -98,18 +98,21 @@ class Gallery_For_Immich {
             exit('Plugin not configured');
         }
 
-        // Build URL based on type
+        // Build URL based on type.
+        // `edited=true` returns the edited render for assets that were rotated, cropped or
+        // filtered in Immich (non-destructive editing, Immich v2.5+). Older Immich versions
+        // ignore unknown query parameters, so this is a safe no-op there.
         if ($type === 'thumbnail') {
-            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?w=300&h=300';
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?size=thumbnail&edited=true';
             $timeout = 10;
         } elseif ($type === 'preview') {
-            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?size=preview';
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?size=preview&edited=true';
             $timeout = 20;
         } elseif ($type === 'video') {
             $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/video/playback';
             $timeout = 60;
         } else {
-            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/original';
+            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/original?edited=true';
             $timeout = 30;
         }
 
@@ -443,8 +446,11 @@ class Gallery_For_Immich {
                 ok:          <?php echo wp_json_encode(__('OK', 'gallery-for-immich')); ?>,
                 missing:     <?php echo wp_json_encode(__('Missing', 'gallery-for-immich')); ?>,
                 unknown:     <?php echo wp_json_encode(__('Could not test (no assets on server)', 'gallery-for-immich')); ?>,
+                notOwned:    <?php echo wp_json_encode(__('Permission is set, but the test photo is not owned by this user', 'gallery-for-immich')); ?>,
                 allOk:       <?php echo wp_json_encode(__('All required permissions are set.', 'gallery-for-immich')); ?>,
-                someKo:      <?php echo wp_json_encode(__('One or more required permissions are missing.', 'gallery-for-immich')); ?>
+                someKo:      <?php echo wp_json_encode(__('One or more required permissions are missing.', 'gallery-for-immich')); ?>,
+                someWarn:    <?php echo wp_json_encode(__('All required permissions are set, but one check could not be completed.', 'gallery-for-immich')); ?>,
+                notOwnedHelp: <?php echo wp_json_encode(__('Immich only allows shared links for photos owned by the API key\'s user. If your albums are shared with this user instead of owned by them, videos will not play in video mode "Shared links" — choose "Proxy via fopen" or "Ignore videos" instead. Photos are unaffected.', 'gallery-for-immich')); ?>
             };
             var nonce      = <?php echo wp_json_encode(wp_create_nonce('gallery_for_immich_test')); ?>;
             var ajaxUrl    = <?php echo wp_json_encode(admin_url('admin-ajax.php')); ?>;
@@ -478,7 +484,9 @@ class Gallery_For_Immich {
 
                         var r       = resp.data.results;
                         var allGood = true;
+                        var hasWarn = false;
                         var rows    = '';
+                        var notes   = '';
 
                         /* Connection row */
                         var connOk = r['connection'] === true;
@@ -488,19 +496,34 @@ class Gallery_For_Immich {
                         /* Permission rows */
                         permissions.forEach(function (p) {
                             var val = r[p];
-                            if (val !== true) allGood = false;
+                            if (val === false) {
+                                allGood = false;
+                            } else if (val !== true) {
+                                /* 'not_owned' or null: the permission is present, the probe was
+                                   just inconclusive. Warn, but do not report it as missing. */
+                                hasWarn = true;
+                                if (val === 'not_owned') {
+                                    notes += '<p style="max-width:560px;margin-top:12px;">' + escHtml(labels.notOwnedHelp) + '</p>';
+                                }
+                            }
                             rows += row(p, val);
                         });
 
-                        var summary = allGood
-                            ? '<div class="notice notice-success inline" style="margin:0 0 12px;"><p>' + escHtml(labels.allOk) + '</p></div>'
-                            : '<div class="notice notice-warning inline" style="margin:0 0 12px;"><p>' + escHtml(labels.someKo) + '</p></div>';
+                        var summary;
+                        if (!allGood) {
+                            summary = '<div class="notice notice-error inline" style="margin:0 0 12px;"><p>' + escHtml(labels.someKo) + '</p></div>';
+                        } else if (hasWarn) {
+                            summary = '<div class="notice notice-warning inline" style="margin:0 0 12px;"><p>' + escHtml(labels.someWarn) + '</p></div>';
+                        } else {
+                            summary = '<div class="notice notice-success inline" style="margin:0 0 12px;"><p>' + escHtml(labels.allOk) + '</p></div>';
+                        }
 
                         resultsDiv.innerHTML =
                             summary +
-                            '<table class="widefat fixed striped" style="max-width:480px;">' +
-                            '<thead><tr><th>' + escHtml(labels.permission) + '</th><th style="width:200px;">' + escHtml(labels.status) + '</th></tr></thead>' +
-                            '<tbody>' + rows + '</tbody></table>';
+                            '<table class="widefat striped" style="max-width:560px;">' +
+                            '<thead><tr><th>' + escHtml(labels.permission) + '</th><th>' + escHtml(labels.status) + '</th></tr></thead>' +
+                            '<tbody>' + rows + '</tbody></table>' +
+                            notes;
                     })
                     .catch(function (err) {
                         btn.disabled    = false;
@@ -515,6 +538,7 @@ class Gallery_For_Immich {
                 var color, text;
                 if (val === true)  { color = '#00a32a'; text = '✓ ' + labels.ok; }
                 else if (val === false) { color = '#d63638'; text = '✗ ' + labels.missing; }
+                else if (val === 'not_owned') { color = '#996800'; text = '! ' + labels.notOwned; }
                 else               { color = '#996800'; text = '? ' + labels.unknown; }
                 return '<tr><td><code>' + escHtml(label) + '</code></td>' +
                        '<td style="color:' + color + ';font-weight:600;">' + escHtml(text) + '</td></tr>';
@@ -1062,7 +1086,19 @@ class Gallery_For_Immich {
         $create_code = is_wp_error($create_response) ? 0 : wp_remote_retrieve_response_code($create_response);
 
         if ($asset_id) {
-            $results['sharedLink.create'] = in_array($create_code, [200, 201], true);
+            if (in_array($create_code, [200, 201], true)) {
+                $results['sharedLink.create'] = true;
+            } elseif (in_array($create_code, [400, 404, 422], true)) {
+                // The API key does hold the permission — a missing permission is rejected by the
+                // auth guard with 403 before the request ever reaches the shared link service.
+                // Immich refuses the link because this user does not *own* the probe asset, which
+                // is the normal situation for an album that is shared with a secondary
+                // "display user" rather than owned by them. Report this as a warning, not a
+                // missing permission, so the settings page stops giving a false negative.
+                $results['sharedLink.create'] = 'not_owned';
+            } else {
+                $results['sharedLink.create'] = false;
+            }
         } else {
             // 400/422 = permission OK but bad input (no assets); 403 = permission missing
             $results['sharedLink.create'] = in_array($create_code, [200, 201, 400, 422], true);
@@ -1132,7 +1168,11 @@ class Gallery_For_Immich {
             // Generate shared link on demand
             $video_url = $this->get_video_url_with_shared_link($asset_data);
         }
-        
+
+        if (null === $video_url) {
+            return new WP_Error('shared_link_failed', 'Could not create a shared link for this asset', ['status' => 502]);
+        }
+
         return ['url' => $video_url];
     }
 
@@ -1148,6 +1188,23 @@ class Gallery_For_Immich {
             return false;
         }
         return true;
+    }
+
+    /**
+     * Cache-busting suffix for proxy URLs.
+     *
+     * Proxy responses carry a one-year Cache-Control header, so an asset that is edited in
+     * Immich would otherwise keep showing its old render in visitors' browsers. Appending the
+     * asset's `updatedAt` timestamp gives every version of an asset its own URL.
+     *
+     * @param array $data Asset or album data from the Immich API.
+     * @return string Query fragment (`&v=...`), or an empty string when no timestamp is known.
+     */
+    private function cache_version_param($data) {
+        $stamp = $data['updatedAt'] ?? ($data['fileModifiedAt'] ?? '');
+        $timestamp = $stamp ? strtotime($stamp) : false;
+
+        return $timestamp ? '&v=' . $timestamp : '';
     }
 
     private function api_request($endpoint) {
@@ -1244,6 +1301,16 @@ class Gallery_For_Immich {
         return $assets;
     }
 
+    /**
+     * Create a temporary Immich shared link so the browser can stream a video directly.
+     *
+     * Immich only allows shared links for assets the API key's user owns. For albums that are
+     * merely shared with that user the call fails, which is a normal situation rather than a
+     * fatal error — the caller is expected to fall back to showing just the thumbnail.
+     *
+     * @param array $asset_data Asset data from the Immich API.
+     * @return string|null Playable video URL, or null when no shared link could be created.
+     */
     private function get_video_url_with_shared_link($asset_data) {
         $options = get_option($this->option_name);
         $expiresAt = gmdate('c', time() + 600); // 10 minuten
@@ -1265,21 +1332,20 @@ class Gallery_For_Immich {
             ]
         );
 
+        // Never abort the page render here: a single unshareable video used to kill the whole
+        // gallery halfway through the HTML output. Return null and let the caller degrade.
         if (is_wp_error($share_response)) {
-            status_header(502);
-            exit('Failed to create shared link');
+            return null;
         }
 
         $code = wp_remote_retrieve_response_code($share_response);
         if ($code !== 201 && $code !== 200) {
-            status_header(502);
-            exit('Invalid Immich response');
+            return null;
         }
 
         $data = json_decode(wp_remote_retrieve_body($share_response), true);
         if (empty($data['key'])) {
-            status_header(502);
-            exit('Missing shared link key');
+            return null;
         }
 
         if (!empty($data['id'])) {
@@ -1463,8 +1529,9 @@ class Gallery_For_Immich {
             }
 
             $is_video = ($asset_data['type'] === 'VIDEO');
-            $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset_data['id'];
-            $full_url  = home_url('/?gallery_for_immich_proxy=preview&id=') . $asset_data['id'];
+            $cache_version = $this->cache_version_param($asset_data);
+            $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset_data['id'] . $cache_version;
+            $full_url  = home_url('/?gallery_for_immich_proxy=preview&id=') . $asset_data['id'] . $cache_version;
 
             // Build inline container with image + metadata
             $html = '<div class="immich-single-photo">';
@@ -1527,13 +1594,19 @@ class Gallery_For_Immich {
                         }
                     }
 
-                    $video_html  = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
-                    $video_html .= '<source src="' . esc_url( $video_url ) . '" type="video/mp4">';
-                    $video_html .= '</video>';
+                    if ( null === $video_url ) {
+                        // No playable URL — typically an album shared with (not owned by) the
+                        // API key's Immich user. Show the thumbnail without a lightbox link.
+                        $html .= '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>';
+                    } else {
+                        $video_html  = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
+                        $video_html .= '<source src="' . esc_url( $video_url ) . '" type="video/mp4">';
+                        $video_html .= '</video>';
 
-                    $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="asset-' . esc_attr( $asset_data['id'] ) . '" data-content="' . esc_attr( $video_html ) . '" data-width="90vw" data-height="90vh">';
-                    $html .= '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>';
-                    $html .= '</a>';
+                        $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="asset-' . esc_attr( $asset_data['id'] ) . '" data-content="' . esc_attr( $video_html ) . '" data-width="90vw" data-height="90vh">';
+                        $html .= '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>';
+                        $html .= '</a>';
+                    }
                 }
             } else {
                 // For images, always show the preview (not the small thumbnail).
@@ -1639,8 +1712,9 @@ class Gallery_For_Immich {
                 if ($is_video && $video_mode === 'ignore') {
                     continue;
                 }
-                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset['id'];
-                $full_url  = home_url('/?gallery_for_immich_proxy=preview&id=') . $asset['id'];
+                $cache_version = $this->cache_version_param($asset);
+                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $asset['id'] . $cache_version;
+                $full_url  = home_url('/?gallery_for_immich_proxy=preview&id=') . $asset['id'] . $cache_version;
 
                 // Prepare description for lightbox
                 $description = '';
@@ -1671,13 +1745,19 @@ class Gallery_For_Immich {
                             $video_url = '#';
                         }
                     }
-                    $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
-                    $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
-                    $video_html .= '</video>';
-                    
-                    $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="album-' . esc_attr($album['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
-                    $html .= '<img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>';
-                    $html .= '</a>';
+                    if (null === $video_url) {
+                        // No playable URL — typically an album shared with (not owned by) the
+                        // API key's Immich user. Show the thumbnail without a lightbox link.
+                        $html .= '<img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>';
+                    } else {
+                        $video_html = '<video class="gvideo-local" controls="controls" controlsList="" playsinline preload="metadata">';
+                        $video_html .= '<source src="' . esc_url($video_url) . '" type="video/mp4">';
+                        $video_html .= '</video>';
+
+                        $html .= '<a href="#" class="immich-lightbox immich-video-thumb" data-video="true" data-gallery="album-' . esc_attr($album['id']) . '" data-content="' . esc_attr($video_html) . '" data-width="90vw" data-height="90vh">';
+                        $html .= '<img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>';
+                        $html .= '</a>';
+                    }
                 } else {
                     $live_photo_id = '';
                     if ($video_mode !== 'ignore' && !empty($asset['livePhotoVideoId']) && preg_match('/^[a-f0-9\-]{36}$/i', $asset['livePhotoVideoId'])) {
@@ -1784,7 +1864,9 @@ class Gallery_For_Immich {
             // Render the albums
             foreach ($albums_to_render as $album) {
                 if (empty($album['albumThumbnailAssetId'])) continue;
-                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $album['albumThumbnailAssetId'];
+                // The album list carries no per-asset timestamp, so the album's own `updatedAt`
+                // is used as a best-effort cache version for its thumbnail.
+                $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $album['albumThumbnailAssetId'] . $this->cache_version_param($album);
 
                 $html .= '<div>';
                 $html .= '<a href="' . get_permalink() . '?gallery_for_immich=' . esc_attr($album['id']) . '">

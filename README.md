@@ -7,6 +7,8 @@ A simple way to display galleries without uploading images manually.
 
 **Access Control:** The plugin displays photos and albums based on the permissions of the Immich user account that owns the API key. Only photos and albums that are visible to this specific Immich user will be accessible in WordPress. This means if your Immich server has multiple users, each with their own private collections, only the albums shared with or owned by the API key's user account can be displayed on your WordPress site.
 
+**Using a separate display user:** You can point the plugin at a secondary Immich account that only has albums shared with it — this keeps your main account's API key off the WordPress server. One caveat: Immich only allows *shared links* to be created for assets a user actually **owns**, not for assets merely shared with them. Photos always work, but videos in the default **Shared links** mode will not play for a display user. Choose video mode **Proxy via fopen** or **Ignore videos** in that case. The connection test on the settings page flags this situation explicitly.
+
 ## ✨ Features
 
 - Display list of albums from Immich
@@ -52,6 +54,8 @@ A simple way to display galleries without uploading images manually.
 
    **Note:** The plugin only needs read-only access. Never grant write permissions for security reasons.
 
+   **Note:** `sharedLink.create` and `sharedLink.delete` only work for photos and videos this Immich user **owns**. If you use a separate display user with albums shared to it, pick a different video mode (see *Video playback modes* below).
+
 1. Click **Create** and copy the generated API key
 1. In WordPress, go to **Settings > Gallery for Immich** and enter:
    - Your Immich server URL (e.g., `https://immich.example.com`)
@@ -62,7 +66,7 @@ A simple way to display galleries without uploading images manually.
 
 Configure **Settings > Gallery for Immich > Video playback**:
 
-- **Shared links (default):** creates temporary shared links on Immich. Videos stream directly from Immich and links expire automatically.
+- **Shared links (default):** creates temporary shared links on Immich. Videos stream directly from Immich and links expire automatically. Requires that the API key's Immich user **owns** the videos — this mode does not work for albums that are only shared with that user.
 - **Proxy via fopen:** streams videos through WordPress. Moste elagant solution, but requires `fopen` support on Wordpress server which is not always supported.
 - **Ignore videos:** hides videos from galleries and only shows photos.
 
@@ -206,6 +210,14 @@ Use the shortcode below to display just one photo:
 ```
 
 ## 📋 Changelog
+
+### 0.8.2
+
+- Tested against WordPress 7.1 and Immich v3.1.
+- Fix: Photos that were rotated, cropped or filtered in Immich were displayed in their original, unedited form. The plugin now asks Immich for the edited render (`edited=true`, supported since Immich v2.5). (issue #15)
+- Fix: Because proxied images carry a one-year browser cache header, an edited photo stayed stale for visitors who had already seen it. Image URLs now include the asset's modification timestamp, giving every version its own URL.
+- Fix: When Immich refused to create a shared link for a video, the plugin aborted the page render with a 502 halfway through the HTML. It now falls back to showing the thumbnail without a lightbox link.
+- Fix: The connection & permissions check reported `sharedLink.create` as missing when the API key's Immich user can view an album but does not own it. That is now a warning with an explanation rather than a false negative.
 
 ### 0.8.1
 
