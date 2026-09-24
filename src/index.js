@@ -1,6 +1,6 @@
 import { registerBlockType } from '@wordpress/blocks';
 import { InspectorControls, useBlockProps } from '@wordpress/block-editor';
-import { PanelBody, SelectControl, CheckboxControl, RadioControl, RangeControl, TextControl } from '@wordpress/components';
+import { PanelBody, SelectControl, CheckboxControl, RadioControl, RangeControl, TextControl, ToggleControl } from '@wordpress/components';
 import { useState, useEffect } from '@wordpress/element';
 import { __ } from '@wordpress/i18n';
 import apiFetch from '@wordpress/api-fetch';
@@ -9,6 +9,12 @@ const Edit = ({ attributes, setAttributes }) => {
 	const { mode, album, albums, asset, show, order, size, title_size, description_size, date_size } = attributes;
 	const link     = attributes.link     || 'lightbox';
 	const link_url = attributes.link_url || '';
+	const link_target = attributes.link_target || 'new';
+	const limit = attributes.limit || 0;
+	const pick  = attributes.pick  || 'first';
+	// undefined = album pages opened from the overview use `show` as well.
+	const detail_show = attributes.detail_show;
+	const hasAlbumPages = mode === 'overview' || mode === 'multiple';
 	const blockProps = useBlockProps();
 	
 	const [availableAlbums, setAvailableAlbums] = useState([]);
@@ -44,6 +50,10 @@ const Edit = ({ attributes, setAttributes }) => {
 		if (show && show.length > 0) {
 			shortcode += ` show="${show.join(',')}"`;
 		}
+
+		if (hasAlbumPages && Array.isArray(detail_show)) {
+			shortcode += ` detail_show="${detail_show.join(',')}"`;
+		}
 		
 		if (order) {
 			shortcode += ` order="${order}"`;
@@ -65,15 +75,26 @@ const Edit = ({ attributes, setAttributes }) => {
 			shortcode += ` date_size="${date_size}"`;
 		}
 
+		// limit / pick (albums and photos; pick only matters with a limit)
+		if (mode !== 'asset' && limit > 0) {
+			shortcode += ` limit="${limit}"`;
+			if (pick !== 'first') {
+				shortcode += ` pick="${pick}"`;
+			}
+		}
+
 		// align (only for single photo mode)
 		if (mode === 'asset' && attributes.align && attributes.align !== 'none') {
 			shortcode += ` align="${attributes.align}"`;
 		}
 
-		// link (only for single photo mode; omit when default 'lightbox')
-		if (mode === 'asset' && link !== 'lightbox') {
+		// link (single photo and single album; omit when default 'lightbox')
+		if ((mode === 'asset' || mode === 'single') && link !== 'lightbox') {
 			if (link === 'custom' && link_url) {
 				shortcode += ` link="${link_url}"`;   // URL goes directly into link=
+				if (link_target !== 'new') {
+					shortcode += ` link_target="${link_target}"`;
+				}
 			} else if (link !== 'custom') {
 				shortcode += ` link="${link}"`;
 			}
@@ -100,21 +121,41 @@ const Edit = ({ attributes, setAttributes }) => {
 		{ label: __('Asset description', 'gallery-for-immich'), value: 'asset_description' }
 	];
 	
-	const orderOptions = [
-		{ label: __('Default', 'gallery-for-immich'), value: '' },
-		{ label: __('Newest first', 'gallery-for-immich'), value: 'date_desc' },
-		{ label: __('Oldest first', 'gallery-for-immich'), value: 'date_asc' },
-		{ label: __('A-Z (albums only)', 'gallery-for-immich'), value: 'name_asc' },
-		{ label: __('Z-A (albums only)', 'gallery-for-immich'), value: 'name_desc' },
-		{ label: __('A-Z by description (photos only)', 'gallery-for-immich'), value: 'description_asc' },
-		{ label: __('Z-A by description (photos only)', 'gallery-for-immich'), value: 'description_desc' }
-	];
+	// Sort options that apply to the chosen mode: albums sort by name, photos by description.
+	// 'multiple' has none: its albums are shown in the order they were selected.
+	const getOrderOptions = (forMode) => {
+		const options = [
+			{ label: __('Default', 'gallery-for-immich'), value: '' },
+			{ label: __('Newest first', 'gallery-for-immich'), value: 'date_desc' },
+			{ label: __('Oldest first', 'gallery-for-immich'), value: 'date_asc' },
+		];
+		if (forMode === 'overview') {
+			options.push(
+				{ label: __('A-Z', 'gallery-for-immich'), value: 'name_asc' },
+				{ label: __('Z-A', 'gallery-for-immich'), value: 'name_desc' }
+			);
+		} else if (forMode === 'single') {
+			options.push(
+				{ label: __('A-Z by description', 'gallery-for-immich'), value: 'description_asc' },
+				{ label: __('Z-A by description', 'gallery-for-immich'), value: 'description_desc' }
+			);
+		}
+		return options;
+	};
+	const orderOptions = getOrderOptions(mode);
 	
 	const handleShowToggle = (value, checked) => {
 		const newShow = checked
 			? [...show, value]
 			: show.filter(item => item !== value);
 		setAttributes({ show: newShow });
+	};
+
+	const handleDetailShowToggle = (value, checked) => {
+		const newDetailShow = checked
+			? [...detail_show, value]
+			: detail_show.filter(item => item !== value);
+		setAttributes({ detail_show: newDetailShow });
 	};
 	
 	const handleAlbumToggle = (albumId, checked) => {
@@ -136,6 +177,18 @@ const Edit = ({ attributes, setAttributes }) => {
 		}
 		if (newMode !== 'multiple') {
 			updates.albums = [];
+		}
+		if (newMode !== 'overview' && newMode !== 'multiple') {
+			updates.detail_show = undefined;
+		}
+		if (newMode !== 'asset' && newMode !== 'single') {
+			updates.link = 'lightbox';
+			updates.link_url = '';
+			updates.link_target = 'new';
+		}
+		// Drop a sort order that does not apply to the new mode.
+		if (newMode === 'multiple' || !getOrderOptions(newMode).some(option => option.value === order)) {
+			updates.order = '';
 		}
 		
 		setAttributes(updates);
@@ -178,27 +231,6 @@ const Edit = ({ attributes, setAttributes }) => {
 						]}
 						help={__('Choose alignment for text wrapping around the photo', 'gallery-for-immich')}
 					/>
-					<SelectControl
-						label={__('Link behavior', 'gallery-for-immich')}
-						value={link}
-						onChange={(value) => setAttributes({ link: value, link_url: '' })}
-						options={[
-							{ label: __('Lightbox (default)', 'gallery-for-immich'), value: 'lightbox' },
-							{ label: __('No link',            'gallery-for-immich'), value: 'none'     },
-							{ label: __('Custom URL',         'gallery-for-immich'), value: 'custom'   },
-						]}
-						help={__('Choose how the photo behaves when clicked', 'gallery-for-immich')}
-					/>
-					{link === 'custom' && (
-						<TextControl
-							label={__('Link URL', 'gallery-for-immich')}
-							value={link_url}
-							onChange={(value) => setAttributes({ link_url: value })}
-							placeholder="https://..."
-							type="url"
-							help={__('The URL to open when the photo is clicked', 'gallery-for-immich')}
-						/>
-					)}
 				</>
 				)}					{mode === 'single' && (
 						<SelectControl
@@ -209,12 +241,16 @@ const Edit = ({ attributes, setAttributes }) => {
 							disabled={loading}
 						/>
 					)}
+
 					
 					{mode === 'multiple' && !loading && availableAlbums.length > 0 && (
 						<div style={{ marginTop: '12px' }}>
 							<label style={{ fontWeight: 600, marginBottom: '8px', display: 'block' }}>
 								{__('Select Albums', 'gallery-for-immich')}
 							</label>
+							<p style={{ marginTop: 0, fontSize: '12px', color: '#757575' }}>
+								{__('Albums are shown in the order you select them.', 'gallery-for-immich')}
+							</p>
 							{availableAlbums.map(albumItem => (
 								<CheckboxControl
 									key={albumItem.id}
@@ -226,13 +262,75 @@ const Edit = ({ attributes, setAttributes }) => {
 						</div>
 					)}
 					
-					{mode !== 'asset' && (
+					{(mode === 'overview' || mode === 'single') && (
 						<SelectControl
 							label={__('Sort Order', 'gallery-for-immich')}
 							value={order}
 							options={orderOptions}
 							onChange={(value) => setAttributes({ order: value })}
 						/>
+					)}
+
+					{mode !== 'asset' && (
+						<TextControl
+							label={mode === 'single' ? __('Maximum number of photos', 'gallery-for-immich') : __('Maximum number of albums', 'gallery-for-immich')}
+							type="number"
+							min={0}
+							max={1000}
+							value={limit}
+							onChange={(value) => {
+								const n = parseInt(value, 10);
+								setAttributes({ limit: n > 0 ? Math.min(n, 1000) : 0 });
+							}}
+							help={__('0 shows all', 'gallery-for-immich')}
+						/>
+					)}
+
+					{mode !== 'asset' && limit > 0 && (
+						<SelectControl
+							label={__('Which ones', 'gallery-for-immich')}
+							value={pick}
+							options={[
+								{ label: __('First in sort order', 'gallery-for-immich'), value: 'first'  },
+								{ label: __('Random selection',    'gallery-for-immich'), value: 'random' },
+							]}
+							onChange={(value) => setAttributes({ pick: value })}
+						/>
+					)}
+
+					{(mode === 'asset' || mode === 'single') && (
+					<>
+					<SelectControl
+						label={__('Link behavior', 'gallery-for-immich')}
+						value={link}
+						onChange={(value) => setAttributes({ link: value, link_url: '', link_target: 'new' })}
+						options={[
+							{ label: __('Lightbox (default)', 'gallery-for-immich'), value: 'lightbox' },
+							{ label: __('No link',            'gallery-for-immich'), value: 'none'     },
+							{ label: __('Custom URL',         'gallery-for-immich'), value: 'custom'   },
+						]}
+						help={mode === 'single'
+							? __('Choose what happens when a photo is clicked, e.g. link a single latest photo to your full gallery page', 'gallery-for-immich')
+							: __('Choose how the photo behaves when clicked', 'gallery-for-immich')}
+					/>
+					{link === 'custom' && (
+						<TextControl
+							label={__('Link URL', 'gallery-for-immich')}
+							value={link_url}
+							onChange={(value) => setAttributes({ link_url: value })}
+							placeholder="https://..."
+							type="url"
+							help={__('The URL to open when the photo is clicked', 'gallery-for-immich')}
+						/>
+					)}
+					{link === 'custom' && (
+						<ToggleControl
+							label={__('Open in new tab', 'gallery-for-immich')}
+							checked={link_target === 'new'}
+							onChange={(checked) => setAttributes({ link_target: checked ? 'new' : 'same' })}
+						/>
+					)}
+					</>
 					)}
 				
 				<RangeControl
@@ -281,6 +379,30 @@ const Edit = ({ attributes, setAttributes }) => {
 							onChange={(checked) => handleShowToggle(option.value, checked)}
 						/>
 					))}
+
+					{hasAlbumPages && (
+						<>
+							<ToggleControl
+								label={__('Same on album page', 'gallery-for-immich')}
+								help={__('The page that opens when a visitor clicks an album', 'gallery-for-immich')}
+								checked={!Array.isArray(detail_show)}
+								onChange={(checked) => setAttributes({ detail_show: checked ? undefined : [...show] })}
+							/>
+							{Array.isArray(detail_show) && (
+								<p style={{ fontWeight: 600, margin: '16px 0 8px' }}>
+									{__('On the album page', 'gallery-for-immich')}
+								</p>
+							)}
+							{Array.isArray(detail_show) && showOptions.map(option => (
+								<CheckboxControl
+									key={`detail-${option.value}`}
+									label={option.label}
+									checked={detail_show.includes(option.value)}
+									onChange={(checked) => handleDetailShowToggle(option.value, checked)}
+								/>
+							))}
+						</>
+					)}
 				</PanelBody>
 			</InspectorControls>
 			

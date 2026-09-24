@@ -34,9 +34,10 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 The plugin has two layers that work together:
 
 **PHP (`gallery-for-immich.php`)** — single class `Gallery_For_Immich` that handles everything server-side:
-- **Image/video proxy** (`handle_image_proxy`): intercepts `?gallery_for_immich_proxy=` requests and streams assets from Immich. The Immich API key never reaches the browser.
+- **Image/video proxy** (`handle_image_proxy`): intercepts `?gallery_for_immich_proxy=` requests and streams assets from Immich. The Immich API key never reaches the browser. Only `thumbnail` and `preview` are served, plus `video` in `fopen` mode — never originals.
 - **Shortcode renderer** (`render_gallery`): one method handles three modes — album overview, album detail, single asset — determined by the presence of `album=`, `asset=`, or neither in shortcode attributes plus `?gallery_for_immich=` in the URL.
-- **REST endpoints**: `/gallery-for-immich/v1/albums` (block editor, auth required) and `/gallery-for-immich/v1/live-photo-url` (public, used by frontend JS for Live Photos).
+- **REST endpoints**: `/gallery-for-immich/v1/albums` (block editor, auth required) and `/gallery-for-immich/v1/live-photo-url` (public, used by frontend JS for Live Photos). Because the latter creates Immich shared links, it requires an HMAC signature (`live_photo_signature()`) that is rendered next to each Live Photo ID; shared links are reused per asset via a transient.
+- **Album from the URL** (`?gallery_for_immich=`): only honoured by an overview shortcode, and with `albums=` only for an album in that list — never by `album=` or `asset=` shortcodes.
 - **Video modes**: `shared` creates temporary Immich shared links (scheduled for cleanup via WP cron); `fopen` streams through the proxy; `ignore` skips videos entirely.
 - **`should_create_shared_links()`**: gates any Immich API write calls — returns false in REST/admin contexts to avoid shared link creation during block editor previews.
 
@@ -58,7 +59,7 @@ Supported locales: `nl_NL`, `de_DE`, `fr_FR`.
 
 ## Version bumping
 
-Three files must be updated together on every release: `gallery-for-immich.php` (plugin header), `readme.txt` (`Stable tag`), `package.json`. See `RELEASE.md` for the full release checklist. Run `npm run translate` **after** bumping the version so the `.pot` header carries the correct version number.
+Three files must be updated together on every release: `gallery-for-immich.php` (plugin header), `readme.txt` (`Stable tag`), `package.json`. See `RELEASE.md` for the full release checklist. The final `npm run translate` before a release must run **after** bumping the version, because the `.pot` header carries the plugin version. Compiling translations earlier during development is fine.
 
 ## Test environment
 

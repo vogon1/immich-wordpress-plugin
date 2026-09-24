@@ -45,6 +45,11 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 | 👤 | `show="gallery_name,gallery_description"` shows name and description |
 | 👤 | `order="name_asc"` sorts alphabetically |
 | 👤 | `size="300"` renders larger thumbnails |
+| 👤 | `limit="2"` shows 2 albums; `pick="random"` varies on reload |
+| 👤 | With `limit` on an overview, a clicked album still shows all its photos |
+| 👤 | `show="gallery_name" detail_show="gallery_description,asset_date"` — overview shows names only; clicked album shows description and dates, no name |
+| 👤 | `detail_show=""` — clicked album shows no text at all |
+| 👤 | Block: turning off **Same on album page** shows a second set of checkboxes; the shortcode preview shows `detail_show` |
 | 🤖 | `albums="invalid-id"` produces no PHP errors |
 
 ---
@@ -56,6 +61,14 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 | 👤 | Photos render in grid |
 | 👤 | `show="asset_date,asset_description"` shows date and description |
 | 👤 | `order="date_desc"` reverses the order |
+| 👤 | `limit="5"` shows the 5 oldest photos; with `order="date_desc"` the 5 newest |
+| 👤 | `limit="5" pick="random"` shows a different selection on reload, in sort order |
+| 👤 | `limit="5" order="description_asc"` shows the first 5 by description |
+| 👤 | Video mode **ignore** + `limit="5"` still shows 5 photos |
+| 👤 | `limit="1" order="date_desc" link="https://..."` shows the latest photo, linking to the URL in a new tab |
+| 👤 | Same with `link_target="same"` opens in the same tab; `pick="random"` shows a different photo on reload |
+| 👤 | `link="none"` shows thumbnails without any link |
+| 👤 | Overview with `link="https://..."`: albums still link to their album page, and the clicked album uses the lightbox |
 | 👤 | Clicking a photo opens the lightbox |
 | 👤 | Lightbox navigation (arrows, keyboard) works |
 | 👤 | Closing lightbox (Escape, close button) works |
@@ -70,6 +83,8 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 | 👤 | `align="left"` / `align="right"` — text wraps around photo |
 | 👤 | `align="center"` centers the photo |
 | 👤 | Clicking opens lightbox with preview |
+| 👤 | `link="https://..."` opens the URL in a new tab |
+| 👤 | `link="https://..." link_target="same"` opens the URL in the same tab |
 | 👤 | `show="asset_date"` shows the date |
 
 ---
@@ -106,7 +121,9 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 | 👤 | Mode "Single album" — album selection works |
 | 👤 | Mode "Multiple albums" — selecting multiple works |
 | 👤 | Mode "Single photo" — entering asset ID works |
+| 👤 | Mode "Single album" — link behavior (lightbox/no link/custom URL + new tab toggle) is available |
 | 👤 | Sidebar options (size, order, show) work |
+| 👤 | Sort order offers name sorting only for "All albums", description sorting only for "Single album", and is hidden for "Multiple albums" |
 | 👤 | Block on published page renders real gallery |
 | 👤 | Block in editor shows placeholder (no real API calls) |
 
@@ -121,6 +138,13 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 | 🤖 | Plugin not configured → HTTP 503 |
 | 🤖 | REST `/albums` without login → HTTP 401/403 |
 | 🤖 | REST `live-photo-url` with invalid ID → HTTP 400 |
+| 🤖 | REST `live-photo-url` without `sig` → HTTP 400; with a wrong `sig` → HTTP 403 |
+| 🤖 | Proxy `type=original` → HTTP 400 |
+| 🤖 | Proxy `type=video` when video mode is not **fopen** → HTTP 403 |
+| 👤 | Page with `album="A"`: adding `?gallery_for_immich=<other album>` still shows album A |
+| 👤 | Page with `albums="A,B"`: `?gallery_for_immich=<album C>` shows the overview, not album C |
+| 👤 | Live Photo button still plays the video (the request carries a `sig` parameter) |
+| 👤 | Video mode **shared**: reloading a page with videos reuses the same shared link (no new cleanup event per view) |
 | 🤖 | API key not visible in page source |
 
 ---
@@ -144,4 +168,10 @@ curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/wp-json/gallery-for-immich/v1/
 
 # REST live-photo-url with invalid ID → expect 400
 curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/wp-json/gallery-for-immich/v1/live-photo-url?asset_id=invalid"
+
+# REST live-photo-url without a valid signature → expect 403
+curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/wp-json/gallery-for-immich/v1/live-photo-url?asset_id=00000000-0000-0000-0000-000000000001&sig=$(printf 'a%.0s' {1..64})"
+
+# Proxy original → expect 400 (originals are never served)
+curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/?gallery_for_immich_proxy=original&id=00000000-0000-0000-0000-000000000001"
 ```

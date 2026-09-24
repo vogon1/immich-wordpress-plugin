@@ -23,7 +23,6 @@ Follow these steps before tagging and publishing a new release.
   - `GET /api/assets/{id}`
   - `GET /api/assets/{id}/thumbnail`
   - `GET /api/assets/{id}/video/playback`
-  - `GET /api/assets/{id}/original`
   - `POST /api/shared-links`
   - `DELETE /api/shared-links/{id}`
 - Test against the latest Immich version.
@@ -40,7 +39,7 @@ Follow these steps before tagging and publishing a new release.
 
 - Review the `.po` files (nl_NL, de_DE, fr_FR) in `languages/` for untranslated strings (`msgstr ""`).
 - Fill in any missing translations manually in the `.po` files.
-- **Do not compile yet** — run the full pipeline after bumping the version in step 6.
+- Compiling in between (`npm run i18n:build && node scripts/sync-translations.js`) is fine, e.g. to test translations during development. Only the final `.pot` generation has to wait until after the version bump in step 6.
 - See `TRANSLATION.md` for the full translation workflow.
 
 ## 4. Update README.md
@@ -69,7 +68,7 @@ There is no version field in `README.md` — the plugin header and `readme.txt` 
 
 ## 7. Compile translations
 
-Now that the version is bumped, run the full translation pipeline. This ensures the `.pot` header carries the correct version number:
+Now that the version is bumped, run the full translation pipeline once more. `wp i18n make-pot` reads the plugin version into the `.pot` header (`Project-Id-Version`), so this final run must come after step 6. Nothing else in the pipeline depends on the version:
 
 ```bash
 npm run translate

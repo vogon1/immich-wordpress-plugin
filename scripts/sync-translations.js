@@ -48,14 +48,21 @@ for (const locale of locales) {
         continue;
     }
     
-    // Use the first (or only) JSON file as source
-    const sourceFile = path.join(languagesDir, jsonFiles[0]);
+    // Use the most recently written JSON file as source. `wp i18n make-json` writes fresh
+    // files next to the previous build's file; picking by name would depend on how the
+    // hashes happen to sort and could silently restore an outdated translation.
+    const newestFile = jsonFiles
+        .map(f => ({ name: f, mtime: fs.statSync(path.join(languagesDir, f)).mtimeMs }))
+        .sort((a, b) => b.mtime - a.mtime)[0].name;
+    const sourceFile = path.join(languagesDir, newestFile);
     const targetFile = path.join(languagesDir, `gallery-for-immich-${locale}-${webpackHash}.json`);
-    
+
     // Copy the file to the new hash
     try {
-        fs.copyFileSync(sourceFile, targetFile);
-        console.log(`✓ Copied ${locale}: ${jsonFiles[0]} → gallery-for-immich-${locale}-${webpackHash}.json`);
+        if (sourceFile !== targetFile) {
+            fs.copyFileSync(sourceFile, targetFile);
+        }
+        console.log(`✓ Copied ${locale}: ${newestFile} → gallery-for-immich-${locale}-${webpackHash}.json`);
         copied++;
         
         // Clean up old JSON files for this locale (keep only the new one)

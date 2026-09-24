@@ -3,7 +3,7 @@
  * Plugin Name: Gallery for Immich
  * Plugin URI: https://github.com/vogon1/immich-wordpress-plugin
  * Description: Show Immich albums and photos in a WordPress site. Requires Immich server with API access.
- * Version: 0.8.2
+ * Version: 0.9.0
  * Requires at least: 5.8
  * Requires PHP: 7.4
  * Author: Sietse Visser
@@ -78,8 +78,9 @@ class Gallery_For_Immich {
         // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Validated with UUID regex below
         $id = isset($_GET['id']) ? sanitize_text_field(wp_unslash($_GET['id'])) : '';
 
-        // Validate type with strict whitelist
-        if (!in_array($type, ['thumbnail', 'preview', 'original', 'video'], true)) {
+        // Validate type with strict whitelist. Only the renders the plugin itself links to are
+        // served: no originals (full resolution with all EXIF data, including GPS location).
+        if (!in_array($type, ['thumbnail', 'preview', 'video'], true)) {
             status_header(400);
             exit('Invalid type');
         }
@@ -98,6 +99,12 @@ class Gallery_For_Immich {
             exit('Plugin not configured');
         }
 
+        // Videos are only streamed through the proxy in 'fopen' mode.
+        if ($type === 'video' && ($options['video_mode'] ?? 'shared') !== 'fopen') {
+            status_header(403);
+            exit('Video streaming disabled');
+        }
+
         // Build URL based on type.
         // `edited=true` returns the edited render for assets that were rotated, cropped or
         // filtered in Immich (non-destructive editing, Immich v2.5+). Older Immich versions
@@ -108,12 +115,9 @@ class Gallery_For_Immich {
         } elseif ($type === 'preview') {
             $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/thumbnail?size=preview&edited=true';
             $timeout = 20;
-        } elseif ($type === 'video') {
+        } else {
             $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/video/playback';
             $timeout = 60;
-        } else {
-            $url = rtrim($options['server_url'], '/') . '/api/assets/' . $id . '/original?edited=true';
-            $timeout = 30;
         }
 
         // For video streaming, use curl with range request support
@@ -633,7 +637,10 @@ class Gallery_For_Immich {
             document.querySelectorAll(".immich-lightbox[data-live-photo-id]").forEach(function(el) {
                 var match = el.href && el.href.match(/id=([a-f0-9-]{36})/i);
                 if (match) {
-                    livePhotoMap[match[1]] = el.getAttribute("data-live-photo-id");
+                    livePhotoMap[match[1]] = {
+                        id: el.getAttribute("data-live-photo-id"),
+                        sig: el.getAttribute("data-live-photo-sig")
+                    };
                 }
             });
 
@@ -670,7 +677,7 @@ class Gallery_For_Immich {
                         e.stopPropagation();
                         btn.disabled = true;
                         btn.innerHTML = "&#8230;";
-                        fetch(immichLivePhotoUrl + "?asset_id=" + liveId, {
+                        fetch(immichLivePhotoUrl + "?asset_id=" + encodeURIComponent(liveId.id) + "&sig=" + encodeURIComponent(liveId.sig), {
                             headers: { "X-WP-Nonce": immichNonce }
                         })
                         .then(function(r) { return r.json(); })
@@ -887,6 +894,11 @@ class Gallery_For_Immich {
         if (!empty($attributes['show']) && is_array($attributes['show'])) {
             $shortcode_atts['show'] = implode(',', $attributes['show']);
         }
+
+        // An empty array is meaningful here (show nothing on the album page), so test isset().
+        if (isset($attributes['detail_show']) && is_array($attributes['detail_show'])) {
+            $shortcode_atts['detail_show'] = implode(',', $attributes['detail_show']);
+        }
         
         if (!empty($attributes['order'])) {
             $shortcode_atts['order'] = $attributes['order'];
@@ -923,6 +935,18 @@ class Gallery_For_Immich {
             $shortcode_atts['link'] = $attributes['link_url'];
         }
 
+        if (!empty($attributes['link_target'])) {
+            $shortcode_atts['link_target'] = $attributes['link_target'];
+        }
+
+        if (!empty($attributes['limit'])) {
+            $shortcode_atts['limit'] = $attributes['limit'];
+        }
+
+        if (!empty($attributes['pick'])) {
+            $shortcode_atts['pick'] = $attributes['pick'];
+        }
+
         return $this->render_gallery($shortcode_atts);
     }
     
@@ -946,6 +970,13 @@ class Gallery_For_Immich {
                     'sanitize_callback' => 'sanitize_text_field',
                     'validate_callback' => function($value) {
                         return (bool) preg_match('/^[a-f0-9\-]{36}$/i', $value);
+                    },
+                ],
+                'sig' => [
+                    'required'          => true,
+                    'sanitize_callback' => 'sanitize_text_field',
+                    'validate_callback' => function($value) {
+                        return (bool) preg_match('/^[a-f0-9]{64}$/', $value);
                     },
                 ],
             ],
@@ -1142,6 +1173,11 @@ class Gallery_For_Immich {
         if (!preg_match('/^[a-f0-9\-]{36}$/i', $asset_id)) {
             return new WP_Error('invalid_id', 'Invalid asset ID', ['status' => 400]);
         }
+
+        // Only Live Photo videos of photos rendered by this site carry a valid signature.
+        if (!hash_equals($this->live_photo_signature($asset_id), (string) $request['sig'])) {
+            return new WP_Error('invalid_signature', 'Invalid signature', ['status' => 403]);
+        }
         
         // For REST API, only block if we're in admin/preview context (not public page loads)
         if (is_admin()) {
@@ -1174,6 +1210,20 @@ class Gallery_For_Immich {
         }
 
         return ['url' => $video_url];
+    }
+
+    /**
+     * Signature for a Live Photo video ID, rendered next to the ID in the page.
+     *
+     * The public live-photo-url endpoint creates an Immich shared link, so it must only serve
+     * Live Photo videos of photos this site actually displays. Only the server can compute this
+     * signature, and it does not expire, so it also works on cached pages.
+     *
+     * @param string $asset_id Live Photo video asset ID.
+     * @return string
+     */
+    private function live_photo_signature($asset_id) {
+        return hash_hmac('sha256', 'live-photo|' . strtolower($asset_id), wp_salt('auth'));
     }
 
     /* --- API request helper --- */
@@ -1276,18 +1326,22 @@ class Gallery_For_Immich {
         return json_decode(wp_remote_retrieve_body($response), true);
     }
 
-    private function get_album_assets($album_id) {
+    private function get_album_assets($album_id, $images_only = false) {
         $assets = [];
         $page = 1;
         $max_pages = 20; // Safety cap: Immich's max page size is 1000, so this covers up to 20,000 assets.
 
         do {
-            $result = $this->api_search_metadata([
+            $body = [
                 'albumIds' => [$album_id],
                 'withExif' => true,
                 'size'     => 1000,
                 'page'     => $page,
-            ]);
+            ];
+            if ($images_only) {
+                $body['type'] = 'IMAGE';
+            }
+            $result = $this->api_search_metadata($body);
 
             if (empty($result) || !empty($result['error']) || empty($result['assets']['items'])) {
                 break;
@@ -1302,6 +1356,102 @@ class Gallery_For_Immich {
     }
 
     /**
+     * Fetch at most $limit assets of an album, letting Immich do the limiting where it can,
+     * so a `limit=10` on a large album costs one small request instead of fetching everything.
+     *
+     * Returns null when the combination cannot be limited server-side (description sorting);
+     * the caller then fetches all assets and applies limit_items() after sorting.
+     *
+     * @param string $album_id    Album UUID.
+     * @param int    $limit       Maximum number of assets (1–1000).
+     * @param string $pick        'first' or 'random'.
+     * @param string $order       Sanitized order parameter.
+     * @param bool   $images_only Skip videos (video mode 'ignore').
+     * @return array|null Assets (unsorted for 'random'), or null when not limitable server-side.
+     */
+    private function get_album_assets_limited($album_id, $limit, $pick, $order, $images_only) {
+        $body = [
+            'albumIds' => [$album_id],
+            'withExif' => true,
+            'size'     => $limit,
+        ];
+        if ($images_only) {
+            $body['type'] = 'IMAGE';
+        }
+
+        if ($pick === 'random') {
+            $result = $this->api_search_random($body);
+            return (empty($result) || !empty($result['error'])) ? [] : $result;
+        }
+
+        if (!in_array($order, ['date_asc', 'date_desc'], true)) {
+            return null;
+        }
+
+        // Immich orders search results by the date the asset was taken.
+        $body['order'] = $order === 'date_asc' ? 'asc' : 'desc';
+        $result = $this->api_search_metadata($body);
+
+        return (empty($result) || !empty($result['error'])) ? [] : ($result['assets']['items'] ?? []);
+    }
+
+    /**
+     * POST /api/search/random — returns a plain array of assets rather than a paged result.
+     */
+    private function api_search_random($body) {
+        $options = get_option($this->option_name);
+
+        if (empty($options['server_url']) || empty($options['api_key'])) {
+            return ['error' => true, 'message' => __('Plugin not configured. Please set Server URL and API Key in settings.', 'gallery-for-immich')];
+        }
+
+        $response = wp_remote_post(rtrim($options['server_url'], '/') . '/api/search/random', [
+            'headers' => [
+                'x-api-key' => $options['api_key'],
+                'Content-Type' => 'application/json',
+                'User-Agent' => 'WordPress-Gallery-for-Immich/' . get_bloginfo('version')
+            ],
+            'body' => wp_json_encode($body),
+            'timeout' => 15,
+            'sslverify' => true // Enforce SSL verification
+        ]);
+
+        if (is_wp_error($response)) {
+            return ['error' => true, 'message' => $response->get_error_message()];
+        }
+
+        $status_code = wp_remote_retrieve_response_code($response);
+        if ($status_code !== 200) {
+            /* translators: %d: HTTP status code number */
+            return ['error' => true, 'message' => sprintf(__('API returned status code: %d', 'gallery-for-immich'), $status_code)];
+        }
+
+        return json_decode(wp_remote_retrieve_body($response), true);
+    }
+
+    /**
+     * Reduce an already sorted list to $limit items: the first ones, or a random
+     * selection that keeps the original order.
+     *
+     * @param array  $items Sorted items.
+     * @param int    $limit Maximum number of items; 0 means no limit.
+     * @param string $pick  'first' or 'random'.
+     * @return array
+     */
+    private function limit_items($items, $limit, $pick) {
+        $items = array_values($items);
+        if ($limit < 1 || count($items) <= $limit) {
+            return $items;
+        }
+        if ($pick === 'random') {
+            // array_rand() returns the keys in their original order, so the sort order is kept.
+            $keys = (array) array_rand($items, $limit);
+            return array_values(array_intersect_key($items, array_flip($keys)));
+        }
+        return array_slice($items, 0, $limit);
+    }
+
+    /**
      * Create a temporary Immich shared link so the browser can stream a video directly.
      *
      * Immich only allows shared links for assets the API key's user owns. For albums that are
@@ -1313,7 +1463,17 @@ class Gallery_For_Immich {
      */
     private function get_video_url_with_shared_link($asset_data) {
         $options = get_option($this->option_name);
-        $expiresAt = gmdate('c', time() + 600); // 10 minuten
+
+        // Reuse one shared link per asset while it is still valid, instead of creating a new
+        // link (plus a cleanup event) on every page view or Live Photo request. The link lives
+        // 10 minutes and is reused for 8, so a returned URL always has 2 minutes left.
+        $cache_key = 'gallery_for_immich_link_' . strtolower($asset_data['id']);
+        $cached_url = get_transient($cache_key);
+        if ($cached_url) {
+            return $cached_url;
+        }
+
+        $expiresAt = gmdate('c', time() + 600); // 10 minutes
 
         $share_response = wp_remote_post(
             rtrim($options['server_url'], '/') . '/api/shared-links',
@@ -1353,6 +1513,7 @@ class Gallery_For_Immich {
         }
 
         $video_url = rtrim($options['server_url'], '/') . '/api/assets/' . $asset_data['id'] . '/video/playback?key=' . $data['key'];
+        set_transient($cache_key, $video_url, 8 * MINUTE_IN_SECONDS);
         return $video_url;
     }
 
@@ -1425,13 +1586,23 @@ class Gallery_For_Immich {
             });
         }
         
-        // Validate album parameter from GET or shortcode
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public gallery view, no privileged action
-        $album = sanitize_text_field(wp_unslash($_GET['gallery_for_immich'] ?? ($atts['album'] ?? '')));
-        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Used for UI display logic only
-        $album_from_url = !empty($_GET['gallery_for_immich']); // Track if album came from URL (navigation)
+        // Album from the shortcode, or from the URL when a visitor clicks an album in an overview.
+        $album = sanitize_text_field($atts['album'] ?? '');
         if ($album && !preg_match('/^[a-f0-9\-]{36}$/i', $album)) {
             $album = ''; // Invalid format, ignore
+        }
+
+        // The URL parameter is only honoured by an overview shortcode, and only for an album that
+        // overview actually lists. Otherwise any visitor who knows an album ID could open any album
+        // the API key can see, on any page that carries the shortcode.
+        // phpcs:ignore WordPress.Security.NonceVerification.Recommended -- Public gallery view, no privileged action
+        $album_param = sanitize_text_field(wp_unslash($_GET['gallery_for_immich'] ?? ''));
+        $album_from_url = false;
+        if ($album_param && preg_match('/^[a-f0-9\-]{36}$/i', $album_param)
+            && !$album && empty($atts['asset'])
+            && (!$albums || in_array(strtolower($album_param), array_map('strtolower', $albums), true))) {
+            $album = $album_param;
+            $album_from_url = true;
         }
         
         // Validate asset parameter
@@ -1442,13 +1613,24 @@ class Gallery_For_Immich {
         }
         
         // Sanitize show parameter - only allow specific values
-        $show = $atts['show'] ?? [];
-        if ($show) {
+        $parse_show = function($value) {
+            if (!$value) {
+                return [];
+            }
             $allowed_show = ['gallery_name', 'gallery_description', 'asset_date', 'asset_description'];
-            $show = array_map('sanitize_text_field', explode(',', $show));
-            $show = array_filter($show, function($item) use ($allowed_show) {
-                return in_array(trim($item), $allowed_show);
+            $items = array_map('trim', array_map('sanitize_text_field', explode(',', $value)));
+            return array_filter($items, function($item) use ($allowed_show) {
+                return in_array($item, $allowed_show);
             });
+        };
+        $show = $parse_show($atts['show'] ?? '');
+
+        // detail_show replaces show on an album page opened from an overview
+        // (?gallery_for_immich=), so the overview and the album page can show different
+        // texts. When omitted, show applies to both; an empty value shows nothing.
+        $opened_from_overview = $album_from_url;
+        if ($opened_from_overview && isset($atts['detail_show'])) {
+            $show = $parse_show($atts['detail_show']);
         }
         
         // Sanitize order parameter - only allow specific sort options
@@ -1492,7 +1674,7 @@ class Gallery_For_Immich {
             $align = 'none';
         }
 
-        // Sanitize link parameter for single photos.
+        // Sanitize link parameter for single photos and albums.
         // Accepted: 'lightbox' (default), 'none', or a valid URL (custom link).
         $link_raw = sanitize_text_field( $atts['link'] ?? 'lightbox' );
         if ( in_array( $link_raw, [ 'lightbox', 'none' ], true ) ) {
@@ -1504,6 +1686,33 @@ class Gallery_For_Immich {
         } else {
             $link_type    = 'lightbox'; // Unknown value → safe default.
             $link_url_val = '';
+        }
+
+        // Sanitize link_target for custom links: 'new' (default) opens a new tab,
+        // 'same' opens in the current tab (e.g. a visual menu to pages on the same site).
+        $link_target = sanitize_text_field( $atts['link_target'] ?? 'new' );
+        if ( ! in_array( $link_target, [ 'new', 'same' ], true ) ) {
+            $link_target = 'new';
+        }
+        $link_target_attr = $link_target === 'new' ? ' target="_blank" rel="noopener noreferrer"' : '';
+
+        // Sanitize limit (maximum number of albums or photos, 1–1000; 0 = no limit)
+        // and pick ('first' in sort order, or a 'random' selection).
+        $limit = intval($atts['limit'] ?? 0);
+        if ($limit < 1 || $limit > 1000) {
+            $limit = 0;
+        }
+        $pick = sanitize_text_field($atts['pick'] ?? 'first');
+        if (!in_array($pick, ['first', 'random'], true)) {
+            $pick = 'first';
+        }
+        // limit/pick apply to the level the shortcode itself defines. An album opened from
+        // an overview (?gallery_for_immich=) shows all its photos, unless the shortcode
+        // itself is for that album.
+        if ($opened_from_overview) {
+            $limit = 0;
+            // Likewise, photos on an album page opened from an overview open in the lightbox.
+            $link_type = 'lightbox';
         }
 
         // Enable lazy loading for all images
@@ -1577,7 +1786,7 @@ class Gallery_For_Immich {
                     $html .= '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>';
                 } elseif ( $link_type === 'custom' ) {
                     // Custom URL: thumbnail linked to provided URL.
-                    $html .= '<a href="' . esc_url( $link_url_val ) . '" target="_blank" rel="noopener noreferrer">'
+                    $html .= '<a href="' . esc_url( $link_url_val ) . '"' . $link_target_attr . '>'
                            . '<img src="' . esc_url( $thumb_url ) . '" style="' . esc_attr( $img_style ) . '"' . $lazy_attr . '>'
                            . '</a>';
                 } else {
@@ -1617,7 +1826,9 @@ class Gallery_For_Immich {
                 if ($video_mode !== 'ignore' && !empty($asset_data['livePhotoVideoId']) && preg_match('/^[a-f0-9\-]{36}$/i', $asset_data['livePhotoVideoId'])) {
                     $live_photo_id = $asset_data['livePhotoVideoId'];
                 }
-                $live_attr = $live_photo_id ? ' data-live-photo-id="' . esc_attr($live_photo_id) . '"' : '';
+                $live_attr = $live_photo_id
+                    ? ' data-live-photo-id="' . esc_attr($live_photo_id) . '" data-live-photo-sig="' . esc_attr($this->live_photo_signature($live_photo_id)) . '"'
+                    : '';
 
                 if ( $link_type === 'lightbox' ) {
                     $html .= '<a href="' . esc_url( $full_url ) . '" class="immich-lightbox"' . $live_attr
@@ -1627,8 +1838,8 @@ class Gallery_For_Immich {
                 } elseif ( $link_type === 'none' ) {
                     $html .= '<img src="' . esc_url( $full_url ) . '" style="' . esc_attr( $preview_style ) . '"' . $lazy_attr . '>';
                 } elseif ( $link_type === 'custom' ) {
-                    // Custom URL: preview image linked to provided URL, opens in new tab.
-                    $html .= '<a href="' . esc_url( $link_url_val ) . '" target="_blank" rel="noopener noreferrer">'
+                    // Custom URL: preview image linked to provided URL, target per link_target.
+                    $html .= '<a href="' . esc_url( $link_url_val ) . '"' . $link_target_attr . '>'
                            . '<img src="' . esc_url( $full_url ) . '" style="' . esc_attr( $preview_style ) . '"' . $lazy_attr . '>'
                            . '</a>';
                 }
@@ -1658,7 +1869,14 @@ class Gallery_For_Immich {
 
             if (!$album || empty($album['id'])) return '<p>' . __('No photos found in this album.', 'gallery-for-immich') . '</p>';
 
-            $assets_to_render = $this->get_album_assets($album['id']);
+            $images_only = ($video_mode === 'ignore');
+            $assets_to_render = $limit
+                ? $this->get_album_assets_limited($album['id'], $limit, $pick, $order, $images_only)
+                : null;
+            $needs_limit = ($assets_to_render === null);
+            if ($needs_limit) {
+                $assets_to_render = $this->get_album_assets($album['id'], $images_only);
+            }
 
             if (empty($assets_to_render)) return '<p>' . __('No photos found in this album.', 'gallery-for-immich') . '</p>';
 
@@ -1696,6 +1914,10 @@ class Gallery_For_Immich {
                 }
             });
 
+            if ($needs_limit) {
+                $assets_to_render = $this->limit_items($assets_to_render, $limit, $pick);
+            }
+
             $html = '';
             if (in_array('gallery_name', $show)) {
                 $html .= '<h2 style="font-size:' . $title_size . 'px;">' . esc_html($album['albumName']) . '</h2>';
@@ -1731,8 +1953,15 @@ class Gallery_For_Immich {
                 }
                 
                 $html .= '<div>';
-                
-                if ($is_video) {
+
+                if ($link_type === 'none' || $link_type === 'custom') {
+                    // No lightbox: a plain thumbnail, optionally linked to a custom URL
+                    // (e.g. a single latest photo on a home page that links to the full gallery).
+                    $thumb_img = '<img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>';
+                    $html .= $link_type === 'custom'
+                        ? '<a href="' . esc_url($link_url_val) . '"' . $link_target_attr . '>' . $thumb_img . '</a>'
+                        : $thumb_img;
+                } elseif ($is_video) {
                     // For videos, create inline video HTML for lightbox
                     if ($video_mode === 'fopen') {
                         $video_url = home_url('/?gallery_for_immich_proxy=video&id=') . $asset['id'];
@@ -1763,7 +1992,9 @@ class Gallery_For_Immich {
                     if ($video_mode !== 'ignore' && !empty($asset['livePhotoVideoId']) && preg_match('/^[a-f0-9\-]{36}$/i', $asset['livePhotoVideoId'])) {
                         $live_photo_id = $asset['livePhotoVideoId'];
                     }
-                    $live_attr = $live_photo_id ? ' data-live-photo-id="' . esc_attr($live_photo_id) . '"' : '';
+                    $live_attr = $live_photo_id
+                    ? ' data-live-photo-id="' . esc_attr($live_photo_id) . '" data-live-photo-sig="' . esc_attr($this->live_photo_signature($live_photo_id)) . '"'
+                    : '';
                     $html .= '<a href="' . esc_url($full_url) . '" class="immich-lightbox"' . $live_attr . '
                                 data-gallery="album-' . esc_attr($album['id']) . '">
                                 <img src="' . esc_url($thumb_url) . '" style="width:100%;height:' . $size . 'px;object-fit:cover;border-radius:6px;display:block;"' . $lazy_attr . '>
@@ -1861,9 +2092,14 @@ class Gallery_For_Immich {
                 });
             }
 
+            // Albums without a thumbnail are not rendered, so leave them out before limiting.
+            $albums_to_render = array_filter($albums_to_render, function($a) {
+                return !empty($a['albumThumbnailAssetId']);
+            });
+            $albums_to_render = $this->limit_items($albums_to_render, $limit, $pick);
+
             // Render the albums
             foreach ($albums_to_render as $album) {
-                if (empty($album['albumThumbnailAssetId'])) continue;
                 // The album list carries no per-asset timestamp, so the album's own `updatedAt`
                 // is used as a best-effort cache version for its thumbnail.
                 $thumb_url = home_url('/?gallery_for_immich_proxy=thumbnail&id=') . $album['albumThumbnailAssetId'] . $this->cache_version_param($album);

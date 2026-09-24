@@ -14,6 +14,7 @@ A simple way to display galleries without uploading images manually.
 - Display list of albums from Immich
 - Display entire albums from Immich
 - Flexible sorting options (date/name, ascending/descending)
+- Limit the number of albums or photos shown, either the first ones or a random selection
 - Beautiful responsive grid layouts with integrated lightbox
 - **Apple Live Photos** - Play the video component of Live Photos directly in the lightbox
 - Video playback modes (shared links, proxy via fopen, or ignore videos)
@@ -83,12 +84,13 @@ The easiest way to add an Immich gallery is through the Gutenberg block editor:
    - **Multiple albums** - Show a curated selection of albums
    - **Single photo** - Display a single image
 3. Configure display options in the sidebar:
-   - **Show options**: Choose what to display (defaults: gallery name, asset description)
+   - **Show options**: Choose what to display (defaults: gallery name, asset description). For album overviews, turn off **Same on album page** to choose different texts for the page that opens when an album is clicked
    - **Sort order**: Control the sorting of albums/photos
+   - **Maximum number** (albums/photos): Limit how many are shown, taking the first ones in sort order or a random selection
    - **Thumbnail size** (albums) / **Max width** (single photo): Adjust size (default: 200px)
    - **Text sizes**: Customize title, description, and date font sizes
    - **Alignment** (single photo): Place the photo left, right, or center for text wrapping
-   - **Link behavior** (single photo): Lightbox (default), no link, or custom URL
+   - **Link behavior** (single photo and single album): Lightbox (default), no link, or custom URL — with a toggle to open the custom URL in a new tab (default) or the same tab
 4. The preview shows the shortcode that will be used
 
 ### Using Shortcodes
@@ -142,7 +144,18 @@ Available `link` values:
 
 - *(omit)* or `lightbox` — opens the full-size photo in a lightbox overlay (default)
 - `none` — displays the photo without any link
-- `https://...` — wraps the photo in a link to your URL, opens in a new tab
+- `https://...` — wraps the photo in a link to your URL
+
+**Single photo — link target (custom URL only):**
+
+```text
+[gallery_for_immich asset=3c874076-ba9e-410a-8501-ef3cca897bcd link="https://example.com/my-page" link_target="same"]
+```
+
+Available `link_target` values:
+
+- `new` — opens the link in a new tab (default)
+- `same` — opens the link in the current tab, e.g. for a visual menu to other pages on your own site
 
 **Customize display options:**
 
@@ -158,6 +171,14 @@ Available show options (no defaults - must be explicitly specified):
 - `asset_date` - Show date the photo/video was taken
 
 **Note:** If the `show` parameter is not specified, only thumbnails are displayed without any text.
+
+**Different texts on the album page:**
+
+```text
+[gallery_for_immich show="gallery_name" detail_show="gallery_name,gallery_description,asset_date"]
+```
+
+When a visitor clicks an album in an overview, the album opens on the same page with the same `show` options. `detail_show` sets different options for that album page — here the overview shows only album names, and the album page adds the description and photo dates. It takes the same values as `show`; `detail_show=""` shows no text on the album page. Without `detail_show`, `show` applies to both.
 
 **Customize sizes:**
 
@@ -189,6 +210,30 @@ Available order options:
 
 **Note:** Name sorting is only available for album lists. Photos can be sorted by date or description.
 
+**Limit the number of albums or photos:**
+
+```text
+[gallery_for_immich album=3c874076-ba9e-410a-8501-ef3cca897bcd limit="10" order="date_desc"]
+[gallery_for_immich limit="3" pick="random"]
+```
+
+- `limit` - Maximum number of albums (overview) or photos (album), 1–1000. Omit to show all.
+- `pick` - Which ones to show when `limit` is set: `first` (default) takes the first ones in the sort order, `random` shows a random selection, still displayed in the sort order.
+
+For albums sorted by date, or with `pick="random"`, only the requested photos are fetched from Immich — a `limit="10"` on a large album is one small request. Sorting by description still needs the whole album to be fetched first.
+
+`limit` applies to the level the shortcode defines: on an overview it limits the number of albums, and an album opened from that overview shows all of its photos.
+
+**Album — link behavior:**
+
+The `link` and `link_target` attributes also work for albums, with the same values as for single photos. Combined with `limit`, this shows e.g. the latest photo of an album on your home page, linking to your full gallery page:
+
+```text
+[gallery_for_immich album=3c874076-ba9e-410a-8501-ef3cca897bcd limit="1" order="date_desc" link="https://example.com/gallery" link_target="same"]
+```
+
+A custom URL applies to every photo in the album. `link` does not affect album overviews, and an album opened from an overview always uses the lightbox.
+
 ## Examples
 
 Sort albums alphabetically:
@@ -210,6 +255,19 @@ Use the shortcode below to display just one photo:
 ```
 
 ## 📋 Changelog
+
+### 0.9.0
+
+- Tested against WordPress 7.1.2 and Immich v3.2.2.
+- New: `limit=` and `pick=` — show only a number of albums or photos, the first ones in the sort order or a random selection. For albums sorted by date, or with `pick="random"`, only the requested photos are fetched from Immich. (issue #13)
+- New: `detail_show=` — choose different texts for the album page that opens when a visitor clicks an album in an overview.
+- New: `link=` also works for albums, so e.g. the latest photo of an album can link to your full gallery page.
+- New: `link_target=` — open a custom link in the same tab or a new tab (default). (issue #6)
+- Improved: the block editor only offers the sort options that apply to the chosen display mode, and explains that "Multiple albums" keeps the order in which you select them.
+- Security: an album page opened from a URL is now limited to the albums the shortcode actually shows.
+- Security: the Live Photo endpoint only serves videos of photos shown on the site, and shared links for videos are reused instead of created on every page view.
+- Security: the image proxy no longer serves original files, and only streams videos in the *Proxy via fopen* mode.
+- Fix: block editor translations could fall back to an older version after a build.
 
 ### 0.8.2
 

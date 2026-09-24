@@ -4,7 +4,7 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.8.2
+Stable tag: 0.9.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -25,6 +25,7 @@ Gallery for Immich is a WordPress plugin that seamlessly integrates your self-ho
 * Integrated lightbox with GLightbox
 * Video playback modes (shared links, proxy via fopen, or ignore videos)
 * Flexible sorting options (date/name, ascending/descending)
+* Limit the number of albums or photos shown, either the first ones or a random selection
 * **Single photo embedding** - Display one photo with alignment (left/right/center) and configurable link behavior (lightbox, no link, or custom URL)
 * Full internationalization support (Dutch, German, French translations)
 * Configure Immich server URL and API key in the WordPress admin panel
@@ -117,6 +118,11 @@ Available show options (no defaults - must be explicitly specified):
 
 Note: If the `show` parameter is not specified, only thumbnails are displayed without any text.
 
+**Different texts on the album page:**
+`[gallery_for_immich show="gallery_name" detail_show="gallery_name,gallery_description,asset_date"]`
+
+When a visitor clicks an album in an overview, the album opens with the same `show` options. `detail_show` sets different options for that album page, using the same values as `show`. `detail_show=""` shows no text there; without `detail_show`, `show` applies to both.
+
 **Customize sizes:**
 `[gallery_for_immich size="300" title_size="18" description_size="15" date_size="12"]`
 
@@ -131,7 +137,9 @@ Size options:
 `[gallery_for_immich asset="photo-id" align="right" link="https://example.com"]`
 
 Align options: `left`, `right`, `center` (default: no float)
-Link options: `lightbox` (default — opens in overlay), `none` (no link), or any `https://...` URL (opens in new tab)
+Link options: `lightbox` (default — opens in overlay), `none` (no link), or any `https://...` URL
+Link target (custom URL only): `new` (default — opens in a new tab) or `same` (opens in the current tab)
+`[gallery_for_immich asset="photo-id" link="https://example.com/page" link_target="same"]`
 
 **Sort order:**
 `[gallery_for_immich order="date_desc"]`
@@ -146,6 +154,20 @@ Available order options:
 * `description_desc` - Alphabetically Z-A by description (photos only)
 
 Note: Name sorting is only available for albums. Photos can be sorted by date or description.
+
+**Limit the number of albums or photos:**
+`[gallery_for_immich album="album-id" limit="10" order="date_desc"]`
+`[gallery_for_immich limit="3" pick="random"]`
+
+* `limit` - Maximum number of albums (overview) or photos (album), 1-1000. Omit to show all.
+* `pick` - `first` (default) takes the first ones in the sort order; `random` shows a random selection, still displayed in the sort order
+
+For albums sorted by date, or with `pick="random"`, only the requested photos are fetched from Immich. An album opened from a limited overview still shows all of its photos.
+
+**Show the latest photo of an album, linking to your gallery page:**
+`[gallery_for_immich album="album-id" limit="1" order="date_desc" link="https://example.com/gallery" link_target="same"]`
+
+`link` and `link_target` work for albums with the same values as for single photos. A custom URL applies to every photo in the album; album overviews are not affected.
 
 == Frequently Asked Questions ==
 
@@ -192,6 +214,20 @@ Additional translations can be contributed via .po files in the languages direct
 4. Single photo display with EXIF data
 
 == Changelog ==
+
+= 0.9.0 =
+*Release Date - 24 September 2026*
+
+* Tested against WordPress 7.1.2 and Immich v3.2.2
+* New: `limit=` and `pick=` — show only a number of albums or photos, the first ones in the sort order or a random selection. For albums sorted by date, or with `pick="random"`, only the requested photos are fetched from Immich (issue #13)
+* New: `detail_show=` — choose different texts for the album page that opens when a visitor clicks an album in an overview
+* New: `link=` also works for albums, so e.g. the latest photo of an album can link to your full gallery page
+* New: `link_target=` — open a custom link in the same tab or a new tab (default) (issue #6)
+* Improved: the block editor only offers the sort options that apply to the chosen display mode, and explains that "Multiple albums" keeps the order in which you select them
+* Security: an album page opened from a URL is now limited to the albums the shortcode actually shows
+* Security: the Live Photo endpoint only serves videos of photos shown on the site, and shared links for videos are reused instead of created on every page view
+* Security: the image proxy no longer serves original files, and only streams videos in the "Proxy via fopen" mode
+* Fix: block editor translations could fall back to an older version after a build
 
 = 0.8.2 =
 *Release Date - 3 September 2026*
@@ -325,6 +361,9 @@ Additional translations can be contributed via .po files in the languages direct
 * Dutch translation included
 
 == Upgrade Notice ==
+
+= 0.9.0 =
+Adds photo limits, random selection, separate album-page texts and link options for albums, plus security hardening. Using a page cache? Clear it after updating so Live Photos keep working.
 
 = 0.8.2 =
 Fixes photos edited in Immich showing their original orientation, and stops a single unshareable video from breaking the page. Recommended for all users.

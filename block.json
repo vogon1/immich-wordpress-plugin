@@ -61,6 +61,21 @@
 		"link_url": {
 			"type": "string",
 			"default": ""
+		},
+		"link_target": {
+			"type": "string",
+			"default": "new"
+		},
+		"limit": {
+			"type": "number",
+			"default": 0
+		},
+		"pick": {
+			"type": "string",
+			"default": "first"
+		},
+		"detail_show": {
+			"type": "array"
 		}
 	},
 	"supports": {
