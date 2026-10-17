@@ -89,10 +89,29 @@ Verify the output does **not** contain any of the following:
 - `src/`, `scripts/`, `node_modules/`
 - `package.json`, `package-lock.json`
 - `languages/*.po`, `languages/*.pot`
+- `assets/screenshot-*` (they belong in SVN `assets/`, see step 12)
 
 If any of these appear, add them to `.distignore` before continuing.
 
-## 9. Commit, tag and push
+## 9. Run Plugin Check on the release contents
+
+Run [Plugin Check](https://wordpress.org/plugins/plugin-check/) with every check enabled against exactly what ships, the same `.distignore`-filtered copy as in step 8:
+
+```bash
+npm run plugin-check
+```
+
+`scripts/plugin-check.sh` needs a running wp-env (`npm run wp-env:start`). It:
+
+- copies the release contents to `dist/release-check/` (`dist/` itself is excluded from the release);
+- installs and activates Plugin Check in wp-env if needed;
+- puts the copy in wp-env as a separate plugin and activates it instead of the development copy, because the runtime checks (enqueued scripts and styles) only run for an active plugin and both copies define the same class;
+- runs `wp plugin check` with `--mode=new` (the stricter mode for new submissions), `--include-experimental`, `--severity=1` (also the lowest-severity findings) and the runtime checks (`--require=…/plugin-check/cli.php`); only the AI analysis (`--ai`) is left out, it needs an external API key;
+- always reactivates the development copy and removes the copy afterwards.
+
+There must be no errors. Review every warning: fix it, or make sure it is a known and accepted one. Known since 0.10.0: GLightbox is loaded on every page and without a `defer` strategy (`EnqueuedScriptsScope`, `EnqueuedStylesScope`, `NonBlockingScripts.NoStrategy`); planned for 0.11.0.
+
+## 10. Commit, tag and push
 
 ```bash
 git add -A
@@ -101,15 +120,15 @@ git tag vx.x.x
 git push origin main --tags
 ```
 
-## 10. Release archive
+## 11. Release archive
 
 The GitHub Action in `.github/workflows/release.yml` triggers automatically on any `v*` tag and builds + publishes the release ZIP. No manual steps needed.
 
-## 11. Publish to the WordPress.org SVN repository
+## 12. Publish to the WordPress.org SVN repository
 
 Prerequisite: a local SVN working copy of the plugin (e.g. `~/wp-svn`, containing `trunk/`, `tags/`, `assets/`).
 
-1. Download and extract the release ZIP built in step 10 into a scratch directory, e.g. `~/gallery-for-immich`. The ZIP is already filtered per `.distignore`, so its contents are exactly what should ship.
+1. Download and extract the release ZIP built in step 11 into a scratch directory, e.g. `~/gallery-for-immich`. The ZIP is already filtered per `.distignore`, so its contents are exactly what should ship.
 
 2. Update the local SVN working copy first, to avoid conflicts:
 
@@ -152,4 +171,18 @@ Prerequisite: a local SVN working copy of the plugin (e.g. `~/wp-svn`, containin
    svn ci -m "Tagging version x.x.x"
    ```
 
-**Screenshots/banners/icons:** `.distignore` excludes `assets/screenshot-*.png` from the release ZIP on purpose — those belong in SVN's `assets/` directory, not `trunk/`. If a screenshot changed, copy it into `~/wp-svn/assets/` directly (from the git repo, not the ZIP) and commit separately.
+**Screenshots/banners/icons:** `.distignore` excludes `assets/screenshot-*` (PNG and JPG) from the release ZIP on purpose — those belong in SVN's `assets/` directory, not `trunk/`. If a screenshot changed, sync them into `~/wp-svn/assets/` directly (from the git repo, not the ZIP) and commit separately:
+
+```bash
+cd ~/wp-svn/assets
+svn update
+rm -f screenshot-*
+cp /path/to/gallery-for-immich/assets/screenshot-* .
+svn add --force .
+svn status | awk '/^!/ {print $2}' | xargs -r svn rm
+svn propset svn:mime-type image/png *.png
+svn propset svn:mime-type image/jpeg *.jpg
+svn ci -m "Update screenshots"
+```
+
+The numbers must match the captions under `== Screenshots ==` in `readme.txt` (`screenshot-1` is caption 1). The MIME type makes browsers show the images instead of downloading them.

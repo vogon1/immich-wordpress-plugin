@@ -4,7 +4,7 @@ Tags: gallery, photos, immich, albums, lightbox
 Requires at least: 5.8
 Tested up to: 7.1
 Requires PHP: 7.4
-Stable tag: 0.9.0
+Stable tag: 0.10.0
 License: GPLv3 or later
 License URI: https://www.gnu.org/licenses/gpl-3.0.html
 Language packs available: nl_NL, de_DE, fr_FR
@@ -23,7 +23,9 @@ Gallery for Immich is a WordPress plugin that seamlessly integrates your self-ho
 * Display entire albums from Immich
 * Beautiful responsive grid layouts
 * Integrated lightbox with GLightbox
-* Video playback modes (shared links, proxy via fopen, or ignore videos)
+* Video playback modes (shared links, stream through WordPress, or ignore videos)
+* Photos and videos on password-protected and private pages are only shown to visitors who may see the page
+* Caching of album lists, album contents and photo details, with a button to clear the cache
 * Flexible sorting options (date/name, ascending/descending)
 * Limit the number of albums or photos shown, either the first ones or a random selection
 * **Single photo embedding** - Display one photo with alignment (left/right/center) and configurable link behavior (lightbox, no link, or custom URL)
@@ -70,14 +72,17 @@ After activation, configure your Immich server connection:
 1. Navigate to Settings > Gallery for Immich in your WordPress admin
 2. Enter your Immich server URL (e.g., https://immich.example.com)
 3. Paste the API key you created in Step 1
-4. Choose **Video playback** mode (shared links, proxy via fopen, or ignore videos)
-5. Save changes
+4. Choose **Video playback** mode (shared links, stream through WordPress, or ignore videos)
+5. Optionally change the **Cache** time (15 minutes by default)
+6. Save changes
 
 **Video playback modes:**
 
 * **Shared links (default)** - Creates temporary shared links on Immich. Videos stream directly from Immich and links expire automatically. Requires that the API key's Immich user *owns* the videos; this mode does not work for albums that are only shared with that user.
-* **Proxy via fopen** - Streams videos through WordPress. Most elegant solution, but requires `fopen` support on the WordPress server which is not always supported.
+* **Stream through WordPress** - Streams videos through your WordPress site, so they also play for albums that are only shared with the API key's user. Uses the bandwidth of your WordPress server and needs `allow_url_fopen` enabled in PHP, which some hosts turn off.
 * **Ignore videos** - Hides videos in galleries and only shows photos.
+
+On password-protected and private pages, videos are always streamed through WordPress, whatever the mode, because a shared link cannot be protected by the page's password.
 
 == Usage ==
 
@@ -183,15 +188,27 @@ Yes, this plugin requires a running Immich server with API access.
 
 You can find IDs in your Immich server's URL when viewing albums or photos, or through the Immich API.
 
-= Does this work with localhost? =
+= Does this work with localhost or an HTTP address? =
 
-Yes, for development purposes localhost URLs (http://localhost or http://127.0.0.1) are allowed. Production servers must use HTTPS.
+Yes. The server URL may start with http:// or https://. For an http:// address other than localhost, the settings page asks you to confirm, because the API key and photos then travel unencrypted between WordPress and Immich. That is fine on a private network, for example when WordPress reaches Immich at its internal address; across the internet, use HTTPS.
 
 = Can I use a separate Immich account instead of the owner account? =
 
 Yes. You can create a secondary Immich account, share the albums you want to publish with it, and use that account's API key. This keeps your main account's credentials off the WordPress server.
 
-One limitation: Immich only allows shared links to be created for assets a user actually owns, not for assets that are merely shared with them. Photos work normally, but videos in the default 'Shared links' video mode will not play for such a display account. Choose 'Proxy via fopen' or 'Ignore videos' instead. The connection & permissions test on the settings page detects this situation and explains it.
+One limitation: Immich only allows shared links to be created for assets a user actually owns, not for assets that are merely shared with them. Photos work normally, but videos in the default 'Shared links' video mode will not play for such a display account. Choose 'Stream through WordPress' or 'Ignore videos' instead. The connection & permissions test on the settings page detects this situation and explains it.
+
+= I added photos to an album in Immich. Why don't they show up? =
+
+The plugin caches the album list, album contents and photo details for a while, 15 minutes by default. The change shows up after that time. To show it right away, click **Clear cache** under Settings > Gallery for Immich. You can also change the cache time there, or turn caching off.
+
+= Are photos on a password-protected page protected? =
+
+Yes. Image and video URLs are signed for the page they are shown on, and the plugin only serves them to visitors who entered that page's password. On a private page or a draft, only logged-in users who may read it see them. Note that this protects the page, not the album: if the same album is also shown on a public page, it can be seen there.
+
+= The gallery shows "No photos found", but the album has photos. =
+
+Log in as an administrator and look at the page again: below the message you then see the error Immich returned, for example a missing permission or an error from a proxy in front of Immich. The **Test connection & permissions** button on the settings page shows the same details per permission.
 
 = Can I customize the appearance? =
 
@@ -208,12 +225,32 @@ Additional translations can be contributed via .po files in the languages direct
 
 == Screenshots ==
 
-1. Album grid overview with thumbnails
-2. Photo gallery with lightbox
-3. Settings page configuration
-4. Single photo display with EXIF data
+1. An overview of selected albums, with album names. Clicking an album opens it on the same page.
+2. An album with photo descriptions and dates, limited to six photos.
+3. A photo opened in the lightbox. Browse with the arrows, swipe or the keyboard; videos and Live Photos play here too.
+4. A single photo aligned left, with the text flowing around it.
+5. The Gallery for Immich block in the block editor, with the album, sort order, number of photos and link behavior in the sidebar.
+6. The settings page: Immich server, video playback, cache, and the connection & permissions test.
 
 == Changelog ==
+
+= 0.10.0 =
+*Release Date - 17 October 2026*
+
+* Tested against WordPress 7.1.3 and Immich v3.3.3
+* New: photos and videos on password-protected and private pages are protected too. Image URLs are signed for the page they are shown on, and only served to visitors who may see that page. Videos on such pages always stream through WordPress. Membership plugins can add their own rule with the `gallery_for_immich_can_view` filter
+* New: caching of the album list, album contents and photo details, 15 minutes by default, configurable, with a "Clear cache" button
+* New: support for the structured search API of Immich 3.2 and later, which Immich 4 will require; older Immich versions keep working
+* Improved: the connection test shows what Immich actually answered for a failed check, and the Immich server version
+* Improved: administrators see the Immich error on a gallery that cannot be loaded; visitors see a plain message instead of the raw error
+* Improved: the image proxy passes on the real image type (thumbnails are WebP), and answers 502 when Immich cannot be reached
+* Changed: the video mode "Proxy via fopen" is now called "Stream through WordPress"; the setting itself is unchanged
+* Security: every image and video URL is signed, so the proxy only serves what your site displays
+* Fix: in Safari, the seek bar of a video in the lightbox did not work
+* Fix: album overviews showed "Error from Immich API: 1" when Immich returned an error
+* Fix: Live Photos did not play on sites with plain permalinks
+* Fix: the video proxy passed an error page from Immich on as a video
+* Uninstalling the plugin now also removes its cached data
 
 = 0.9.0 =
 *Release Date - 24 September 2026*
@@ -362,6 +399,9 @@ Additional translations can be contributed via .po files in the languages direct
 
 == Upgrade Notice ==
 
+= 0.10.0 =
+Protects photos on password-protected pages, adds caching and prepares for Immich 4. All image URLs are now signed: using a page cache? Clear it after updating, otherwise cached pages show no photos.
+
 = 0.9.0 =
 Adds photo limits, random selection, separate album-page texts and link options for albums, plus security hardening. Using a page cache? Clear it after updating so Live Photos keep working.
 
@@ -385,11 +425,11 @@ Adds chronological photo sorting and improved album organization. Recommended up
 This plugin:
 * Connects to your self-hosted Immich server via API
 * Does not collect or transmit any user data to third parties
-* Requires HTTPS for production security
+* Warns when the connection to Immich is not encrypted (HTTP instead of HTTPS)
 * Validates all user input and API parameters
 * Uses WordPress security best practices
 
-Your Immich server credentials (URL and API key) are stored in your WordPress database.
+Your Immich server credentials (URL and API key) are stored in your WordPress database. Cached album and photo details from Immich (names, descriptions, dates, IDs) are stored there too, as transients that expire after the configured cache time. No location or camera data is cached.
 
 == Support ==
 

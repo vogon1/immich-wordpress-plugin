@@ -1,6 +1,6 @@
 {
 	"name": "gallery-for-immich",
-	"version": "0.9.0",
+	"version": "0.10.0",
 	"description": "WordPress plugin to display Immich galleries",
 	"scripts": {
 		"build": "wp-scripts build src/index.js --output-path=build && node scripts/sync-translations.js",
@@ -11,6 +11,8 @@
 		"i18n:json": "wp i18n make-json languages/ --no-purge",
 		"i18n:build": "npm run i18n:mo && npm run i18n:json",
 		"translate": "npm run i18n:pot && npm run i18n:update && npm run i18n:build && node scripts/sync-translations.js",
+		"test": "node tests/run.js",
+		"plugin-check": "bash scripts/plugin-check.sh",
 		"wp-env:start": "wp-env start",
 		"wp-env:stop": "wp-env stop",
 		"wp-env:destroy": "wp-env destroy",

@@ -2,7 +2,7 @@
 
 Use this checklist for every new release or WordPress version upgrade.
 
-> **🤖 = testable via CLI** (curl / WP-CLI in wp-env)  
+> **🤖 = covered by `npm run test`** (see [Running the Test Suite](#-running-the-test-suite))  
 > **👤 = manual browser testing**
 
 ## Setting Up the Test Environment
@@ -30,7 +30,11 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 | 👤 | Cancelling modal → form not submitted |
 | 👤 | API key with invalid characters (space, @) shows error message |
 | 👤 | Video mode dropdown saves correctly |
-| 🤖 | Connection test button returns green result |
+| 👤 | Cache dropdown saves correctly; **Off** fetches from Immich on every page view |
+| 👤 | **Clear cache** shows "Cache cleared." and a photo added in Immich appears right away |
+| 👤 | Connection test button returns green result and shows the Immich server version |
+| 👤 | Connection test with a wrong API key shows `Connection failed: HTTP 401: Invalid API key` |
+| 👤 | A failing check shows what Immich answered, e.g. `Missing (HTTP 403: …)` or `Failed (HTTP 502: …)` |
 
 ---
 
@@ -59,6 +63,7 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 | ✓ | Test |
 |---|---|
 | 👤 | Photos render in grid |
+| 🤖 | Invalid album ID: a visitor sees "No photos found in this album."; an administrator also sees the Immich error |
 | 👤 | `show="asset_date,asset_description"` shows date and description |
 | 👤 | `order="date_desc"` reverses the order |
 | 👤 | `limit="5"` shows the 5 oldest photos; with `order="date_desc"` the 5 newest |
@@ -93,11 +98,14 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 
 | ✓ | Test |
 |---|---|
+| 🤖 | Video mode **shared**: a public page uses an Immich shared link that streams (206) |
 | 👤 | Video mode **shared**: video plays in lightbox |
-| 👤 | Video mode **fopen**: video streams via WordPress |
+| 👤 | Video mode **Stream through WordPress**: video streams via WordPress, seeking works |
+| 🤖 | Streaming answers Range requests with 206 and passes `Content-Range` on |
 | 👤 | Video mode **ignore**: videos are not shown |
 | 👤 | Video autoplays when lightbox slide changes |
 | 👤 | Previous video pauses when switching slides |
+| 👤 | Safari (Mac): clicking the seek bar jumps, dragging moves the seek bar (not the slide), and releasing the mouse button lets go of it |
 
 ---
 
@@ -129,49 +137,55 @@ npx wp-env run cli wp option update gallery_for_immich_settings \
 
 ---
 
+## 🔐 Password-Protected & Private Pages
+
+| ✓ | Test |
+|---|---|
+| 🤖 | Without the password the page shows no photos; their image URLs answer 403 |
+| 🤖 | After entering the password, photos load with `Cache-Control: private` |
+| 🤖 | Image URL from a private page answers 403 for a visitor |
+| 👤 | After entering the password, the lightbox and Live Photos work |
+| 🤖 | Video mode **Shared links**: a video on a password page is streamed through WordPress (no shared link), 403 without the password |
+| 👤 | Video mode **Shared links**: that video plays and seeks in the lightbox, also in Safari |
+| 🤖 | Logged in as editor: photos on a private page and in a draft preview load |
+
+---
+
 ## 🔒 Proxy & Security
 
 | ✓ | Test |
 |---|---|
 | 🤖 | Invalid proxy type → HTTP 400 |
 | 🤖 | Invalid UUID format → HTTP 400 |
-| 🤖 | Plugin not configured → HTTP 503 |
+| 🤖 | Unsigned URL, wrong signature, or a signature for another post → HTTP 403 |
+| 🤖 | Thumbnails are served as `image/webp`, previews as `image/jpeg` |
+| 👤 | Plugin not configured → HTTP 503 |
 | 🤖 | REST `/albums` without login → HTTP 401/403 |
 | 🤖 | REST `live-photo-url` with invalid ID → HTTP 400 |
 | 🤖 | REST `live-photo-url` without `sig` → HTTP 400; with a wrong `sig` → HTTP 403 |
 | 🤖 | Proxy `type=original` → HTTP 400 |
-| 🤖 | Proxy `type=video` when video mode is not **fopen** → HTTP 403 |
+| 🤖 | Proxy `type=video` in video mode **Ignore videos** → HTTP 403 |
 | 👤 | Page with `album="A"`: adding `?gallery_for_immich=<other album>` still shows album A |
 | 👤 | Page with `albums="A,B"`: `?gallery_for_immich=<album C>` shows the overview, not album C |
 | 👤 | Live Photo button still plays the video (the request carries a `sig` parameter) |
 | 👤 | Video mode **shared**: reloading a page with videos reuses the same shared link (no new cleanup event per view) |
 | 🤖 | API key not visible in page source |
+| 🤖 | Plain permalinks: photos load and the Live Photo request (`?rest_route=`) reaches the endpoint |
 
 ---
 
-## 🤖 Running CLI Tests
-
-The security/proxy tests can be run in one go:
+## 🤖 Running the Test Suite
 
 ```bash
-# Replace BASE_URL with your wp-env URL (default: http://localhost:8888)
-BASE_URL=http://localhost:8888
-
-# Invalid proxy type → expect HTTP 400
-curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/?gallery_for_immich_proxy=invalid&id=00000000-0000-0000-0000-000000000001"
-
-# Invalid UUID → expect HTTP 400
-curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/?gallery_for_immich_proxy=thumbnail&id=not-a-uuid"
-
-# REST albums without login → expect 401
-curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/wp-json/gallery-for-immich/v1/albums"
-
-# REST live-photo-url with invalid ID → expect 400
-curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/wp-json/gallery-for-immich/v1/live-photo-url?asset_id=invalid"
-
-# REST live-photo-url without a valid signature → expect 403
-curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/wp-json/gallery-for-immich/v1/live-photo-url?asset_id=00000000-0000-0000-0000-000000000001&sig=$(printf 'a%.0s' {1..64})"
-
-# Proxy original → expect 400 (originals are never served)
-curl -s -o /dev/null -w "%{http_code}" "$BASE_URL/?gallery_for_immich_proxy=original&id=00000000-0000-0000-0000-000000000001"
+npm run wp-env:start   # if it is not running yet
+npm run test
 ```
+
+`tests/run.js` creates test pages in wp-env (a public album page, an overview, a password-protected page and a private page), runs the checks and removes the pages again. It also creates a temporary editor account. Afterwards it restores the plugin settings and the permalink structure, because the tests switch the video mode and try plain permalinks. In the mode Shared links one real, short-lived shared link is created in Immich; the plugin's cleanup job removes it.
+
+- **Internals** (`tests/unit.php`, run with `wp eval-file`): attribute parsing (`limit`, `pick`, `show`, `detail_show`, the album from the URL, `link`), signatures, search request bodies for the flat and the structured Immich search API, version detection, caching and error messages.
+- **HTTP** (`tests/run.js`): the proxy, password-protected and private pages (as a visitor and as a logged-in editor, including a draft preview), pretty and plain permalinks, the album-from-URL rule, the REST endpoints, and video in the modes Shared links, Stream through WordPress and Ignore videos.
+
+Requirements: a working Immich server URL and API key in the plugin settings, and on that server at least two albums with three or more photos, plus one video for the streaming checks. Set `BASE_URL` to test another address than `http://localhost:8888`.
+
+The tests talk to the real Immich server. A proxy answer of **502** means wp-env could not reach Immich at that moment (a network hiccup), not a plugin error; run the suite again.

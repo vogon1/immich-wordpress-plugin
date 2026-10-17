@@ -6,6 +6,7 @@
 /node_modules
 /src
 /scripts
+/tests
 
 # Build tools
 /package.json
@@ -25,7 +26,7 @@
 /.wp-env.json
 
 # Screenshots (for WordPress.org only, not in distribution)
-/assets/screenshot-*.png
+/assets/screenshot-*
 
 # Translation source files (only .mo files needed for production)
 /languages/*.pot
